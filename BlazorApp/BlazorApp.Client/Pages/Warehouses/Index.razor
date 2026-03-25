@@ -1,0 +1,224 @@
+@page "/warehouses"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Warehouses — LogisticHub</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Warehouses</h1>
+        <div class="page-sub">Storage facility management</div>
+    </div>
+    <button class="btn-primary-custom" @onclick="OpenCreate">
+        &#43; New Warehouse
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading warehouses...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Capacity</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!_warehouses.Any())
+                    {
+                        <tr><td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#127970;</div>
+                                <div class="empty-state-text">No warehouses configured yet.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    @foreach (var w in _warehouses)
+                    {
+                        <tr>
+                            <td><strong>@w.Name</strong></td>
+                            <td>&#128205; @w.Location</td>
+                            <td>@w.Capacity.ToString("N0") units</td>
+                            <td>@w.CreatedAt.ToString("MMM d, yyyy")</td>
+                            <td>
+                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(w))">Edit</button>
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#ef4444;border-color:#ef4444" @onclick="@(() => ConfirmDelete(w))">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ── Create / Edit Dialog ── *@
+@if (_showForm)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">@(_isEdit ? "Edit Warehouse" : "New Warehouse")</span>
+                <button class="btn-logout" @onclick="CloseForm">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                @if (!_isEdit)
+                {
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input class="form-control-custom" @bind="_createReq.Name" placeholder="Main Warehouse" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input class="form-control-custom" @bind="_createReq.Location" placeholder="123 Industrial Blvd, City" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capacity (units)</label>
+                        <input class="form-control-custom" type="number" @bind="_createReq.Capacity" placeholder="0" />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input class="form-control-custom" @bind="_updateReq.Name" placeholder="Main Warehouse" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input class="form-control-custom" @bind="_updateReq.Location" placeholder="123 Industrial Blvd, City" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capacity (units)</label>
+                        <input class="form-control-custom" type="number" @bind="_editCapacity" placeholder="0" />
+                    </div>
+                }
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="CloseForm">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="SaveAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        @(_isEdit ? "Update" : "Create")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Delete Confirmation ── *@
+@if (_showDelete)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:400px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Confirm Delete</span>
+                <button class="btn-logout" @onclick="() => _showDelete = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                <p>Are you sure you want to delete warehouse <strong>@_deleteTarget?.Name</strong>?</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showDelete = false">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#ef4444" @onclick="DeleteAsync" disabled="@_saving">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showForm;
+    private bool _showDelete;
+    private bool _isEdit;
+    private bool _saving;
+    private string _formError = string.Empty;
+    private List<WarehouseDto> _warehouses = new();
+    private CreateWarehouseRequest _createReq = new();
+    private UpdateWarehouseRequest _updateReq = new();
+    private int _editCapacity;
+    private WarehouseDto? _editTarget;
+    private WarehouseDto? _deleteTarget;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _warehouses = await Api.GetWarehousesAsync(); } catch { }
+        _loading = false;
+    }
+
+    private void OpenCreate()
+    {
+        _isEdit = false;
+        _createReq = new();
+        _formError = string.Empty;
+        _showForm = true;
+    }
+
+    private void OpenEdit(WarehouseDto w)
+    {
+        _isEdit = true;
+        _editTarget = w;
+        _editCapacity = w.Capacity;
+        _updateReq = new() { Name = w.Name, Location = w.Location };
+        _formError = string.Empty;
+        _showForm = true;
+    }
+
+    private void CloseForm() => _showForm = false;
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+
+        if (_isEdit && _editTarget != null)
+        {
+            _updateReq.Capacity = _editCapacity;
+            var ok = await Api.UpdateWarehouseAsync(_editTarget.Id, _updateReq);
+            if (ok)
+            {
+                _editTarget.Name = _updateReq.Name ?? _editTarget.Name;
+                _editTarget.Location = _updateReq.Location ?? _editTarget.Location;
+                _editTarget.Capacity = _editCapacity;
+                _showForm = false;
+            }
+            else _formError = "Failed to update warehouse.";
+        }
+        else
+        {
+            var result = await Api.CreateWarehouseAsync(_createReq);
+            if (result != null) { _warehouses.Insert(0, result); _showForm = false; }
+            else _formError = "Failed to create warehouse.";
+        }
+
+        _saving = false;
+    }
+
+    private void ConfirmDelete(WarehouseDto w) { _deleteTarget = w; _showDelete = true; }
+
+    private async Task DeleteAsync()
+    {
+        if (_deleteTarget == null) return;
+        _saving = true;
+        var ok = await Api.DeleteWarehouseAsync(_deleteTarget.Id);
+        if (ok) _warehouses.Remove(_deleteTarget);
+        _showDelete = false;
+        _saving = false;
+    }
+}

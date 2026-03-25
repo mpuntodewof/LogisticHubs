@@ -1,0 +1,146 @@
+@page "/"
+@page "/dashboard"
+@layout AppLayout
+
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Dashboard — LogisticHub</PageTitle>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading dashboard...</div>
+}
+else
+{
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <div class="page-sub">Welcome back, @_userName</div>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">&#128230;</div>
+            <div>
+                <div class="stat-value">@_totalShipments</div>
+                <div class="stat-label">Total Shipments</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow">&#128336;</div>
+            <div>
+                <div class="stat-value">@_pendingShipments</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">&#10003;</div>
+            <div>
+                <div class="stat-value">@_deliveredShipments</div>
+                <div class="stat-label">Delivered</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon cyan">&#128101;</div>
+            <div>
+                <div class="stat-value">@_totalDrivers</div>
+                <div class="stat-label">Active Drivers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">&#128663;</div>
+            <div>
+                <div class="stat-value">@_totalVehicles</div>
+                <div class="stat-label">Vehicles</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">&#127970;</div>
+            <div>
+                <div class="stat-value">@_totalWarehouses</div>
+                <div class="stat-label">Warehouses</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header-custom">
+            <span class="card-title-custom">Recent Shipments</span>
+            <a href="/shipments" class="btn-outline">View all</a>
+        </div>
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Tracking No.</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!_recentShipments.Any())
+                    {
+                        <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128230;</div><div class="empty-state-text">No shipments yet</div></div></td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var s in _recentShipments)
+                        {
+                            <tr style="cursor:pointer" @onclick="@(() => NavToShipment(s.Id))">
+                                <td><strong>@s.TrackingNumber</strong></td>
+                                <td>@s.DestinationAddress</td>
+                                <td><span class="badge-status @GetStatusClass(s.Status)">@s.Status</span></td>
+                                <td>@s.CreatedAt.ToString("MMM d, yyyy")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private string _userName = "User";
+    private int _totalShipments, _pendingShipments, _deliveredShipments;
+    private int _totalDrivers, _totalVehicles, _totalWarehouses;
+    private List<ShipmentDto> _recentShipments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthSvc.GetCurrentUserAsync();
+        _userName = user?.Name ?? "User";
+
+        try
+        {
+            var shipments = await Api.GetShipmentsAsync();
+            _totalShipments = shipments.Count;
+            _pendingShipments = shipments.Count(s => s.Status == "Pending");
+            _deliveredShipments = shipments.Count(s => s.Status == "Delivered");
+            _recentShipments = shipments.Take(8).ToList();
+
+            var drivers = await Api.GetDriversAsync();
+            _totalDrivers = drivers.Count;
+
+            var vehicles = await Api.GetVehiclesAsync();
+            _totalVehicles = vehicles.Count;
+
+            var warehouses = await Api.GetWarehousesAsync();
+            _totalWarehouses = warehouses.Count;
+        }
+        catch { /* insufficient permissions — show zeros */ }
+
+        _loading = false;
+    }
+
+    private void NavToShipment(Guid id) => Nav.NavigateTo("/shipments/" + id);
+
+    private static string GetStatusClass(string status) =>
+        "status-" + status.ToLower().Replace(" ", "");
+}

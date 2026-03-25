@@ -1,0 +1,226 @@
+@page "/drivers"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Drivers — LogisticHub</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Drivers</h1>
+        <div class="page-sub">Manage your driver workforce</div>
+    </div>
+    <button class="btn-primary-custom" @onclick="OpenCreate">
+        &#43; New Driver
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading drivers...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>License Number</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!_drivers.Any())
+                    {
+                        <tr><td colspan="4">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128101;</div>
+                                <div class="empty-state-text">No drivers registered yet.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    @foreach (var d in _drivers)
+                    {
+                        <tr>
+                            <td><strong>@d.LicenseNumber</strong></td>
+                            <td>@d.Phone</td>
+                            <td><span class="badge-status @StatusClass(d.Status)">@d.Status</span></td>
+                            <td>
+                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(d))">Edit</button>
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#ef4444;border-color:#ef4444" @onclick="@(() => ConfirmDelete(d))">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ── Create / Edit Dialog ── *@
+@if (_showForm)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">@(_isEdit ? "Edit Driver" : "New Driver")</span>
+                <button class="btn-logout" @onclick="CloseForm">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                @if (!_isEdit)
+                {
+                    <div class="form-group">
+                        <label class="form-label">User ID</label>
+                        <input class="form-control-custom" @bind="_createReq.UserId" placeholder="User GUID to register as driver" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">License Number</label>
+                        <input class="form-control-custom" @bind="_createReq.LicenseNumber" placeholder="DL-12345678" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input class="form-control-custom" @bind="_createReq.Phone" placeholder="+1 555-0100" />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label class="form-label">License Number</label>
+                        <input class="form-control-custom" @bind="_updateReq.LicenseNumber" placeholder="DL-12345678" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input class="form-control-custom" @bind="_updateReq.Phone" placeholder="+1 555-0100" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-control-custom" @bind="_updateReq.Status">
+                            <option value="Available">Available</option>
+                            <option value="OnTrip">On Trip</option>
+                            <option value="OffDuty">Off Duty</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                }
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="CloseForm">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="SaveAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        @(_isEdit ? "Update" : "Create")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Delete Confirmation ── *@
+@if (_showDelete)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:400px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Confirm Delete</span>
+                <button class="btn-logout" @onclick="() => _showDelete = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                <p>Are you sure you want to delete driver <strong>@_deleteTarget?.LicenseNumber</strong>?</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showDelete = false">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#ef4444" @onclick="DeleteAsync" disabled="@_saving">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showForm;
+    private bool _showDelete;
+    private bool _isEdit;
+    private bool _saving;
+    private string _formError = string.Empty;
+    private List<DriverDto> _drivers = new();
+    private CreateDriverRequest _createReq = new();
+    private UpdateDriverRequest _updateReq = new();
+    private DriverDto? _editTarget;
+    private DriverDto? _deleteTarget;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _drivers = await Api.GetDriversAsync(); } catch { }
+        _loading = false;
+    }
+
+    private void OpenCreate()
+    {
+        _isEdit = false;
+        _createReq = new();
+        _formError = string.Empty;
+        _showForm = true;
+    }
+
+    private void OpenEdit(DriverDto d)
+    {
+        _isEdit = true;
+        _editTarget = d;
+        _updateReq = new() { LicenseNumber = d.LicenseNumber, Phone = d.Phone, Status = d.Status };
+        _formError = string.Empty;
+        _showForm = true;
+    }
+
+    private void CloseForm() => _showForm = false;
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+
+        if (_isEdit && _editTarget != null)
+        {
+            var ok = await Api.UpdateDriverAsync(_editTarget.Id, _updateReq);
+            if (ok)
+            {
+                _editTarget.LicenseNumber = _updateReq.LicenseNumber ?? _editTarget.LicenseNumber;
+                _editTarget.Phone = _updateReq.Phone ?? _editTarget.Phone;
+                _editTarget.Status = _updateReq.Status ?? _editTarget.Status;
+                _showForm = false;
+            }
+            else _formError = "Failed to update driver.";
+        }
+        else
+        {
+            var result = await Api.CreateDriverAsync(_createReq);
+            if (result != null) { _drivers.Insert(0, result); _showForm = false; }
+            else _formError = "Failed to create driver. Check the User ID.";
+        }
+
+        _saving = false;
+    }
+
+    private void ConfirmDelete(DriverDto d) { _deleteTarget = d; _showDelete = true; }
+
+    private async Task DeleteAsync()
+    {
+        if (_deleteTarget == null) return;
+        _saving = true;
+        var ok = await Api.DeleteDriverAsync(_deleteTarget.Id);
+        if (ok) _drivers.Remove(_deleteTarget);
+        _showDelete = false;
+        _saving = false;
+    }
+
+    private static string StatusClass(string s) => "status-" + s.ToLower().Replace(" ", "");
+}

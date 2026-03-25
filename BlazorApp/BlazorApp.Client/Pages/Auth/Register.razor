@@ -1,0 +1,84 @@
+@page "/register"
+@layout AuthLayout
+
+@inject AuthService AuthSvc
+@inject NavigationManager Nav
+
+<PageTitle>Create Account — LogisticHub</PageTitle>
+
+<div class="auth-card">
+    <div class="auth-logo">
+        <div class="auth-logo-icon">&#128666;</div>
+        <div>
+            <div class="auth-logo-text">LogisticHub</div>
+            <div class="auth-logo-sub">Fleet Management Platform</div>
+        </div>
+    </div>
+
+    <h1 class="auth-title">Create account</h1>
+    <p class="auth-subtitle">Get started with LogisticHub today</p>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="alert-custom alert-error">&#9888; @_error</div>
+    }
+
+    @if (_success)
+    {
+        <div class="alert-custom alert-success">
+            &#10003; Account created! <a href="/login">Sign in now</a>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label class="form-label">Full name</label>
+                <InputText class="form-control-custom" @bind-Value="_model.Name" placeholder="John Doe" autocomplete="name" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email address</label>
+                <InputText class="form-control-custom" @bind-Value="_model.Email" placeholder="you@company.com" type="email" autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <InputText class="form-control-custom" @bind-Value="_model.Password" placeholder="Min. 8 characters" type="password" autocomplete="new-password" />
+            </div>
+
+            <button type="submit" class="btn-primary-custom btn-full" disabled="@_loading">
+                @if (_loading) { <span class="spinner" style="border-top-color:#fff"></span> }
+                @(_loading ? "Creating account..." : "Create account")
+            </button>
+        </EditForm>
+    }
+
+    <div class="divider">or</div>
+
+    <p style="text-align:center; font-size:.875rem; color:var(--text-muted)">
+        Already have an account?
+        <a href="/login" style="font-weight:600">Sign in</a>
+    </p>
+</div>
+
+@code {
+    private readonly RegisterRequest _model = new();
+    private bool _loading;
+    private bool _success;
+    private string _error = string.Empty;
+
+    private async Task HandleRegister()
+    {
+        _loading = true;
+        _error = string.Empty;
+
+        var ok = await AuthSvc.RegisterAsync(_model);
+        if (ok) _success = true;
+        else _error = "Registration failed. Email may already be in use.";
+
+        _loading = false;
+    }
+}

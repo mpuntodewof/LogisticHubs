@@ -1,0 +1,149 @@
+@inherits LayoutComponentBase
+@inject AuthService AuthSvc
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+
+@if (!_authChecked)
+{
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0F172A">
+        <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
+    </div>
+}
+else
+{
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">&#128666;</div>
+                <div>
+                    <div class="brand-name">LogisticHub</div>
+                    <div class="brand-sub">Fleet Management</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">Main</div>
+            <NavLink class="nav-item-link" href="/dashboard" Match="NavLinkMatch.All">
+                <span class="nav-icon">&#128202;</span> Dashboard
+            </NavLink>
+            <NavLink class="nav-item-link" href="/shipments">
+                <span class="nav-icon">&#128230;</span> Shipments
+            </NavLink>
+
+            @if (_canManageDrivers || _canManageVehicles || _canManageWarehouses)
+            {
+                <div class="sidebar-section">Fleet</div>
+                @if (_canManageDrivers)
+                {
+                    <NavLink class="nav-item-link" href="/drivers">
+                        <span class="nav-icon">&#128101;</span> Drivers
+                    </NavLink>
+                }
+                @if (_canManageVehicles)
+                {
+                    <NavLink class="nav-item-link" href="/vehicles">
+                        <span class="nav-icon">&#128663;</span> Vehicles
+                    </NavLink>
+                }
+                @if (_canManageWarehouses)
+                {
+                    <NavLink class="nav-item-link" href="/warehouses">
+                        <span class="nav-icon">&#127970;</span> Warehouses
+                    </NavLink>
+                }
+            }
+
+            <div class="sidebar-section">Account</div>
+            @if (_canReadUsers)
+            {
+                <NavLink class="nav-item-link" href="/users">
+                    <span class="nav-icon">&#128100;</span> Users
+                </NavLink>
+            }
+            @if (_canManageRoles)
+            {
+                <NavLink class="nav-item-link" href="/roles">
+                    <span class="nav-icon">&#128272;</span> Roles
+                </NavLink>
+            }
+            <NavLink class="nav-item-link" href="/profile">
+                <span class="nav-icon">&#128736;</span> Profile
+            </NavLink>
+
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <div class="user-avatar">@_initials</div>
+                    <div>
+                        <div class="user-name">@_userName</div>
+                        <div class="user-role">@_userRole</div>
+                    </div>
+                    <button class="btn-primary-custom" style="padding:.4rem 1rem;font-size:.75rem;margin-left:auto" @onclick="LogoutAsync">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <div class="page-content">
+                @Body
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _authChecked;
+    private string _userName = "User";
+    private string _userRole = "";
+    private string _initials = "U";
+    private bool _canManageDrivers;
+    private bool _canManageVehicles;
+    private bool _canManageWarehouses;
+    private bool _canReadUsers;
+    private bool _canManageRoles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Everything runs in WASM now (no SSR), so localStorage is always available.
+        var state = await AuthState.GetAuthenticationStateAsync();
+        var isAuth = state.User.Identity?.IsAuthenticated == true;
+
+        if (!isAuth)
+        {
+            // Token is missing or expired — clean up stale cached data to prevent
+            // Login page from seeing old user_info and bouncing back here.
+            await AuthSvc.LogoutAsync();
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        var user = await AuthSvc.GetCurrentUserAsync();
+        if (user == null)
+        {
+            await AuthSvc.LogoutAsync();
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        _userName = user.Name;
+        _userRole = user.Roles.FirstOrDefault() ?? "Viewer";
+        _initials = string.Concat(user.Name.Split(' ').Select(w => w.FirstOrDefault())).ToUpper();
+        if (_initials.Length > 2) _initials = _initials[..2];
+
+        var permissions = state.User.Claims
+            .Where(c => c.Type == "permissions")
+            .Select(c => c.Value)
+            .ToHashSet();
+        _canManageDrivers = permissions.Contains("drivers.manage");
+        _canManageVehicles = permissions.Contains("vehicles.manage");
+        _canManageWarehouses = permissions.Contains("warehouses.manage");
+        _canReadUsers = permissions.Contains("users.read");
+        _canManageRoles = permissions.Contains("roles.read");
+
+        _authChecked = true;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthSvc.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

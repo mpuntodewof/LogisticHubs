@@ -1,0 +1,49 @@
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+
+@if (_checked && _isAuthenticated)
+{
+    @ChildContent
+}
+else if (_checked && !_isAuthenticated)
+{
+    <div></div>
+}
+else
+{
+    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+        <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _checked;
+    private bool _isAuthenticated;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var state = await AuthState.GetAuthenticationStateAsync();
+            _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+        }
+        catch
+        {
+            _isAuthenticated = false;
+        }
+
+        _checked = true;
+
+        if (!_isAuthenticated)
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
+
+        StateHasChanged();
+    }
+}

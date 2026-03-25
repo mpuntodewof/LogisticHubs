@@ -1,0 +1,419 @@
+@page "/roles"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject AuthService AuthSvc
+
+<PageTitle>Roles — LogisticHub</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Roles</h1>
+        <div class="page-sub">Manage roles and permissions</div>
+    </div>
+    @if (_isAdmin)
+    {
+        <button class="btn-primary-custom" @onclick="OpenCreate">
+            &#43; New Role
+        </button>
+    }
+</div>
+
+@* ── Filters ── *@
+<div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+            <input class="form-control-custom" placeholder="Search by role name..." @bind="_searchTerm" @bind:event="oninput" @onkeyup="ApplyFilter" />
+        </div>
+        <div class="form-group" style="margin:0">
+            <select class="form-control-custom" style="min-width:150px" @bind="_typeFilter" @bind:after="ApplyFilter">
+                <option value="">All Types</option>
+                <option value="system">System</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading roles...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th @onclick='() => SetSort("name")' style="cursor:pointer">Name @SortIcon("name")</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th @onclick='() => SetSort("permissions")' style="cursor:pointer">Permissions @SortIcon("permissions")</th>
+                        @if (_isAdmin)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!_filtered.Any())
+                    {
+                        <tr><td colspan="@(_isAdmin ? 5 : 4)">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128272;</div>
+                                <div class="empty-state-text">No roles found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    @foreach (var r in _filtered)
+                    {
+                        <tr>
+                            <td><strong>@r.Name</strong></td>
+                            <td style="color:#64748b">@(r.Description ?? "—")</td>
+                            <td>
+                                @if (r.IsSystem)
+                                {
+                                    <span class="badge-status status-admin">&#128274; System</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status status-pending">Custom</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge-status status-active">@r.Permissions.Count permissions</span>
+                            </td>
+                            @if (_isAdmin)
+                            {
+                                <td>
+                                    <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                        <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(r))">Edit</button>
+                                        <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#2563eb;border-color:#2563eb" @onclick="@(() => OpenPermissions(r))">Permissions</button>
+                                        @if (!r.IsSystem)
+                                        {
+                                            <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#ef4444;border-color:#ef4444" @onclick="@(() => ConfirmDelete(r))">Delete</button>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ── Create Role Dialog ── *@
+@if (_showCreate)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">New Role</span>
+                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Role Name</label>
+                    <input class="form-control-custom" @bind="_createReq.Name" placeholder="e.g. Dispatcher" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control-custom" @bind="_createReq.Description" placeholder="Describe what this role is for..." rows="3" style="resize:vertical"></textarea>
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="CreateRoleAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Edit Role Dialog ── *@
+@if (_showEdit)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Edit Role</span>
+                <button class="btn-logout" @onclick="() => _showEdit = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Role Name</label>
+                    <input class="form-control-custom" @bind="_updateReq.Name" disabled="@(_editTarget?.IsSystem == true)" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control-custom" @bind="_updateReq.Description" rows="3" style="resize:vertical"></textarea>
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showEdit = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="UpdateRoleAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Manage Permissions Dialog ── *@
+@if (_showPermissions)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:560px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Permissions — @_permTarget?.Name</span>
+                <button class="btn-logout" @onclick="() => _showPermissions = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom" style="overflow-y:auto;flex:1">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                @foreach (var group in _allPermissions.GroupBy(p => p.Resource).OrderBy(g => g.Key))
+                {
+                    <div style="margin-bottom:1rem">
+                        <div style="font-weight:600;text-transform:capitalize;font-size:.85rem;color:#334155;margin-bottom:.4rem;border-bottom:1px solid #e2e8f0;padding-bottom:.3rem">
+                            @group.Key
+                        </div>
+                        @foreach (var perm in group.OrderBy(p => p.Action))
+                        {
+                            <label style="display:flex;align-items:center;gap:.5rem;padding:.35rem 0;cursor:pointer;font-size:.875rem">
+                                <input type="checkbox"
+                                       checked="@_selectedPermissionIds.Contains(perm.Id)"
+                                       @onchange="@(e => TogglePermission(perm.Id, (bool)(e.Value ?? false)))"
+                                       style="width:16px;height:16px;accent-color:#2563eb" />
+                                <span style="text-transform:capitalize">@perm.Action</span>
+                                <span style="color:#94a3b8;font-size:.75rem;margin-left:auto">@perm.Name</span>
+                            </label>
+                        }
+                    </div>
+                }
+            </div>
+            <div style="padding:1rem;border-top:1px solid #e2e8f0;display:flex;gap:.75rem;justify-content:flex-end">
+                <button class="btn-outline" @onclick="() => _showPermissions = false">Cancel</button>
+                <button class="btn-primary-custom" @onclick="SavePermissionsAsync" disabled="@_saving">
+                    @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                    Save Permissions
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Delete Confirmation ── *@
+@if (_showDelete)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:400px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Confirm Delete</span>
+                <button class="btn-logout" @onclick="() => _showDelete = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                <p>Are you sure you want to delete role <strong>@_deleteTarget?.Name</strong>? Users assigned to this role will lose it.</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showDelete = false">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#ef4444" @onclick="DeleteRoleAsync" disabled="@_saving">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _showEdit;
+    private bool _showPermissions;
+    private bool _showDelete;
+    private bool _saving;
+    private bool _isAdmin;
+    private string _formError = string.Empty;
+    private string _searchTerm = string.Empty;
+    private string _typeFilter = string.Empty;
+    private string _sortColumn = "name";
+    private bool _sortAsc = true;
+
+    private List<RoleDto> _roles = new();
+    private List<RoleDto> _filtered = new();
+    private List<PermissionDto> _allPermissions = new();
+    private HashSet<Guid> _selectedPermissionIds = new();
+
+    private CreateRoleRequest _createReq = new();
+    private UpdateRoleRequest _updateReq = new();
+    private RoleDto? _editTarget;
+    private RoleDto? _permTarget;
+    private RoleDto? _deleteTarget;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthSvc.GetCurrentUserAsync();
+        _isAdmin = user?.Roles.Contains("Admin") ?? false;
+
+        try
+        {
+            _roles = await Api.GetRolesAsync();
+            _allPermissions = await Api.GetPermissionsAsync();
+        }
+        catch { }
+
+        ApplyFilter();
+        _loading = false;
+    }
+
+    // ── Filter & Sort ───────────────────────────────────────────────────────
+
+    private void ApplyFilter()
+    {
+        var q = _roles.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            var term = _searchTerm.Trim().ToLower();
+            q = q.Where(r => r.Name.ToLower().Contains(term));
+        }
+
+        if (_typeFilter == "system") q = q.Where(r => r.IsSystem);
+        else if (_typeFilter == "custom") q = q.Where(r => !r.IsSystem);
+
+        q = _sortColumn switch
+        {
+            "permissions" => _sortAsc ? q.OrderBy(r => r.Permissions.Count) : q.OrderByDescending(r => r.Permissions.Count),
+            _ => _sortAsc ? q.OrderBy(r => r.Name) : q.OrderByDescending(r => r.Name),
+        };
+
+        _filtered = q.ToList();
+    }
+
+    private void SetSort(string col)
+    {
+        if (_sortColumn == col) _sortAsc = !_sortAsc;
+        else { _sortColumn = col; _sortAsc = true; }
+        ApplyFilter();
+    }
+
+    private string SortIcon(string col) => _sortColumn == col ? (_sortAsc ? "\u25B2" : "\u25BC") : "";
+
+    // ── Create ──────────────────────────────────────────────────────────────
+
+    private void OpenCreate()
+    {
+        _createReq = new();
+        _formError = string.Empty;
+        _showCreate = true;
+    }
+
+    private async Task CreateRoleAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+        var role = await Api.CreateRoleAsync(_createReq);
+        if (role != null)
+        {
+            _roles.Add(role);
+            ApplyFilter();
+            _showCreate = false;
+        }
+        else _formError = "Failed to create role. Name may already exist.";
+        _saving = false;
+    }
+
+    // ── Edit ────────────────────────────────────────────────────────────────
+
+    private void OpenEdit(RoleDto r)
+    {
+        _editTarget = r;
+        _updateReq = new() { Name = r.Name, Description = r.Description };
+        _formError = string.Empty;
+        _showEdit = true;
+    }
+
+    private async Task UpdateRoleAsync()
+    {
+        if (_editTarget == null) return;
+        _saving = true;
+        _formError = string.Empty;
+
+        var req = new UpdateRoleRequest { Description = _updateReq.Description };
+        if (!(_editTarget.IsSystem)) req.Name = _updateReq.Name;
+
+        var ok = await Api.UpdateRoleAsync(_editTarget.Id, req);
+        if (ok)
+        {
+            try { _roles = await Api.GetRolesAsync(); } catch { }
+            ApplyFilter();
+            _showEdit = false;
+        }
+        else _formError = "Failed to update role.";
+        _saving = false;
+    }
+
+    // ── Permissions ─────────────────────────────────────────────────────────
+
+    private void OpenPermissions(RoleDto r)
+    {
+        _permTarget = r;
+        _selectedPermissionIds = r.Permissions.Select(p => p.Id).ToHashSet();
+        _formError = string.Empty;
+        _showPermissions = true;
+    }
+
+    private void TogglePermission(Guid permId, bool isChecked)
+    {
+        if (isChecked) _selectedPermissionIds.Add(permId);
+        else _selectedPermissionIds.Remove(permId);
+    }
+
+    private async Task SavePermissionsAsync()
+    {
+        if (_permTarget == null) return;
+        _saving = true;
+        _formError = string.Empty;
+
+        var ok = await Api.UpdateRolePermissionsAsync(_permTarget.Id, new UpdateRolePermissionsRequest
+        {
+            PermissionIds = _selectedPermissionIds.ToList()
+        });
+
+        if (ok)
+        {
+            try { _roles = await Api.GetRolesAsync(); } catch { }
+            ApplyFilter();
+            _showPermissions = false;
+        }
+        else _formError = "Failed to update permissions.";
+        _saving = false;
+    }
+
+    // ── Delete ──────────────────────────────────────────────────────────────
+
+    private void ConfirmDelete(RoleDto r) { _deleteTarget = r; _showDelete = true; }
+
+    private async Task DeleteRoleAsync()
+    {
+        if (_deleteTarget == null) return;
+        _saving = true;
+        var ok = await Api.DeleteRoleAsync(_deleteTarget.Id);
+        if (ok) { _roles.Remove(_deleteTarget); ApplyFilter(); }
+        _showDelete = false;
+        _saving = false;
+    }
+}

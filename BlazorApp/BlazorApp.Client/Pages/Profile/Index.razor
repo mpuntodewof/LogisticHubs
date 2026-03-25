@@ -1,0 +1,100 @@
+@page "/profile"
+@layout AppLayout
+
+
+@inject AuthService AuthSvc
+@inject NavigationManager Nav
+
+<PageTitle>Profile — LogisticHub</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">My Profile</h1>
+        <div class="page-sub">Your account information</div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading profile...</div>
+}
+else if (_user != null)
+{
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start">
+        @* ── Profile Card ── *@
+        <div class="card" style="text-align:center;padding:2rem 1.5rem">
+            <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:2.2rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                @_initials
+            </div>
+            <h2 style="margin:0 0 .25rem;font-size:1.3rem;color:#fff">@_user.Name</h2>
+            <div style="color:#94a3b8;font-size:.9rem;margin-bottom:1rem">@_user.Email</div>
+            <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap">
+                @foreach (var role in _user.Roles)
+                {
+                    <span class="badge-status @RoleBadge(role)">@role</span>
+                }
+                @if (!_user.Roles.Any())
+                {
+                    <span class="badge-status status-pending">No roles assigned</span>
+                }
+            </div>
+        </div>
+
+        @* ── Details Card ── *@
+        <div class="card" style="padding:1.5rem">
+            <h3 style="margin:0 0 1.25rem;color:#fff;font-size:1.1rem;border-bottom:1px solid #334155;padding-bottom:.75rem">Account Details</h3>
+            <div style="display:grid;gap:1rem">
+                <div class="profile-row">
+                    <span class="profile-label">Full Name</span>
+                    <span class="profile-value">@_user.Name</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Email Address</span>
+                    <span class="profile-value">@_user.Email</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">User ID</span>
+                    <span class="profile-value" style="font-family:monospace;font-size:.8rem">@_user.Id</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Roles</span>
+                    <span class="profile-value">
+                        @if (_user.Roles.Any())
+                        {
+                            @string.Join(", ", _user.Roles)
+                        }
+                        else
+                        {
+                            <span style="color:#666">None</span>
+                        }
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private UserInfo? _user;
+    private string _initials = "U";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await AuthSvc.GetCurrentUserAsync();
+        if (_user == null) return;
+
+        _initials = string.Concat(_user.Name.Split(' ').Select(w => w.FirstOrDefault())).ToUpper();
+        if (_initials.Length > 2) _initials = _initials[..2];
+
+        _loading = false;
+    }
+
+    private static string RoleBadge(string role) => role switch
+    {
+        "Admin" => "status-admin",
+        "Manager" => "status-manager",
+        "Driver" => "status-ontrip",
+        _ => "status-pending"
+    };
+}

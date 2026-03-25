@@ -1,0 +1,369 @@
+@page "/shipments/{Id:guid}"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Shipment Detail — LogisticHub</PageTitle>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
+}
+else if (_shipment == null)
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128230;</div>
+        <div class="empty-state-text">Shipment not found.</div>
+        <a href="/shipments" class="btn-outline" style="margin-top:1rem">Back to Shipments</a>
+    </div>
+}
+else
+{
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">@_shipment.TrackingNumber</h1>
+            <div class="page-sub">
+                <span class="badge-status @StatusClass(_shipment.Status)">@_shipment.Status</span>
+                &nbsp; Created @_shipment.CreatedAt.ToString("MMM d, yyyy HH:mm")
+            </div>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+            @if (_canAssign && _shipment.Status != "Delivered" && _shipment.Status != "Cancelled")
+            {
+                <button class="btn-primary-custom" @onclick="OpenAssignModal">&#128100; Assign</button>
+            }
+            @if (_canTrack && _shipment.Status != "Pending" && _shipment.Status != "Delivered" && _shipment.Status != "Cancelled")
+            {
+                <button class="btn-primary-custom" style="background:#16A34A" @onclick="OpenTrackingModal">&#128205; Add Tracking</button>
+            }
+            <a href="/shipments" class="btn-outline">&#8592; Back</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_successMsg))
+    {
+        <div class="alert-custom alert-success" style="margin-bottom:1rem">@_successMsg</div>
+    }
+    @if (!string.IsNullOrEmpty(_errorMsg))
+    {
+        <div class="alert-custom alert-error" style="margin-bottom:1rem">@_errorMsg</div>
+    }
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div class="card card-body-custom">
+            <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Shipment Info</div>
+            <div style="display:grid;gap:.6rem">
+                <div><span style="color:var(--text-muted);font-size:.8rem">Destination</span><br/><strong>@_shipment.DestinationAddress</strong></div>
+                <div><span style="color:var(--text-muted);font-size:.8rem">Weight</span><br/><strong>@_shipment.Weight.ToString("F1") kg</strong></div>
+                <div><span style="color:var(--text-muted);font-size:.8rem">Volume</span><br/><strong>@_shipment.Volume.ToString("F2") m³</strong></div>
+            </div>
+        </div>
+
+        <div class="card card-body-custom">
+            <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Tracking History</div>
+            @if (!_events.Any())
+            {
+                <div class="empty-state" style="padding:1rem">
+                    <div class="empty-state-icon" style="font-size:1.5rem">&#128207;</div>
+                    <div class="empty-state-text">No tracking events yet</div>
+                </div>
+            }
+            else
+            {
+                <div class="timeline">
+                    @foreach (var e in _events)
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-time">@e.CreatedAt.ToString("MMM d, HH:mm")</div>
+                            <div class="timeline-status">@e.Status</div>
+                            @if (!string.IsNullOrEmpty(e.Location))
+                            {
+                                <div class="timeline-location">&#128205; @e.Location</div>
+                            }
+                            @if (!string.IsNullOrEmpty(e.Notes))
+                            {
+                                <div style="font-size:.8rem;color:var(--text-muted);font-style:italic">@e.Notes</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@* ── Assign Driver/Vehicle Modal ──────────────────────────────────────────── *@
+@if (_showAssignModal)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000" @onclick="CloseModals">
+        <div class="card" style="width:480px;max-width:95vw" @onclick:stopPropagation>
+            <div class="card-header-custom">
+                <h3 style="margin:0;font-size:1rem">Assign Driver & Vehicle</h3>
+                <button class="btn-close" @onclick="CloseModals">&times;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error" style="margin-bottom:1rem">@_formError</div>
+                }
+
+                <div class="form-group">
+                    <label class="form-label">Driver</label>
+                    <select class="form-control-custom" @bind="_assignRequest.DriverId">
+                        <option value="@Guid.Empty">-- Select a driver --</option>
+                        @foreach (var d in _drivers.Where(d => d.Status == "Available"))
+                        {
+                            <option value="@d.Id">@d.LicenseNumber — @d.Phone</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vehicle</label>
+                    <select class="form-control-custom" @bind="_assignRequest.VehicleId">
+                        <option value="@Guid.Empty">-- Select a vehicle --</option>
+                        @foreach (var v in _vehicles.Where(v => v.Status == "Available" && v.CapacityWeight >= _shipment!.Weight && v.CapacityVolume >= _shipment.Volume))
+                        {
+                            <option value="@v.Id">@v.PlateNumber — @v.VehicleType (@v.CapacityWeight.ToString("F0") kg / @v.CapacityVolume.ToString("F1") m³)</option>
+                        }
+                    </select>
+                    @if (!_vehicles.Any(v => v.Status == "Available" && v.CapacityWeight >= _shipment!.Weight && v.CapacityVolume >= _shipment.Volume))
+                    {
+                        <div style="font-size:.8rem;color:var(--danger);margin-top:.25rem">No vehicles have enough capacity for this shipment (@_shipment!.Weight.ToString("F1") kg / @_shipment.Volume.ToString("F2") m³).</div>
+                    }
+                    else
+                    {
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem">Only vehicles with capacity >= @_shipment!.Weight.ToString("F1") kg and >= @_shipment.Volume.ToString("F2") m³ are shown.</div>
+                    }
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem">
+                    <button class="btn-outline" @onclick="CloseModals">Cancel</button>
+                    <button class="btn-primary-custom" disabled="@_submitting" @onclick="HandleAssign">
+                        @(_submitting ? "Assigning..." : "Assign")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Add Tracking Event Modal ─────────────────────────────────────────────── *@
+@if (_showTrackingModal)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000" @onclick="CloseModals">
+        <div class="card" style="width:480px;max-width:95vw" @onclick:stopPropagation>
+            <div class="card-header-custom">
+                <h3 style="margin:0;font-size:1rem">Add Tracking Event</h3>
+                <button class="btn-close" @onclick="CloseModals">&times;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error" style="margin-bottom:1rem">@_formError</div>
+                }
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-control-custom" @bind="_trackingRequest.Status">
+                        <option value="">-- Select status --</option>
+                        <option value="PickedUp">Picked Up</option>
+                        <option value="InTransit">In Transit</option>
+                        <option value="OutForDelivery">Out for Delivery</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Failed">Failed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input class="form-control-custom" placeholder="e.g. Highway I-95, Central Depot" @bind="_trackingRequest.Location" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea class="form-control-custom" rows="3" placeholder="Additional details..." @bind="_trackingRequest.Notes"></textarea>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem">
+                    <button class="btn-outline" @onclick="CloseModals">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#16A34A" disabled="@_submitting" @onclick="HandleAddTracking">
+                        @(_submitting ? "Saving..." : "Add Event")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private bool _loading = true;
+    private ShipmentDto? _shipment;
+    private List<TrackingEventDto> _events = new();
+
+    // Permissions
+    private bool _canAssign;
+    private bool _canTrack;
+
+    // Assign modal
+    private bool _showAssignModal;
+    private AssignShipmentRequest _assignRequest = new();
+    private List<DriverDto> _drivers = new();
+    private List<VehicleDto> _vehicles = new();
+
+    // Tracking modal
+    private bool _showTrackingModal;
+    private AddTrackingEventRequest _trackingRequest = new();
+
+    // UI state
+    private bool _submitting;
+    private string? _formError;
+    private string? _successMsg;
+    private string? _errorMsg;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load permissions from JWT
+            var state = await AuthState.GetAuthenticationStateAsync();
+            var permissions = state.User.Claims
+                .Where(c => c.Type == "permissions")
+                .Select(c => c.Value)
+                .ToHashSet();
+            _canAssign = permissions.Contains("shipments.assign");
+            _canTrack = permissions.Contains("tracking.create");
+
+            // Load shipment + tracking
+            _shipment = await Api.GetShipmentAsync(Id);
+            if (_shipment != null)
+                _events = await Api.GetTrackingAsync(Id);
+        }
+        catch { }
+
+        _loading = false;
+    }
+
+    // ── Assign ──────────────────────────────────────────────────────────────
+
+    private async Task OpenAssignModal()
+    {
+        _formError = null;
+        _assignRequest = new();
+
+        try
+        {
+            _drivers = await Api.GetDriversAsync();
+            _vehicles = await Api.GetVehiclesAsync();
+        }
+        catch
+        {
+            _errorMsg = "Failed to load drivers/vehicles.";
+            return;
+        }
+
+        _showAssignModal = true;
+    }
+
+    private async Task HandleAssign()
+    {
+        _formError = null;
+
+        if (_assignRequest.DriverId == Guid.Empty)
+        {
+            _formError = "Please select a driver.";
+            return;
+        }
+        if (_assignRequest.VehicleId == Guid.Empty)
+        {
+            _formError = "Please select a vehicle.";
+            return;
+        }
+
+        _submitting = true;
+        try
+        {
+            var ok = await Api.AssignShipmentAsync(Id, _assignRequest);
+            if (ok)
+            {
+                _showAssignModal = false;
+                _successMsg = "Driver and vehicle assigned successfully.";
+                _shipment = await Api.GetShipmentAsync(Id);
+                _events = await Api.GetTrackingAsync(Id);
+            }
+            else
+            {
+                _formError = "Assignment failed. The shipment may already be delivered or cancelled.";
+            }
+        }
+        catch
+        {
+            _formError = "An unexpected error occurred.";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    // ── Add Tracking ────────────────────────────────────────────────────────
+
+    private void OpenTrackingModal()
+    {
+        _formError = null;
+        _trackingRequest = new();
+        _showTrackingModal = true;
+    }
+
+    private async Task HandleAddTracking()
+    {
+        _formError = null;
+
+        if (string.IsNullOrEmpty(_trackingRequest.Status))
+        {
+            _formError = "Please select a status.";
+            return;
+        }
+
+        _submitting = true;
+        try
+        {
+            var result = await Api.AddTrackingEventAsync(Id, _trackingRequest);
+            if (result != null)
+            {
+                _showTrackingModal = false;
+                _successMsg = $"Tracking event '{result.Status}' added.";
+                _shipment = await Api.GetShipmentAsync(Id);
+                _events = await Api.GetTrackingAsync(Id);
+            }
+            else
+            {
+                _formError = "Failed to add tracking event.";
+            }
+        }
+        catch
+        {
+            _formError = "An unexpected error occurred.";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private void CloseModals()
+    {
+        _showAssignModal = false;
+        _showTrackingModal = false;
+        _formError = null;
+    }
+
+    private static string StatusClass(string s) => "status-" + s.ToLower().Replace(" ", "");
+}

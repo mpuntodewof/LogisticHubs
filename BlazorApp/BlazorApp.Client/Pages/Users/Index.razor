@@ -1,0 +1,442 @@
+@page "/users"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Users — LogisticHub</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Users</h1>
+        <div class="page-sub">Manage user accounts and roles</div>
+    </div>
+    @if (_isAdmin)
+    {
+        <button class="btn-primary-custom" @onclick="OpenCreate">
+            &#43; New User
+        </button>
+    }
+</div>
+
+@* ── Filters ── *@
+<div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+            <input class="form-control-custom" placeholder="Search by name or email..." @bind="_searchTerm" @bind:event="oninput" @onkeyup="ApplyFilter" />
+        </div>
+        <div class="form-group" style="margin:0">
+            <select class="form-control-custom" style="min-width:150px" @bind="_roleFilter" @bind:after="ApplyFilter">
+                <option value="">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Manager">Manager</option>
+                <option value="Driver">Driver</option>
+                <option value="Viewer">Viewer</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin:0">
+            <select class="form-control-custom" style="min-width:130px" @bind="_statusFilter" @bind:after="ApplyFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading users...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th @onclick='() => SetSort("name")' style="cursor:pointer">Name @SortIcon("name")</th>
+                        <th @onclick='() => SetSort("email")' style="cursor:pointer">Email @SortIcon("email")</th>
+                        <th>Roles</th>
+                        <th @onclick='() => SetSort("status")' style="cursor:pointer">Status @SortIcon("status")</th>
+                        <th @onclick='() => SetSort("created")' style="cursor:pointer">Created @SortIcon("created")</th>
+                        @if (_isAdmin)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!_filtered.Any())
+                    {
+                        <tr><td colspan="@(_isAdmin ? 6 : 5)">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128100;</div>
+                                <div class="empty-state-text">No users found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    @foreach (var u in _filtered)
+                    {
+                        <tr>
+                            <td><strong>@u.Name</strong></td>
+                            <td>@u.Email</td>
+                            <td>
+                                @foreach (var r in u.Roles)
+                                {
+                                    <span class="badge-status @RoleBadge(r)" style="margin-right:.3rem">@r</span>
+                                }
+                                @if (!u.Roles.Any())
+                                {
+                                    <span style="color:#666;font-size:.8rem">No roles</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge-status @(u.IsActive ? "status-active" : "status-inactive")">
+                                    @(u.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                            @if (_isAdmin)
+                            {
+                                <td>
+                                    <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                        <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(u))">Edit</button>
+                                        <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#7c3aed;border-color:#7c3aed" @onclick="@(() => OpenManageRoles(u))">Roles</button>
+                                        <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem;color:#ef4444;border-color:#ef4444" @onclick="@(() => ConfirmDelete(u))">Delete</button>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ── Create User Dialog ── *@
+@if (_showCreate)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">New User</span>
+                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input class="form-control-custom" @bind="_createReq.Name" placeholder="John Doe" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-control-custom" type="email" @bind="_createReq.Email" placeholder="john@example.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input class="form-control-custom" type="password" @bind="_createReq.Password" placeholder="Min 8 characters" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="CreateUserAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Edit User Dialog ── *@
+@if (_showEdit)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Edit User</span>
+                <button class="btn-logout" @onclick="() => _showEdit = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input class="form-control-custom" @bind="_updateReq.Name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-control-custom" @bind="_editActive">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showEdit = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="UpdateUserAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Delete Confirmation ── *@
+@if (_showDelete)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:400px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Confirm Delete</span>
+                <button class="btn-logout" @onclick="() => _showDelete = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                <p>Are you sure you want to delete user <strong>@_deleteTarget?.Name</strong>?</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showDelete = false">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#ef4444" @onclick="DeleteUserAsync" disabled="@_saving">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Manage User Roles Dialog ── *@
+@if (_showRoles)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Roles — @_roleTarget?.Name</span>
+                <button class="btn-logout" @onclick="() => _showRoles = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_roleError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_roleError</div>
+                }
+                @if (!_allRoles.Any())
+                {
+                    <p style="color:#64748b">No roles available.</p>
+                }
+                @foreach (var role in _allRoles)
+                {
+                    var isAssigned = _roleTarget?.Roles.Contains(role.Name) ?? false;
+                    <label style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;cursor:pointer;border-bottom:1px solid #f1f5f9">
+                        <input type="checkbox"
+                               checked="@isAssigned"
+                               disabled="@_togglingRole"
+                               @onchange="@(e => ToggleUserRole(role, (bool)(e.Value ?? false)))"
+                               style="width:16px;height:16px;accent-color:#2563eb" />
+                        <div>
+                            <div style="font-weight:500">@role.Name</div>
+                            <div style="font-size:.75rem;color:#94a3b8">@(role.Description ?? "No description")</div>
+                        </div>
+                        @if (role.IsSystem)
+                        {
+                            <span style="margin-left:auto;font-size:.7rem;color:#7c3aed">System</span>
+                        }
+                    </label>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _showEdit;
+    private bool _showDelete;
+    private bool _showRoles;
+    private bool _saving;
+    private bool _isAdmin;
+    private string _formError = string.Empty;
+    private string _searchTerm = string.Empty;
+    private string _roleFilter = string.Empty;
+    private string _statusFilter = string.Empty;
+    private string _sortColumn = "name";
+    private bool _sortAsc = true;
+    private string _editActive = "true";
+
+    private List<UserDto> _users = new();
+    private List<UserDto> _filtered = new();
+    private CreateUserRequest _createReq = new();
+    private UpdateUserRequest _updateReq = new();
+    private UserDto? _editTarget;
+    private UserDto? _deleteTarget;
+    private UserDto? _roleTarget;
+    private List<RoleDto> _allRoles = new();
+    private bool _togglingRole;
+    private string _roleError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthSvc.GetCurrentUserAsync();
+        _isAdmin = user?.Roles.Contains("Admin") ?? false;
+
+        try { _users = await Api.GetUsersAsync(); } catch { }
+        try { _allRoles = await Api.GetRolesAsync(); } catch { }
+        ApplyFilter();
+        _loading = false;
+    }
+
+    private void ApplyFilter()
+    {
+        var q = _users.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            var term = _searchTerm.Trim().ToLower();
+            q = q.Where(u => u.Name.ToLower().Contains(term) || u.Email.ToLower().Contains(term));
+        }
+
+        if (!string.IsNullOrEmpty(_roleFilter))
+            q = q.Where(u => u.Roles.Contains(_roleFilter));
+
+        if (_statusFilter == "active") q = q.Where(u => u.IsActive);
+        else if (_statusFilter == "inactive") q = q.Where(u => !u.IsActive);
+
+        q = _sortColumn switch
+        {
+            "email" => _sortAsc ? q.OrderBy(u => u.Email) : q.OrderByDescending(u => u.Email),
+            "status" => _sortAsc ? q.OrderBy(u => u.IsActive) : q.OrderByDescending(u => u.IsActive),
+            "created" => _sortAsc ? q.OrderBy(u => u.CreatedAt) : q.OrderByDescending(u => u.CreatedAt),
+            _ => _sortAsc ? q.OrderBy(u => u.Name) : q.OrderByDescending(u => u.Name),
+        };
+
+        _filtered = q.ToList();
+    }
+
+    private void SetSort(string col)
+    {
+        if (_sortColumn == col) _sortAsc = !_sortAsc;
+        else { _sortColumn = col; _sortAsc = true; }
+        ApplyFilter();
+    }
+
+    private string SortIcon(string col) => _sortColumn == col ? (_sortAsc ? "\u25B2" : "\u25BC") : "";
+
+    private void OpenCreate()
+    {
+        _createReq = new();
+        _formError = string.Empty;
+        _showCreate = true;
+    }
+
+    private void OpenEdit(UserDto u)
+    {
+        _editTarget = u;
+        _updateReq = new() { Name = u.Name, IsActive = u.IsActive };
+        _editActive = u.IsActive.ToString().ToLower();
+        _formError = string.Empty;
+        _showEdit = true;
+    }
+
+    private async Task CreateUserAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+        var ok = await Api.CreateUserAsync(_createReq);
+        if (ok)
+        {
+            try { _users = await Api.GetUsersAsync(); } catch { }
+            ApplyFilter();
+            _showCreate = false;
+        }
+        else _formError = "Failed to create user. Email may already exist.";
+        _saving = false;
+    }
+
+    private async Task UpdateUserAsync()
+    {
+        if (_editTarget == null) return;
+        _saving = true;
+        _formError = string.Empty;
+        _updateReq.IsActive = _editActive == "true";
+        var ok = await Api.UpdateUserAsync(_editTarget.Id, _updateReq);
+        if (ok)
+        {
+            _editTarget.Name = _updateReq.Name ?? _editTarget.Name;
+            _editTarget.IsActive = _updateReq.IsActive ?? _editTarget.IsActive;
+            ApplyFilter();
+            _showEdit = false;
+        }
+        else _formError = "Failed to update user.";
+        _saving = false;
+    }
+
+    private void ConfirmDelete(UserDto u) { _deleteTarget = u; _showDelete = true; }
+
+    private async Task DeleteUserAsync()
+    {
+        if (_deleteTarget == null) return;
+        _saving = true;
+        var ok = await Api.DeleteUserAsync(_deleteTarget.Id);
+        if (ok) { _users.Remove(_deleteTarget); ApplyFilter(); }
+        _showDelete = false;
+        _saving = false;
+    }
+
+    // ── User Roles ────────────────────────────────────────────────────────
+
+    private void OpenManageRoles(UserDto u)
+    {
+        _roleTarget = u;
+        _roleError = string.Empty;
+        _showRoles = true;
+    }
+
+    private async Task ToggleUserRole(RoleDto role, bool assign)
+    {
+        if (_roleTarget == null) return;
+        _togglingRole = true;
+        _roleError = string.Empty;
+
+        bool ok;
+        if (assign)
+        {
+            ok = await Api.AssignUserRoleAsync(_roleTarget.Id, new AssignRoleRequest { RoleId = role.Id });
+        }
+        else
+        {
+            ok = await Api.RevokeUserRoleAsync(_roleTarget.Id, role.Id);
+        }
+
+        if (ok)
+        {
+            // Refresh user data to get updated roles
+            try
+            {
+                _users = await Api.GetUsersAsync();
+                _roleTarget = _users.FirstOrDefault(u => u.Id == _roleTarget.Id);
+                ApplyFilter();
+            }
+            catch { }
+        }
+        else
+        {
+            _roleError = assign ? "Failed to assign role." : "Failed to revoke role.";
+        }
+
+        _togglingRole = false;
+    }
+
+    private static string RoleBadge(string role) => role switch
+    {
+        "Admin" => "status-admin",
+        "Manager" => "status-manager",
+        "Driver" => "status-ontrip",
+        _ => "status-pending"
+    };
+}

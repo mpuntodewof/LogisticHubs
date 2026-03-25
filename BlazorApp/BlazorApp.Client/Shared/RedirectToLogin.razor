@@ -1,0 +1,16 @@
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        var relative = Nav.ToBaseRelativePath(Nav.Uri).Split('?')[0].TrimStart('/');
+
+        // Don't redirect if already on login or register
+        if (relative.StartsWith("login", StringComparison.OrdinalIgnoreCase) ||
+            relative.StartsWith("register", StringComparison.OrdinalIgnoreCase) ||
+            relative.StartsWith("access-denied", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        Nav.NavigateTo("/login");
+    }
+}

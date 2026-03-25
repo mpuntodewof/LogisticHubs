@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet run:*)",
+      "Bash(grep -E \"\\(Domain|Application|Infrastructure|API\\)$\")",
+      "Bash(find p:/Projects/Playground/LogisticHub/Domain -type f -name *.cs)",
+      "Bash(find p:/Projects/Playground/LogisticHub/Application -type f -name *.cs)",
+      "Bash(find p:/Projects/Playground/LogisticHub/Infrastructure -type f -name *.cs)",
+      "Bash(find p:/Projects/Playground/LogisticHub/API -type f -name *.cs)",
+      "Bash(dotnet build:*)",
+      "Bash(taskkill /PID 27700 /F)",
+      "Bash(cmd /c \"taskkill /PID 27700 /F\")",
+      "Bash(cmd /c \"taskkill /F /IM API.exe\")",
+      "Bash(cmd /c \"tasklist | findstr API\")",
+      "Bash(TaskStop)",
+      "Bash(sed -i 's/services.AddScoped<IVehicleRepository, VehicleRepository>\\(\\);/services.AddScoped<IVehicleRepository, VehicleRepository>\\(\\);\\\\n            services.AddScoped<IWarehouseRepository, WarehouseRepository>\\(\\);/' \"p:/Projects/Playground/LogisticHub/Infrastructure/DependencyInjection.cs\")",
+      "Bash(sed -i 's/services.AddScoped<Application.UseCases.Vehicles.VehicleUseCase>\\(\\);/services.AddScoped<Application.UseCases.Vehicles.VehicleUseCase>\\(\\);\\\\n            services.AddScoped<Application.UseCases.Warehouses.WarehouseUseCase>\\(\\);/' \"p:/Projects/Playground/LogisticHub/Infrastructure/DependencyInjection.cs\")",
+      "Bash(dotnet add:*)",
+      "Bash(taskkill /F /IM dotnet.exe)",
+      "Bash(taskkill //F //IM dotnet.exe)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5152/_framework/blazor.web.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5152/_framework/blazor.boot.json)",
+      "Bash(curl -s http://localhost:5152/_framework/blazor.boot.json)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''mainAssembly:'''', d.get\\(''''mainAssembly'''',''''?''''\\)\\); print\\(''''resources keys:'''', list\\(d.get\\(''''resources'''',{}\\).keys\\(\\)\\)[:5]\\)\")",
+      "Bash(node -e \"let d='''''''';process.stdin.on\\(''''data'''',c=>d+=c\\);process.stdin.on\\(''''end'''',\\(\\)=>{const b=JSON.parse\\(d\\);console.log\\(''''mainAssembly:'''',b.mainAssembly\\);console.log\\(''''cacheKey:'''',b.cacheKey\\);}\\)\")",
+      "Bash(node -e \"let d='''''''';process.stdin.on\\(''''data'''',c=>d+=c\\);process.stdin.on\\(''''end'''',\\(\\)=>{const b=JSON.parse\\(d\\);console.log\\(JSON.stringify\\(Object.keys\\(b\\)\\)\\);}\\);\")",
+      "Bash(node -e \"let d='''''''';process.stdin.on\\(''''data'''',c=>d+=c\\);process.stdin.on\\(''''end'''',\\(\\)=>{const b=JSON.parse\\(d\\);console.log\\(''''mainAssemblyName:'''',b.mainAssemblyName\\);console.log\\(''''globalizationMode:'''',b.globalizationMode\\);}\\);\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5152/)",
+      "Bash(curl -s http://localhost:5152/)",
+      "Bash(curl -s http://localhost:5152/_framework/blazor.web.js)",
+      "Bash(curl -s http://localhost:5152/login)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i '/@rendermode/d' \"$f\")",
+      "Bash(done)"
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Shipments;
 using Application.Interfaces;
 using Domain.Entities;
@@ -20,6 +21,18 @@ namespace Application.UseCases.Shipments
         {
             var shipments = await _shipmentRepository.GetAllAsync();
             return shipments.Select(MapToDto);
+        }
+
+        public async Task<PagedResult<ShipmentDto>> GetPagedAsync(PagedRequest request)
+        {
+            var paged = await _shipmentRepository.GetPagedAsync(request);
+            return new PagedResult<ShipmentDto>
+            {
+                Items = paged.Items.Select(MapToDto).ToList(),
+                TotalCount = paged.TotalCount,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
         }
 
         public async Task<ShipmentDto?> GetByIdAsync(Guid id)

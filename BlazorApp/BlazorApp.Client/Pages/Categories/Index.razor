@@ -1,0 +1,186 @@
+@page "/categories"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Categories — NiagaOne</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Categories</h1>
+        <div class="page-sub">Organize products into categories</div>
+    </div>
+    <button class="btn-primary-custom" @onclick="() => _showCreate = true">
+        &#43; New Category
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading categories...</div>
+}
+else
+{
+    <div class="card">
+        <div style="padding:.75rem 1rem;display:flex;gap:.75rem;align-items:center">
+            <input class="form-control-custom" placeholder="Search categories..." @bind="_search" @bind:event="oninput" @onkeydown="HandleSearchKey" style="max-width:300px" />
+            <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" @onclick="SearchAsync">Search</button>
+        </div>
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th>Parent</th>
+                        <th>Sort Order</th>
+                        <th>Active</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_pagedResult == null || !_pagedResult.Items.Any())
+                    {
+                        <tr><td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128193;</div>
+                                <div class="empty-state-text">No categories found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in _pagedResult.Items)
+                        {
+                            <tr>
+                                <td><strong>@c.Name</strong></td>
+                                <td>@c.Slug</td>
+                                <td>@(c.ParentCategoryName ?? "—")</td>
+                                <td>@c.SortOrder</td>
+                                <td><span class="badge-status @(c.IsActive ? "status-active" : "status-inactive")">@(c.IsActive ? "Active" : "Inactive")</span></td>
+                                <td>@c.CreatedAt.ToString("MMM d, yyyy")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-top:1px solid var(--border)">
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasPreviousPage)" @onclick="PrevPage">Previous</button>
+                <span style="font-size:.85rem;color:var(--text-muted)">Page @_pagedResult.Page of @_pagedResult.TotalPages</span>
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasNextPage)" @onclick="NextPage">Next</button>
+            </div>
+        }
+    </div>
+}
+
+@if (_showCreate)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">New Category</span>
+                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_createError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_createError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-control-custom" @bind="_newItem.Name" placeholder="Category name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input class="form-control-custom" @bind="_newItem.Description" placeholder="Optional description" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Parent Category</label>
+                    <select class="form-control-custom" @bind="_newItem.ParentCategoryId">
+                        <option value="">-- None --</option>
+                        @if (_pagedResult != null)
+                        {
+                            @foreach (var cat in _pagedResult.Items)
+                            {
+                                <option value="@cat.Id">@cat.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input class="form-control-custom" type="number" @bind="_newItem.SortOrder" placeholder="0" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="CreateAsync" disabled="@_creating">
+                        @if (_creating) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _creating;
+    private string _createError = string.Empty;
+    private string _search = string.Empty;
+    private int _page = 1;
+    private int _pageSize = 20;
+    private PagedResult<CategoryDto>? _pagedResult;
+    private readonly CreateCategoryRequest _newItem = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        _loading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try { _pagedResult = await Api.GetCategoriesAsync(_page, _pageSize, _search); } catch { }
+    }
+
+    private async Task SearchAsync()
+    {
+        _page = 1;
+        await LoadDataAsync();
+    }
+
+    private async Task HandleSearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchAsync();
+    }
+
+    private async Task PrevPage() { _page--; await LoadDataAsync(); }
+    private async Task NextPage() { _page++; await LoadDataAsync(); }
+
+    private async Task CreateAsync()
+    {
+        _creating = true;
+        _createError = string.Empty;
+
+        var result = await Api.CreateCategoryAsync(_newItem);
+        if (result != null)
+        {
+            _showCreate = false;
+            _page = 1;
+            await LoadDataAsync();
+        }
+        else
+        {
+            _createError = "Failed to create category.";
+        }
+
+        _creating = false;
+    }
+}

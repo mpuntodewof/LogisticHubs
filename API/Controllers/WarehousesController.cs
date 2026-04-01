@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Warehouses;
 using Application.UseCases.Warehouses;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,13 @@ namespace API.Controllers
             _warehouseUseCase = warehouseUseCase;
         }
 
-        /// <summary>Get all warehouses.</summary>
+        /// <summary>Get all warehouses (paginated).</summary>
         [HttpGet]
         [RequirePermission("warehouses.manage")]
-        public async Task<ActionResult<IEnumerable<WarehouseDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<WarehouseDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var warehouses = await _warehouseUseCase.GetAllAsync();
-            return Ok(warehouses);
+            var result = await _warehouseUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a warehouse by ID.</summary>

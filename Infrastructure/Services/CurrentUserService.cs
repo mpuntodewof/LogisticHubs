@@ -25,6 +25,15 @@ namespace Infrastructure.Services
             }
         }
 
+        public Guid? TenantId
+        {
+            get
+            {
+                var tenantClaim = Principal?.FindFirstValue("tenant_id");
+                return Guid.TryParse(tenantClaim, out var id) ? id : null;
+            }
+        }
+
         public string? Email => Principal?.FindFirstValue(ClaimTypes.Email)
             ?? Principal?.FindFirstValue("email");
 

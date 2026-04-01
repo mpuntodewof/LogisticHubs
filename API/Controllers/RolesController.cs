@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Roles;
 using Application.UseCases.Roles;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,13 @@ namespace API.Controllers
             _roleUseCase = roleUseCase;
         }
 
-        /// <summary>Get all roles with their permissions.</summary>
+        /// <summary>Get all roles with their permissions (paginated).</summary>
         [HttpGet]
         [RequirePermission("roles.read")]
-        public async Task<ActionResult<IEnumerable<RoleDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<RoleDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var roles = await _roleUseCase.GetAllAsync();
-            return Ok(roles);
+            var result = await _roleUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a specific role by ID.</summary>

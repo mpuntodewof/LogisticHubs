@@ -1,0 +1,186 @@
+@page "/coupons"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject AuthService AuthSvc
+
+<PageTitle>Coupons — NiagaOne</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Coupons</h1>
+        <div class="page-sub">Manage coupon codes and discounts</div>
+    </div>
+    <button class="btn-primary-custom" @onclick="OpenCreate">
+        &#43; New Coupon
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading coupons...</div>
+}
+else
+{
+    <div class="card">
+        <div style="padding:.75rem 1rem;display:flex;gap:.75rem;align-items:center">
+            <input class="form-control-custom" placeholder="Search coupons..." @bind="_search" @bind:event="oninput" @onkeydown="HandleSearchKey" style="max-width:300px" />
+            <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" @onclick="SearchAsync">Search</button>
+        </div>
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Discount Type</th>
+                        <th>Discount Value</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Usage</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_pagedResult == null || !_pagedResult.Items.Any())
+                    {
+                        <tr><td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#127915;</div>
+                                <div class="empty-state-text">No coupons found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in _pagedResult.Items)
+                        {
+                            <tr>
+                                <td><strong>@c.Code</strong></td>
+                                <td>@c.DiscountType</td>
+                                <td>@($"Rp {c.DiscountValue:N0}")</td>
+                                <td>@c.StartDate.ToString("MMM d, yyyy")</td>
+                                <td>@c.EndDate.ToString("MMM d, yyyy")</td>
+                                <td>@c.CurrentUsageCount</td>
+                                <td><span class="badge-status @(c.IsActive ? "status-active" : "status-inactive")">@(c.IsActive ? "Active" : "Inactive")</span></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-top:1px solid var(--border)">
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasPreviousPage)" @onclick="PrevPage">Previous</button>
+                <span style="font-size:.85rem;color:var(--text-muted)">Page @_pagedResult.Page of @_pagedResult.TotalPages</span>
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasNextPage)" @onclick="NextPage">Next</button>
+            </div>
+        }
+    </div>
+}
+
+@if (_showCreate)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">New Coupon</span>
+                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_createError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_createError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Code</label>
+                    <input class="form-control-custom" @bind="_newItem.Code" placeholder="e.g. SAVE20" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Type</label>
+                    <select class="form-control-custom" @bind="_newItem.DiscountType">
+                        <option value="">-- Select Type --</option>
+                        <option value="Percentage">Percentage</option>
+                        <option value="FixedAmount">Fixed Amount</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Value</label>
+                    <input class="form-control-custom" type="number" @bind="_newItem.DiscountValue" placeholder="0" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input class="form-control-custom" type="date" @bind="_newItem.StartDate" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input class="form-control-custom" type="date" @bind="_newItem.EndDate" />
+                    </div>
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="CreateAsync" disabled="@_creating">
+                        @if (_creating) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _creating;
+    private string _createError = string.Empty;
+    private string _search = string.Empty;
+    private int _page = 1;
+    private int _pageSize = 20;
+    private PagedResult<CouponCodeDto>? _pagedResult;
+    private CreateCouponCodeRequest _newItem = new() { StartDate = DateTime.Today, EndDate = DateTime.Today.AddMonths(1) };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        _loading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try { _pagedResult = await Api.GetCouponsAsync(_page, _pageSize, _search); } catch { }
+    }
+
+    private async Task SearchAsync() { _page = 1; await LoadDataAsync(); }
+    private async Task HandleSearchKey(KeyboardEventArgs e) { if (e.Key == "Enter") await SearchAsync(); }
+    private async Task PrevPage() { _page--; await LoadDataAsync(); }
+    private async Task NextPage() { _page++; await LoadDataAsync(); }
+
+    private void OpenCreate()
+    {
+        _newItem = new() { StartDate = DateTime.Today, EndDate = DateTime.Today.AddMonths(1) };
+        _createError = string.Empty;
+        _showCreate = true;
+    }
+
+    private async Task CreateAsync()
+    {
+        _creating = true;
+        _createError = string.Empty;
+
+        var result = await Api.CreateCouponAsync(_newItem);
+        if (result != null)
+        {
+            _showCreate = false;
+            _page = 1;
+            await LoadDataAsync();
+        }
+        else
+        {
+            _createError = "Failed to create coupon.";
+        }
+
+        _creating = false;
+    }
+}

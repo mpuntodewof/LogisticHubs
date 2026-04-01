@@ -1,5 +1,7 @@
+using Application.DTOs.Common;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Extensions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +19,26 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
+        }
+
+        public async Task<PagedResult<User>> GetPagedAsync(PagedRequest request)
+        {
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var search = request.Search.ToLower();
+                query = query.Where(u => u.Name.ToLower().Contains(search) || u.Email.ToLower().Contains(search));
+            }
+
+            query = request.SortBy?.ToLower() switch
+            {
+                "name" => request.SortDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
+                "email" => request.SortDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+                _ => query.OrderByDescending(u => u.CreatedAt)
+            };
+
+            return await query.ToPagedResultAsync(request);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)

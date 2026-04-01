@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Domain.Entities;
 
 namespace Application.Interfaces
@@ -5,6 +6,7 @@ namespace Application.Interfaces
     public interface IUserRepository
     {
         Task<IEnumerable<User>> GetAllAsync();
+        Task<PagedResult<User>> GetPagedAsync(PagedRequest request);
         Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByIdWithRolesAsync(Guid id);
         Task UpdateAsync(User user);

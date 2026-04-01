@@ -1,5 +1,7 @@
+using Application.DTOs.Common;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Extensions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +23,28 @@ namespace Infrastructure.Repositories
                     .ThenInclude(rp => rp.Permission)
                 .OrderBy(r => r.Name)
                 .ToListAsync();
+        }
+
+        public async Task<PagedResult<Role>> GetPagedAsync(PagedRequest request)
+        {
+            var query = _context.Roles
+                .Include(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var search = request.Search.ToLower();
+                query = query.Where(r => r.Name.ToLower().Contains(search));
+            }
+
+            query = request.SortBy?.ToLower() switch
+            {
+                "name" => request.SortDescending ? query.OrderByDescending(r => r.Name) : query.OrderBy(r => r.Name),
+                _ => query.OrderBy(r => r.Name)
+            };
+
+            return await query.ToPagedResultAsync(request);
         }
 
         public async Task<Role?> GetByIdWithPermissionsAsync(Guid id)

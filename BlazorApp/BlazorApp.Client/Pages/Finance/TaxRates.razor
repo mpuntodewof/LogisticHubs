@@ -1,0 +1,224 @@
+@page "/tax-rates"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Tax Rates — NiagaOne</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Tax Rates</h1>
+        <div class="page-sub">Manage tax rate configurations</div>
+    </div>
+    <button class="btn-primary-custom" @onclick="OpenCreate">
+        &#43; New Tax Rate
+    </button>
+</div>
+
+@* ── Search ── *@
+<div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+            <input class="form-control-custom" placeholder="Search by name or code..." @bind="_search" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading tax rates...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Tax Type</th>
+                        <th>Rate</th>
+                        <th>Active</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_items == null || !_items.Any())
+                    {
+                        <tr><td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128176;</div>
+                                <div class="empty-state-text">No tax rates configured yet.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var t in _items)
+                        {
+                            <tr>
+                                <td><strong>@t.Name</strong></td>
+                                <td>@t.Code</td>
+                                <td>@t.TaxType</td>
+                                <td>@($"{t.Rate:N2}%")</td>
+                                <td>
+                                    <span class="badge-status @(t.IsActive ? "status-active" : "status-inactive")">
+                                        @(t.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => {})">Edit</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* ── Pagination ── *@
+        @if (_totalPages > 1)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid #e2e8f0">
+                <span style="font-size:.85rem;color:#64748b">Page @_page of @_totalPages (@_totalCount total)</span>
+                <div style="display:flex;gap:.5rem">
+                    <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" disabled="@(!_hasPrevious)" @onclick="PreviousPage">Previous</button>
+                    <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" disabled="@(!_hasNext)" @onclick="NextPage">Next</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@* ── Create Modal ── *@
+@if (_showCreate)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">New Tax Rate</span>
+                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-control-custom" @bind="_createReq.Name" placeholder="PPN 11%" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Code</label>
+                    <input class="form-control-custom" @bind="_createReq.Code" placeholder="PPN11" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tax Type</label>
+                    <select class="form-control-custom" @bind="_createReq.TaxType">
+                        <option value="">-- Select Type --</option>
+                        <option value="PPN">PPN</option>
+                        <option value="PPh21">PPh 21</option>
+                        <option value="PPh23">PPh 23</option>
+                        <option value="PPh4(2)">PPh 4(2)</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rate (%)</label>
+                    <input class="form-control-custom" type="number" @bind="_createReq.Rate" placeholder="11.00" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Effective From</label>
+                    <input class="form-control-custom" type="date" @bind="_effectiveFrom" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="CreateAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _saving;
+    private string _formError = string.Empty;
+    private string _search = string.Empty;
+    private DateTime _effectiveFrom = DateTime.Today;
+
+    private List<TaxRateDto> _items = new();
+    private CreateTaxRateRequest _createReq = new();
+
+    private int _page = 1;
+    private int _pageSize = 20;
+    private int _totalCount;
+    private int _totalPages;
+    private bool _hasPrevious;
+    private bool _hasNext;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            var result = await Api.GetTaxRatesAsync(_page, _pageSize, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
+            if (result != null)
+            {
+                _items = result.Items;
+                _totalCount = result.TotalCount;
+                _totalPages = result.TotalPages;
+                _hasPrevious = result.HasPreviousPage;
+                _hasNext = result.HasNextPage;
+            }
+        }
+        catch { }
+        _loading = false;
+    }
+
+    private async Task OnSearchKeyUp(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        _page = 1;
+        await LoadAsync();
+    }
+
+    private async Task PreviousPage() { if (_hasPrevious) { _page--; await LoadAsync(); } }
+    private async Task NextPage() { if (_hasNext) { _page++; await LoadAsync(); } }
+
+    private void OpenCreate()
+    {
+        _createReq = new();
+        _effectiveFrom = DateTime.Today;
+        _formError = string.Empty;
+        _showCreate = true;
+    }
+
+    private async Task CreateAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+
+        var result = await Api.CreateTaxRateAsync(_createReq);
+        if (result != null)
+        {
+            _showCreate = false;
+            _page = 1;
+            await LoadAsync();
+        }
+        else
+        {
+            _formError = "Failed to create tax rate.";
+        }
+
+        _saving = false;
+    }
+}

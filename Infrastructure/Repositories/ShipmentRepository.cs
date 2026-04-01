@@ -1,5 +1,7 @@
+using Application.DTOs.Common;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Extensions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +18,26 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Shipment>> GetAllAsync()
             => await _context.Shipments.OrderByDescending(s => s.CreatedAt).ToListAsync();
+
+        public async Task<PagedResult<Shipment>> GetPagedAsync(PagedRequest request)
+        {
+            var query = _context.Shipments.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var search = request.Search.ToLower();
+                query = query.Where(s => s.TrackingNumber.ToLower().Contains(search) || s.DestinationAddress.ToLower().Contains(search));
+            }
+
+            query = request.SortBy?.ToLower() switch
+            {
+                "tracking" => request.SortDescending ? query.OrderByDescending(s => s.TrackingNumber) : query.OrderBy(s => s.TrackingNumber),
+                "status" => request.SortDescending ? query.OrderByDescending(s => s.Status) : query.OrderBy(s => s.Status),
+                _ => query.OrderByDescending(s => s.CreatedAt)
+            };
+
+            return await query.ToPagedResultAsync(request);
+        }
 
         public async Task<Shipment?> GetByIdAsync(Guid id)
             => await _context.Shipments.FindAsync(id);

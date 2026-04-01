@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Vehicles;
 using Application.Interfaces;
 using Domain.Entities;
@@ -20,6 +21,18 @@ namespace Application.UseCases.Vehicles
         {
             var vehicles = await _vehicleRepository.GetAllAsync();
             return vehicles.Select(MapToDto);
+        }
+
+        public async Task<PagedResult<VehicleDto>> GetPagedAsync(PagedRequest request)
+        {
+            var paged = await _vehicleRepository.GetPagedAsync(request);
+            return new PagedResult<VehicleDto>
+            {
+                Items = paged.Items.Select(MapToDto).ToList(),
+                TotalCount = paged.TotalCount,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
         }
 
         public async Task<VehicleDto?> GetByIdAsync(Guid id)

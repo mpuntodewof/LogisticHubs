@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Drivers;
 using Application.UseCases.Drivers;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,13 @@ namespace API.Controllers
             _driverUseCase = driverUseCase;
         }
 
-        /// <summary>Get all drivers.</summary>
+        /// <summary>Get all drivers (paginated).</summary>
         [HttpGet]
         [RequirePermission("drivers.manage")]
-        public async Task<ActionResult<IEnumerable<DriverDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<DriverDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var drivers = await _driverUseCase.GetAllAsync();
-            return Ok(drivers);
+            var result = await _driverUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a driver by ID.</summary>

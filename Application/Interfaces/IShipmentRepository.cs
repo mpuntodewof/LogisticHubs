@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Domain.Entities;
 
 namespace Application.Interfaces
@@ -5,6 +6,7 @@ namespace Application.Interfaces
     public interface IShipmentRepository
     {
         Task<IEnumerable<Shipment>> GetAllAsync();
+        Task<PagedResult<Shipment>> GetPagedAsync(PagedRequest request);
         Task<Shipment?> GetByIdAsync(Guid id);
         Task<Shipment?> GetByTrackingNumberAsync(string trackingNumber);
         Task<Shipment> CreateAsync(Shipment shipment);

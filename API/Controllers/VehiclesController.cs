@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Vehicles;
 using Application.UseCases.Vehicles;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,13 @@ namespace API.Controllers
             _vehicleUseCase = vehicleUseCase;
         }
 
-        /// <summary>Get all vehicles.</summary>
+        /// <summary>Get all vehicles (paginated).</summary>
         [HttpGet]
         [RequirePermission("vehicles.manage")]
-        public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<VehicleDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var vehicles = await _vehicleUseCase.GetAllAsync();
-            return Ok(vehicles);
+            var result = await _vehicleUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a vehicle by ID.</summary>

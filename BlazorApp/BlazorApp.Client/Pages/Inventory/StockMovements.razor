@@ -1,0 +1,125 @@
+@page "/stock-movements"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Stock Movements — NiagaOne</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Stock Movements</h1>
+        <div class="page-sub">Track inventory changes across warehouses</div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading stock movements...</div>
+}
+else
+{
+    <div class="card">
+        <div style="padding:.75rem 1rem;display:flex;gap:.75rem;align-items:center">
+            <input class="form-control-custom" placeholder="Search movements..." @bind="_search" @bind:event="oninput" @onkeydown="HandleSearchKey" style="max-width:300px" />
+            <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" @onclick="SearchAsync">Search</button>
+        </div>
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Warehouse</th>
+                        <th>SKU</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th>Quantity</th>
+                        <th>Before</th>
+                        <th>After</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_pagedResult == null || !_pagedResult.Items.Any())
+                    {
+                        <tr><td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128259;</div>
+                                <div class="empty-state-text">No stock movements found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in _pagedResult.Items)
+                        {
+                            var dict = item as IDictionary<string, object>;
+                            <tr>
+                                <td><strong>@GetVal(dict, "warehouseName")</strong></td>
+                                <td>@GetVal(dict, "sku")</td>
+                                <td><span class="badge-status @TypeClass(GetVal(dict, "movementType"))">@GetVal(dict, "movementType")</span></td>
+                                <td>@GetVal(dict, "reason")</td>
+                                <td>@GetVal(dict, "quantity")</td>
+                                <td>@GetVal(dict, "quantityBefore")</td>
+                                <td>@GetVal(dict, "quantityAfter")</td>
+                                <td>@GetVal(dict, "createdAt")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-top:1px solid var(--border)">
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasPreviousPage)" @onclick="PrevPage">Previous</button>
+                <span style="font-size:.85rem;color:var(--text-muted)">Page @_pagedResult.Page of @_pagedResult.TotalPages</span>
+                <button class="btn-outline" style="padding:.3rem .7rem;font-size:.8rem" disabled="@(!_pagedResult.HasNextPage)" @onclick="NextPage">Next</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private string _search = string.Empty;
+    private int _page = 1;
+    private int _pageSize = 20;
+    private PagedResult<object>? _pagedResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        _loading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try { _pagedResult = await Api.GetStockMovementsAsync(_page, _pageSize, _search); } catch { }
+    }
+
+    private async Task SearchAsync()
+    {
+        _page = 1;
+        await LoadDataAsync();
+    }
+
+    private async Task HandleSearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchAsync();
+    }
+
+    private async Task PrevPage() { _page--; await LoadDataAsync(); }
+    private async Task NextPage() { _page++; await LoadDataAsync(); }
+
+    private static string GetVal(IDictionary<string, object>? dict, string key)
+    {
+        if (dict == null) return "—";
+        if (dict.TryGetValue(key, out var val)) return val?.ToString() ?? "—";
+        var pascal = char.ToUpper(key[0]) + key[1..];
+        if (dict.TryGetValue(pascal, out val)) return val?.ToString() ?? "—";
+        return "—";
+    }
+
+    private static string TypeClass(string t) => "status-" + t.ToLower().Replace(" ", "");
+}

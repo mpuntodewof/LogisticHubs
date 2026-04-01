@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Roles;
 using Application.Interfaces;
 using Domain.Entities;
@@ -19,6 +20,18 @@ namespace Application.UseCases.Roles
         {
             var roles = await _roleRepository.GetAllWithPermissionsAsync();
             return roles.Select(MapToDto);
+        }
+
+        public async Task<PagedResult<RoleDto>> GetPagedAsync(PagedRequest request)
+        {
+            var paged = await _roleRepository.GetPagedAsync(request);
+            return new PagedResult<RoleDto>
+            {
+                Items = paged.Items.Select(MapToDto).ToList(),
+                TotalCount = paged.TotalCount,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
         }
 
         public async Task<RoleDto?> GetByIdAsync(Guid id)

@@ -1,0 +1,131 @@
+@page "/journal-entries"
+@layout AppLayout
+
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject AuthService AuthSvc
+
+<PageTitle>Journal Entries — NiagaOne</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Journal Entries</h1>
+        <div class="page-sub">View all accounting journal entries</div>
+    </div>
+</div>
+
+@* ── Search ── *@
+<div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+            <input class="form-control-custom" placeholder="Search by entry number or description..." @bind="_search" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner"><div class="spinner"></div> Loading journal entries...</div>
+}
+else
+{
+    <div class="card">
+        <div class="table-wrapper">
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>Entry #</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Total Debit</th>
+                        <th>Total Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_items == null || !_items.Any())
+                    {
+                        <tr><td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128221;</div>
+                                <div class="empty-state-text">No journal entries found.</div>
+                            </div>
+                        </td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var j in _items)
+                        {
+                            <tr>
+                                <td><strong>@j.EntryNumber</strong></td>
+                                <td>@j.EntryDate.ToString("MMM d, yyyy")</td>
+                                <td>@(j.Description ?? "-")</td>
+                                <td><span class="badge-status @StatusClass(j.Status)">@j.Status</span></td>
+                                <td>@($"Rp {j.TotalDebit:N0}")</td>
+                                <td>@($"Rp {j.TotalCredit:N0}")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* ── Pagination ── *@
+        @if (_totalPages > 1)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid #e2e8f0">
+                <span style="font-size:.85rem;color:#64748b">Page @_page of @_totalPages (@_totalCount total)</span>
+                <div style="display:flex;gap:.5rem">
+                    <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" disabled="@(!_hasPrevious)" @onclick="PreviousPage">Previous</button>
+                    <button class="btn-outline" style="padding:.4rem .8rem;font-size:.8rem" disabled="@(!_hasNext)" @onclick="NextPage">Next</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private string _search = string.Empty;
+
+    private List<JournalEntryDto> _items = new();
+
+    private int _page = 1;
+    private int _pageSize = 20;
+    private int _totalCount;
+    private int _totalPages;
+    private bool _hasPrevious;
+    private bool _hasNext;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            var result = await Api.GetJournalEntriesAsync(_page, _pageSize, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
+            if (result != null)
+            {
+                _items = result.Items;
+                _totalCount = result.TotalCount;
+                _totalPages = result.TotalPages;
+                _hasPrevious = result.HasPreviousPage;
+                _hasNext = result.HasNextPage;
+            }
+        }
+        catch { }
+        _loading = false;
+    }
+
+    private async Task OnSearchKeyUp(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        _page = 1;
+        await LoadAsync();
+    }
+
+    private async Task PreviousPage() { if (_hasPrevious) { _page--; await LoadAsync(); } }
+    private async Task NextPage() { if (_hasNext) { _page++; await LoadAsync(); } }
+
+    private static string StatusClass(string s) => "status-" + s.ToLower().Replace(" ", "");
+}

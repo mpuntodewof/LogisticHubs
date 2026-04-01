@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Interfaces;
 
 namespace Domain.Entities
 {
-    public class Driver
+    public class Driver : BaseEntity, ITenantScoped, ISoftDeletable
     {
-        [Key]
-        public Guid Id { get; set; }
-
         [Required]
         public Guid UserId { get; set; }
 
@@ -29,7 +22,15 @@ namespace Domain.Entities
         [MaxLength(50)]
         public string Status { get; set; } = string.Empty;
 
+        public Guid TenantId { get; set; }
+
+        // Soft delete
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public Guid? DeletedBy { get; set; }
+
         // Navigation properties
+        public Tenant Tenant { get; set; } = null!;
         [ForeignKey(nameof(UserId))]
         public User User { get; set; } = null!;
 

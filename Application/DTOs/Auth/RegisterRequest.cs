@@ -17,5 +17,10 @@ namespace Application.DTOs.Auth
         [MinLength(8)]
         [MaxLength(100)]
         public string Password { get; set; } = string.Empty;
+
+        public Guid? TenantId { get; set; }
+
+        [MaxLength(255)]
+        public string? CompanyName { get; set; }
     }
 }

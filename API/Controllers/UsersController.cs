@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Users;
 using Application.UseCases.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -19,13 +20,13 @@ namespace API.Controllers
             _userUseCase = userUseCase;
         }
 
-        /// <summary>Get all users.</summary>
+        /// <summary>Get all users (paginated).</summary>
         [HttpGet]
         [RequirePermission("users.read")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<UserDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var users = await _userUseCase.GetAllAsync();
-            return Ok(users);
+            var result = await _userUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a specific user by ID.</summary>

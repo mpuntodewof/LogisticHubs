@@ -14,10 +14,10 @@ else
     <div class="app-wrapper">
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <div class="brand-icon">&#128666;</div>
+                <div class="brand-icon">&#128230;</div>
                 <div>
-                    <div class="brand-name">LogisticHub</div>
-                    <div class="brand-sub">Fleet Management</div>
+                    <div class="brand-name">NiagaOne</div>
+                    <div class="brand-sub">Commerce Platform</div>
                 </div>
             </div>
 
@@ -25,44 +25,298 @@ else
             <NavLink class="nav-item-link" href="/dashboard" Match="NavLinkMatch.All">
                 <span class="nav-icon">&#128202;</span> Dashboard
             </NavLink>
-            <NavLink class="nav-item-link" href="/shipments">
-                <span class="nav-icon">&#128230;</span> Shipments
-            </NavLink>
 
-            @if (_canManageDrivers || _canManageVehicles || _canManageWarehouses)
+            @if (Has("products.read") || Has("categories.read") || Has("brands.read") || Has("units.read"))
             {
-                <div class="sidebar-section">Fleet</div>
-                @if (_canManageDrivers)
+                <div class="sidebar-section">Catalog</div>
+                @if (Has("products.read"))
                 {
-                    <NavLink class="nav-item-link" href="/drivers">
-                        <span class="nav-icon">&#128101;</span> Drivers
+                    <NavLink class="nav-item-link" href="/products">
+                        <span class="nav-icon">&#128722;</span> Products
                     </NavLink>
                 }
-                @if (_canManageVehicles)
+                @if (Has("categories.read"))
+                {
+                    <NavLink class="nav-item-link" href="/categories">
+                        <span class="nav-icon">&#128193;</span> Categories
+                    </NavLink>
+                }
+                @if (Has("brands.read"))
+                {
+                    <NavLink class="nav-item-link" href="/brands">
+                        <span class="nav-icon">&#127991;</span> Brands
+                    </NavLink>
+                }
+                @if (Has("units.read"))
+                {
+                    <NavLink class="nav-item-link" href="/units-of-measure">
+                        <span class="nav-icon">&#128207;</span> Units
+                    </NavLink>
+                }
+            }
+
+            @if (Has("inventory.read"))
+            {
+                <div class="sidebar-section">Inventory</div>
+                <NavLink class="nav-item-link" href="/warehouse-stock">
+                    <span class="nav-icon">&#128230;</span> Stock Levels
+                </NavLink>
+                <NavLink class="nav-item-link" href="/stock-movements">
+                    <span class="nav-icon">&#128260;</span> Movements
+                </NavLink>
+            }
+
+            @if (Has("sales-orders.read") || Has("customers.read"))
+            {
+                <div class="sidebar-section">Sales</div>
+                @if (Has("sales-orders.read"))
+                {
+                    <NavLink class="nav-item-link" href="/sales-orders">
+                        <span class="nav-icon">&#128176;</span> Orders
+                    </NavLink>
+                }
+                @if (Has("customers.read"))
+                {
+                    <NavLink class="nav-item-link" href="/customers">
+                        <span class="nav-icon">&#128101;</span> Customers
+                    </NavLink>
+                }
+                @if (Has("customer-groups.read"))
+                {
+                    <NavLink class="nav-item-link" href="/customer-groups">
+                        <span class="nav-icon">&#127991;</span> Groups
+                    </NavLink>
+                }
+            }
+
+            @if (Has("purchase-orders.read") || Has("suppliers.read"))
+            {
+                <div class="sidebar-section">Purchasing</div>
+                @if (Has("purchase-orders.read"))
+                {
+                    <NavLink class="nav-item-link" href="/purchase-orders">
+                        <span class="nav-icon">&#128203;</span> Purchase Orders
+                    </NavLink>
+                }
+                @if (Has("suppliers.read"))
+                {
+                    <NavLink class="nav-item-link" href="/suppliers">
+                        <span class="nav-icon">&#127970;</span> Suppliers
+                    </NavLink>
+                }
+                @if (Has("goods-receipts.read"))
+                {
+                    <NavLink class="nav-item-link" href="/goods-receipts">
+                        <span class="nav-icon">&#128229;</span> Goods Receipts
+                    </NavLink>
+                }
+            }
+
+            @if (Has("shipments.read") || Has("drivers.manage") || Has("vehicles.manage") || Has("warehouses.manage"))
+            {
+                <div class="sidebar-section">Logistics</div>
+                @if (Has("shipments.read"))
+                {
+                    <NavLink class="nav-item-link" href="/shipments">
+                        <span class="nav-icon">&#128666;</span> Shipments
+                    </NavLink>
+                }
+                @if (Has("drivers.manage"))
+                {
+                    <NavLink class="nav-item-link" href="/drivers">
+                        <span class="nav-icon">&#128100;</span> Drivers
+                    </NavLink>
+                }
+                @if (Has("vehicles.manage"))
                 {
                     <NavLink class="nav-item-link" href="/vehicles">
                         <span class="nav-icon">&#128663;</span> Vehicles
                     </NavLink>
                 }
-                @if (_canManageWarehouses)
+                @if (Has("warehouses.manage"))
                 {
                     <NavLink class="nav-item-link" href="/warehouses">
                         <span class="nav-icon">&#127970;</span> Warehouses
                     </NavLink>
                 }
+                @if (Has("delivery-zones.read"))
+                {
+                    <NavLink class="nav-item-link" href="/delivery-zones">
+                        <span class="nav-icon">&#127757;</span> Delivery Zones
+                    </NavLink>
+                }
+            }
+
+            @if (Has("chart-of-accounts.read") || Has("invoices.read"))
+            {
+                <div class="sidebar-section">Finance</div>
+                @if (Has("chart-of-accounts.read"))
+                {
+                    <NavLink class="nav-item-link" href="/chart-of-accounts">
+                        <span class="nav-icon">&#128209;</span> Chart of Accounts
+                    </NavLink>
+                }
+                @if (Has("journal-entries.read"))
+                {
+                    <NavLink class="nav-item-link" href="/journal-entries">
+                        <span class="nav-icon">&#128221;</span> Journal Entries
+                    </NavLink>
+                }
+                @if (Has("invoices.read"))
+                {
+                    <NavLink class="nav-item-link" href="/invoices">
+                        <span class="nav-icon">&#128196;</span> Invoices
+                    </NavLink>
+                }
+                @if (Has("tax-rates.read"))
+                {
+                    <NavLink class="nav-item-link" href="/tax-rates">
+                        <span class="nav-icon">&#128181;</span> Tax Rates
+                    </NavLink>
+                }
+                @if (Has("payment-terms.read"))
+                {
+                    <NavLink class="nav-item-link" href="/payment-terms">
+                        <span class="nav-icon">&#128197;</span> Payment Terms
+                    </NavLink>
+                }
+            }
+
+            @if (Has("promotions.read") || Has("coupons.read") || Has("loyalty.read"))
+            {
+                <div class="sidebar-section">Marketing</div>
+                @if (Has("promotions.read"))
+                {
+                    <NavLink class="nav-item-link" href="/promotions">
+                        <span class="nav-icon">&#127873;</span> Promotions
+                    </NavLink>
+                }
+                @if (Has("coupons.read"))
+                {
+                    <NavLink class="nav-item-link" href="/coupons">
+                        <span class="nav-icon">&#127915;</span> Coupons
+                    </NavLink>
+                }
+                @if (Has("loyalty.read"))
+                {
+                    <NavLink class="nav-item-link" href="/loyalty-programs">
+                        <span class="nav-icon">&#11088;</span> Loyalty
+                    </NavLink>
+                }
+            }
+
+            @if (Has("departments.read") || Has("employees.read") || Has("attendance.read"))
+            {
+                <div class="sidebar-section">HRM</div>
+                @if (Has("employees.read"))
+                {
+                    <NavLink class="nav-item-link" href="/employees">
+                        <span class="nav-icon">&#128119;</span> Employees
+                    </NavLink>
+                }
+                @if (Has("departments.read"))
+                {
+                    <NavLink class="nav-item-link" href="/departments">
+                        <span class="nav-icon">&#127963;</span> Departments
+                    </NavLink>
+                }
+                @if (Has("attendance.read"))
+                {
+                    <NavLink class="nav-item-link" href="/attendance">
+                        <span class="nav-icon">&#128337;</span> Attendance
+                    </NavLink>
+                }
+                @if (Has("leave-requests.read"))
+                {
+                    <NavLink class="nav-item-link" href="/leave-requests">
+                        <span class="nav-icon">&#128197;</span> Leave Requests
+                    </NavLink>
+                }
+            }
+
+            @if (Has("branches.read"))
+            {
+                <div class="sidebar-section">Branches</div>
+                <NavLink class="nav-item-link" href="/branches">
+                    <span class="nav-icon">&#127978;</span> Branches
+                </NavLink>
+            }
+
+            @if (Has("storefront-config.read") || Has("banners.read") || Has("pages.read"))
+            {
+                <div class="sidebar-section">Storefront</div>
+                @if (Has("storefront-config.read"))
+                {
+                    <NavLink class="nav-item-link" href="/storefront-config">
+                        <span class="nav-icon">&#127760;</span> Config
+                    </NavLink>
+                }
+                @if (Has("banners.read"))
+                {
+                    <NavLink class="nav-item-link" href="/banners">
+                        <span class="nav-icon">&#128247;</span> Banners
+                    </NavLink>
+                }
+                @if (Has("pages.read"))
+                {
+                    <NavLink class="nav-item-link" href="/pages">
+                        <span class="nav-icon">&#128196;</span> Pages
+                    </NavLink>
+                }
+            }
+
+            @if (Has("reports.read") || Has("audit-logs.read"))
+            {
+                <div class="sidebar-section">Reports & Audit</div>
+                @if (Has("reports.read"))
+                {
+                    <NavLink class="nav-item-link" href="/reports">
+                        <span class="nav-icon">&#128202;</span> Reports
+                    </NavLink>
+                }
+                @if (Has("audit-logs.read"))
+                {
+                    <NavLink class="nav-item-link" href="/audit-logs">
+                        <span class="nav-icon">&#128270;</span> Audit Logs
+                    </NavLink>
+                }
             }
 
             <div class="sidebar-section">Account</div>
-            @if (_canReadUsers)
+            @if (Has("users.read"))
             {
                 <NavLink class="nav-item-link" href="/users">
                     <span class="nav-icon">&#128100;</span> Users
                 </NavLink>
             }
-            @if (_canManageRoles)
+            @if (Has("roles.read"))
             {
                 <NavLink class="nav-item-link" href="/roles">
                     <span class="nav-icon">&#128272;</span> Roles
+                </NavLink>
+            }
+            @if (Has("tenant-settings.read"))
+            {
+                <NavLink class="nav-item-link" href="/settings">
+                    <span class="nav-icon">&#9881;</span> Settings
+                </NavLink>
+            }
+            @if (Has("api-keys.read"))
+            {
+                <NavLink class="nav-item-link" href="/api-keys">
+                    <span class="nav-icon">&#128273;</span> API Keys
+                </NavLink>
+            }
+            @if (Has("webhooks.read"))
+            {
+                <NavLink class="nav-item-link" href="/webhooks">
+                    <span class="nav-icon">&#128279;</span> Webhooks
+                </NavLink>
+            }
+            @if (Has("notifications.read"))
+            {
+                <NavLink class="nav-item-link" href="/notifications">
+                    <span class="nav-icon">&#128276;</span> Notifications
                 </NavLink>
             }
             <NavLink class="nav-item-link" href="/profile">
@@ -94,22 +348,15 @@ else
     private string _userName = "User";
     private string _userRole = "";
     private string _initials = "U";
-    private bool _canManageDrivers;
-    private bool _canManageVehicles;
-    private bool _canManageWarehouses;
-    private bool _canReadUsers;
-    private bool _canManageRoles;
+    private HashSet<string> _permissions = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // Everything runs in WASM now (no SSR), so localStorage is always available.
         var state = await AuthState.GetAuthenticationStateAsync();
         var isAuth = state.User.Identity?.IsAuthenticated == true;
 
         if (!isAuth)
         {
-            // Token is missing or expired — clean up stale cached data to prevent
-            // Login page from seeing old user_info and bouncing back here.
             await AuthSvc.LogoutAsync();
             Nav.NavigateTo("/login");
             return;
@@ -128,18 +375,15 @@ else
         _initials = string.Concat(user.Name.Split(' ').Select(w => w.FirstOrDefault())).ToUpper();
         if (_initials.Length > 2) _initials = _initials[..2];
 
-        var permissions = state.User.Claims
+        _permissions = state.User.Claims
             .Where(c => c.Type == "permissions")
             .Select(c => c.Value)
             .ToHashSet();
-        _canManageDrivers = permissions.Contains("drivers.manage");
-        _canManageVehicles = permissions.Contains("vehicles.manage");
-        _canManageWarehouses = permissions.Contains("warehouses.manage");
-        _canReadUsers = permissions.Contains("users.read");
-        _canManageRoles = permissions.Contains("roles.read");
 
         _authChecked = true;
     }
+
+    private bool Has(string permission) => _permissions.Contains(permission);
 
     private async Task LogoutAsync()
     {

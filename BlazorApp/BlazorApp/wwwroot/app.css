@@ -171,7 +171,146 @@ a:hover { text-decoration: underline; }
 .status-retired   { background: rgba(100,116,139,.12); color: #64748B; }
 
 /* ── Profile Page ───────────────────────────────────────────────────────── */
-.profile-row { display: flex; justify-content: space-between; align-items: center; padding: .6rem 0; border-bottom: 1px solid #334155; }
-.profile-row:last-child { border-bottom: none; }
-.profile-label { color: #94a3b8; font-size: .85rem; font-weight: 500; }
-.profile-value { color: #e2e8f0; font-size: .9rem; }
+.profile-container { max-width: 800px; display: flex; flex-direction: column; gap: 1rem; }
+
+/* Header card */
+.profile-header-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.75rem;
+}
+.profile-header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64748B 0%, #475569 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.profile-header-info {
+    flex: 1;
+    min-width: 0;
+}
+.profile-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 .25rem;
+    color: var(--text-primary);
+}
+.profile-meta {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .85rem;
+    margin-bottom: .6rem;
+}
+.profile-role-label {
+    color: var(--primary);
+    font-weight: 600;
+}
+.profile-meta-divider {
+    color: var(--border);
+}
+.profile-email-link {
+    color: var(--primary);
+}
+.profile-bio {
+    font-size: .85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+.profile-header-actions {
+    display: flex;
+    gap: .5rem;
+    flex-shrink: 0;
+}
+.btn-danger-outline {
+    color: var(--danger) !important;
+    border-color: var(--danger) !important;
+}
+.btn-danger-outline:hover {
+    background: rgba(220,38,38,.06) !important;
+}
+
+/* Section cards */
+.profile-section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.75rem;
+}
+.profile-section-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    margin: 0 0 1.25rem;
+    color: var(--text-primary);
+}
+
+/* Info grid — two columns */
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 2rem;
+}
+.profile-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+.profile-info-label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.profile-info-value {
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.profile-info-mono {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: .8rem;
+}
+
+/* Role chips */
+.profile-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+.profile-role-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.role-admin   { background: rgba(139,92,246,.12); color: #7C3AED; }
+.role-manager { background: rgba(37,99,235,.1);   color: #2563EB; }
+.role-driver  { background: rgba(22,163,74,.1);   color: #16A34A; }
+.role-default { background: var(--body-bg);        color: var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 640px) {
+    .profile-header-content { flex-direction: column; align-items: center; text-align: center; }
+    .profile-meta { justify-content: center; }
+    .profile-header-actions { width: 100%; justify-content: center; }
+    .profile-info-grid { grid-template-columns: 1fr; }
+}

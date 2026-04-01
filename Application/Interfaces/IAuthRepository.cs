@@ -15,5 +15,12 @@ namespace Application.Interfaces
         Task<RefreshToken?> GetActiveRefreshTokenByHashAsync(string tokenHash);
         Task RevokeRefreshTokenAsync(RefreshToken token, string? revokedByIp, string? replacedByToken);
         Task RevokeAllUserRefreshTokensAsync(Guid userId, string? revokedByIp);
+
+        // Multi-tenancy
+        Task<Tenant?> GetTenantByIdAsync(Guid tenantId);
+        Task<Tenant> CreateTenantAsync(Tenant tenant);
+        Task<Role?> GetRoleByNameAndTenantAsync(string roleName, Guid tenantId);
+        Task SeedRolesAndPermissionsForTenantAsync(Guid tenantId);
+        Task<User?> GetUserByEmailUnfilteredAsync(string email);
     }
 }

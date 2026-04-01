@@ -1,8 +1,8 @@
-# LogisticHub
+# NiagaOne
 
 A full-stack logistics management platform built with **.NET 8**, **ASP.NET Core Web API**, **Blazor**, and **MySQL** — following **Clean Architecture** principles.
 
-LogisticHub provides end-to-end shipment lifecycle management including warehouse operations, driver and vehicle fleet management, real-time shipment tracking, and a granular role-based access control (RBAC) system with JWT authentication.
+NiagaOne provides end-to-end shipment lifecycle management including warehouse operations, driver and vehicle fleet management, real-time shipment tracking, and a granular role-based access control (RBAC) system with JWT authentication.
 
 ---
 
@@ -25,7 +25,7 @@ LogisticHub provides end-to-end shipment lifecycle management including warehous
 
 ## Project Background
 
-LogisticHub was designed to solve the core operational challenges in logistics management — tracking shipments from origin warehouse to destination, managing a fleet of drivers and vehicles, and enforcing access control across different organizational roles.
+NiagaOne was designed to solve the core operational challenges in logistics management — tracking shipments from origin warehouse to destination, managing a fleet of drivers and vehicles, and enforcing access control across different organizational roles.
 
 The platform addresses:
 
@@ -54,7 +54,7 @@ The platform addresses:
 
 ## System Architecture
 
-LogisticHub follows **Clean Architecture** (also known as Onion Architecture), enforcing strict dependency boundaries where all dependencies point inward.
+NiagaOne follows **Clean Architecture** (also known as Onion Architecture), enforcing strict dependency boundaries where all dependencies point inward.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -87,7 +87,7 @@ LogisticHub follows **Clean Architecture** (also known as Onion Architecture), e
                               ▼
                     ┌──────────────────┐
                     │    MySQL 8.0     │
-                    │  logistics_hub   │
+                    │  niagaone   │
                     └──────────────────┘
 ```
 
@@ -124,7 +124,7 @@ LogisticHub follows **Clean Architecture** (also known as Onion Architecture), e
 ## Project Structure
 
 ```
-LogisticHub/
+NiagaOne/
 ├── Domain/                          # Domain Layer — entities & enums
 │   ├── Entities/
 │   │   ├── User.cs
@@ -200,7 +200,7 @@ LogisticHub/
 │       ├── Services/                # ApiClient, AuthService, JwtAuthStateProvider
 │       └── Shared/                  # AuthGuard, RedirectToLogin
 │
-└── LogisticHub.sln                  # Solution file
+└── NiagaOne.sln                  # Solution file
 ```
 
 ---
@@ -422,8 +422,8 @@ Base URL: `http://localhost:5164/api`
 | Algorithm | HMAC-SHA256 |
 | Access token expiry | 15 minutes |
 | Refresh token expiry | 7 days |
-| Issuer | `logistichub-api` |
-| Audience | `logistichub-client` |
+| Issuer | `niagaone-api` |
+| Audience | `niagaone-client` |
 | Token claims | `sub`, `email`, `name`, `iat`, `role` (multiple), `permissions` (multiple) |
 
 ### Refresh Token Security
@@ -471,8 +471,8 @@ Custom roles can be created and assigned any combination of permissions via the 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/mpuntodewof/LogisticHubs.git
-cd LogisticHubs
+git clone https://github.com/mpuntodewof/NiagaOnes.git
+cd NiagaOnes
 ```
 
 ### 2. Set Up MySQL Database
@@ -480,9 +480,9 @@ cd LogisticHubs
 Create the database and user:
 
 ```sql
-CREATE DATABASE logistics_hub;
+CREATE DATABASE niagaone;
 CREATE USER 'log_user'@'localhost' IDENTIFIED BY 'your_secure_password';
-GRANT ALL PRIVILEGES ON logistics_hub.* TO 'log_user'@'localhost';
+GRANT ALL PRIVILEGES ON niagaone.* TO 'log_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -493,12 +493,12 @@ Update `API/appsettings.json` with your MySQL credentials:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "server=127.0.0.1;port=3306;database=logistics_hub;user=log_user;password=your_secure_password;AllowUserVariables=true;Connect Timeout=30;SslMode=Preferred"
+    "DefaultConnection": "server=127.0.0.1;port=3306;database=niagaone;user=log_user;password=your_secure_password;AllowUserVariables=true;Connect Timeout=30;SslMode=Preferred"
   },
   "JwtSettings": {
     "SecretKey": "your-secret-key-at-least-32-characters-long",
-    "Issuer": "logistichub-api",
-    "Audience": "logistichub-client",
+    "Issuer": "niagaone-api",
+    "Audience": "niagaone-client",
     "AccessTokenExpiryMinutes": 15,
     "RefreshTokenExpiryDays": 7
   }
@@ -551,7 +551,7 @@ Open Swagger UI and test the login endpoint:
 ```bash
 curl -X POST http://localhost:5164/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@logistichub.com", "password": "P@ssw0rd123"}'
+  -d '{"email": "admin@niagaone.com", "password": "P@ssw0rd123"}'
 ```
 
 You should receive a JSON response with `accessToken`, `refreshToken`, and user info.
@@ -566,8 +566,8 @@ You should receive a JSON response with `accessToken`, `refreshToken`, and user 
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | MySQL connection string | localhost:3306 |
 | `JwtSettings:SecretKey` | HMAC-SHA256 signing key | — |
-| `JwtSettings:Issuer` | JWT issuer claim | `logistichub-api` |
-| `JwtSettings:Audience` | JWT audience claim | `logistichub-client` |
+| `JwtSettings:Issuer` | JWT issuer claim | `niagaone-api` |
+| `JwtSettings:Audience` | JWT audience claim | `niagaone-client` |
 | `JwtSettings:AccessTokenExpiryMinutes` | Access token TTL | `15` |
 | `JwtSettings:RefreshTokenExpiryDays` | Refresh token TTL | `7` |
 
@@ -591,10 +591,10 @@ The database is seeded with four test accounts:
 
 | Name | Email | Password | Role |
 |---|---|---|---|
-| Alice Admin | `admin@logistichub.com` | `P@ssw0rd123` | Admin |
-| Marcus Manager | `manager@logistichub.com` | `P@ssw0rd123` | Manager |
-| Diana Driver | `driver@logistichub.com` | `P@ssw0rd123` | Driver |
-| Victor Viewer | `viewer@logistichub.com` | `P@ssw0rd123` | Viewer |
+| Alice Admin | `admin@niagaone.com` | `P@ssw0rd123` | Admin |
+| Marcus Manager | `manager@niagaone.com` | `P@ssw0rd123` | Manager |
+| Diana Driver | `driver@niagaone.com` | `P@ssw0rd123` | Driver |
+| Victor Viewer | `viewer@niagaone.com` | `P@ssw0rd123` | Viewer |
 
 > **Warning:** Change these passwords immediately in production environments.
 

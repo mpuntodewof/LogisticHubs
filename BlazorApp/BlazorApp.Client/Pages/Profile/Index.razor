@@ -1,11 +1,13 @@
 @page "/profile"
 @layout AppLayout
 
-
+@using Microsoft.AspNetCore.Components.Authorization
 @inject AuthService AuthSvc
+@inject ApiClient Api
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Profile — LogisticHub</PageTitle>
+<PageTitle>Profile — NiagaOne</PageTitle>
 
 <div class="page-header">
     <div>
@@ -20,54 +22,198 @@
 }
 else if (_user != null)
 {
-    <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start">
-        @* ── Profile Card ── *@
-        <div class="card" style="text-align:center;padding:2rem 1.5rem">
-            <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:2.2rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @_initials
-            </div>
-            <h2 style="margin:0 0 .25rem;font-size:1.3rem;color:#fff">@_user.Name</h2>
-            <div style="color:#94a3b8;font-size:.9rem;margin-bottom:1rem">@_user.Email</div>
-            <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap">
-                @foreach (var role in _user.Roles)
-                {
-                    <span class="badge-status @RoleBadge(role)">@role</span>
-                }
-                @if (!_user.Roles.Any())
-                {
-                    <span class="badge-status status-pending">No roles assigned</span>
-                }
+    <div class="profile-container">
+        @* ── Header Card: Avatar + Name + Role + Actions ── *@
+        <div class="profile-header-card">
+            <div class="profile-header-content">
+                <div class="profile-avatar">
+                    @_initials
+                </div>
+
+                <div class="profile-header-info">
+                    <h2 class="profile-name">@_user.Name</h2>
+                    <div class="profile-meta">
+                        <span class="profile-role-label">@_primaryRole</span>
+                        <span class="profile-meta-divider">|</span>
+                        <span class="profile-email-link">@_user.Email</span>
+                    </div>
+                    <p class="profile-bio">
+                        Member of the NiagaOne platform with
+                        @(_user.Roles.Any() ? string.Join(", ", _user.Roles) : "no")
+                        role@(_user.Roles.Count != 1 ? "s" : "") assigned.
+                        @_permissionCount permission@(_permissionCount != 1 ? "s" : "") granted across the system.
+                    </p>
+                </div>
+
+                <div class="profile-header-actions">
+                    <button class="btn-primary-custom" @onclick="OnEditProfile">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit Profile
+                    </button>
+                    <button class="btn-outline btn-danger-outline" @onclick="OnDeleteAccount">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Delete Account
+                    </button>
+                </div>
             </div>
         </div>
 
-        @* ── Details Card ── *@
-        <div class="card" style="padding:1.5rem">
-            <h3 style="margin:0 0 1.25rem;color:#fff;font-size:1.1rem;border-bottom:1px solid #334155;padding-bottom:.75rem">Account Details</h3>
-            <div style="display:grid;gap:1rem">
-                <div class="profile-row">
-                    <span class="profile-label">Full Name</span>
-                    <span class="profile-value">@_user.Name</span>
+        @* ── Personal Information Section ── *@
+        <div class="profile-section-card">
+            <h3 class="profile-section-title">Personal Information</h3>
+
+            <div class="profile-info-grid">
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Full name</span>
+                    <span class="profile-info-value">@_user.Name</span>
                 </div>
-                <div class="profile-row">
-                    <span class="profile-label">Email Address</span>
-                    <span class="profile-value">@_user.Email</span>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">User ID</span>
+                    <span class="profile-info-value profile-info-mono">@_user.Id.ToString()[..8]...</span>
                 </div>
-                <div class="profile-row">
-                    <span class="profile-label">User ID</span>
-                    <span class="profile-value" style="font-family:monospace;font-size:.8rem">@_user.Id</span>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Email address</span>
+                    <span class="profile-info-value">@_user.Email</span>
                 </div>
-                <div class="profile-row">
-                    <span class="profile-label">Roles</span>
-                    <span class="profile-value">
-                        @if (_user.Roles.Any())
-                        {
-                            @string.Join(", ", _user.Roles)
-                        }
-                        else
-                        {
-                            <span style="color:#666">None</span>
-                        }
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Status</span>
+                    <span class="profile-info-value">
+                        <span class="badge-status status-active">Active</span>
                     </span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Primary role</span>
+                    <span class="profile-info-value">@_primaryRole</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Member since</span>
+                    <span class="profile-info-value">@_memberSince</span>
+                </div>
+            </div>
+        </div>
+
+        @* ── Roles & Permissions Section ── *@
+        <div class="profile-section-card">
+            <h3 class="profile-section-title">Roles & Permissions</h3>
+
+            <div class="profile-info-grid">
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Assigned roles</span>
+                    <span class="profile-info-value">
+                        <div class="profile-roles">
+                            @foreach (var role in _user.Roles)
+                            {
+                                <span class="profile-role-chip @RoleChipClass(role)">@role</span>
+                            }
+                            @if (!_user.Roles.Any())
+                            {
+                                <span class="profile-role-chip role-default">None</span>
+                            }
+                        </div>
+                    </span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Permissions</span>
+                    <span class="profile-info-value">@_permissionCount granted</span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Edit Profile Dialog ── *@
+@if (_showEdit)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Edit Profile</span>
+                <button class="btn-logout" @onclick="CloseEdit">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                @if (!string.IsNullOrEmpty(_formSuccess))
+                {
+                    <div class="alert-custom alert-success">&#10003; @_formSuccess</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">User ID</label>
+                    <input class="form-control-custom" value="@_user?.Id" disabled />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-control-custom" value="@_editEmail" disabled />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input class="form-control-custom" @bind="_editName" placeholder="Your full name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Roles</label>
+                    <div class="profile-roles" style="padding:.5rem 0">
+                        @foreach (var role in (_user?.Roles ?? new()))
+                        {
+                            <span class="profile-role-chip @RoleChipClass(role)">@role</span>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Member Since</label>
+                    <input class="form-control-custom" value="@_memberSince" disabled />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="CloseEdit">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="UpdateProfileAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Delete Account Confirmation Dialog ── *@
+@if (_showDelete)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:440px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Delete Account</span>
+                <button class="btn-logout" @onclick="() => _showDelete = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_deleteError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_deleteError</div>
+                }
+                <p style="margin-bottom:.75rem">
+                    Are you sure you want to permanently delete your account
+                    <strong>@_user?.Name</strong> (<em>@_user?.Email</em>)?
+                </p>
+                <p style="color:#ef4444;font-size:.85rem;margin-bottom:.75rem">
+                    This action cannot be undone. All your data, role assignments, and active sessions will be removed.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Type <strong>DELETE</strong> to confirm</label>
+                    <input class="form-control-custom" @bind="_deleteConfirmText" placeholder="DELETE" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showDelete = false">Cancel</button>
+                    <button class="btn-primary-custom" style="background:#ef4444" @onclick="DeleteAccountAsync"
+                            disabled="@(_saving || _deleteConfirmText != "DELETE")">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Delete My Account
+                    </button>
                 </div>
             </div>
         </div>
@@ -78,23 +224,143 @@ else if (_user != null)
     private bool _loading = true;
     private UserInfo? _user;
     private string _initials = "U";
+    private int _permissionCount;
+    private string _memberSince = "—";
+    private string _primaryRole = "User";
+
+    // Edit dialog state
+    private bool _showEdit;
+    private bool _saving;
+    private string _editName = string.Empty;
+    private string _editEmail = string.Empty;
+    private string? _formError;
+    private string? _formSuccess;
+
+    // Delete dialog state
+    private bool _showDelete;
+    private string _deleteConfirmText = string.Empty;
+    private string? _deleteError;
 
     protected override async Task OnInitializedAsync()
     {
         _user = await AuthSvc.GetCurrentUserAsync();
         if (_user == null) return;
 
-        _initials = string.Concat(_user.Name.Split(' ').Select(w => w.FirstOrDefault())).ToUpper();
+        _initials = string.Concat(_user.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0])).ToUpper();
         if (_initials.Length > 2) _initials = _initials[..2];
+
+        _primaryRole = _user.Roles.FirstOrDefault() ?? "User";
+
+        var authState = (JwtAuthStateProvider)AuthStateProvider;
+        var permissions = await authState.GetPermissionsAsync();
+        _permissionCount = permissions.Count();
+
+        _memberSince = DateTime.UtcNow.ToString("MMMM yyyy");
 
         _loading = false;
     }
 
-    private static string RoleBadge(string role) => role switch
+    private void OnEditProfile()
     {
-        "Admin" => "status-admin",
-        "Manager" => "status-manager",
-        "Driver" => "status-ontrip",
-        _ => "status-pending"
+        _formError = null;
+        _formSuccess = null;
+        _editName = _user?.Name ?? string.Empty;
+        _editEmail = _user?.Email ?? string.Empty;
+        _showEdit = true;
+    }
+
+    private void CloseEdit()
+    {
+        _showEdit = false;
+        _formError = null;
+        _formSuccess = null;
+    }
+
+    private async Task UpdateProfileAsync()
+    {
+        _formError = null;
+        _formSuccess = null;
+
+        if (string.IsNullOrWhiteSpace(_editName))
+        {
+            _formError = "Name cannot be empty.";
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var request = new UpdateUserRequest { Name = _editName.Trim() };
+            var success = await Api.UpdateUserAsync(_user!.Id, request);
+
+            if (success)
+            {
+                // Update local state
+                _user.Name = _editName.Trim();
+                _initials = string.Concat(_user.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0])).ToUpper();
+                if (_initials.Length > 2) _initials = _initials[..2];
+
+                _formSuccess = "Profile updated successfully.";
+            }
+            else
+            {
+                _formError = "Failed to update profile. Please try again.";
+            }
+        }
+        catch
+        {
+            _formError = "An error occurred while updating your profile.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void OnDeleteAccount()
+    {
+        _deleteError = null;
+        _deleteConfirmText = string.Empty;
+        _showDelete = true;
+    }
+
+    private async Task DeleteAccountAsync()
+    {
+        _deleteError = null;
+
+        if (_deleteConfirmText != "DELETE")
+            return;
+
+        _saving = true;
+        try
+        {
+            var success = await Api.DeleteUserAsync(_user!.Id);
+
+            if (success)
+            {
+                await AuthSvc.LogoutAsync();
+                Nav.NavigateTo("/login", forceLoad: true);
+            }
+            else
+            {
+                _deleteError = "Failed to delete account. You may not have permission.";
+            }
+        }
+        catch
+        {
+            _deleteError = "An error occurred while deleting your account.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private static string RoleChipClass(string role) => role switch
+    {
+        "Admin" => "role-admin",
+        "Manager" => "role-manager",
+        "Driver" => "role-driver",
+        _ => "role-default"
     };
 }

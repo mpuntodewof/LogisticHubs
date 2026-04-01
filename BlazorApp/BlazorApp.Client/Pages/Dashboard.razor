@@ -2,12 +2,11 @@
 @page "/dashboard"
 @layout AppLayout
 
-
 @inject ApiClient Api
 @inject NavigationManager Nav
 @inject AuthService AuthSvc
 
-<PageTitle>Dashboard — LogisticHub</PageTitle>
+<PageTitle>Dashboard — NiagaOne</PageTitle>
 
 @if (_loading)
 {
@@ -22,94 +21,158 @@ else
         </div>
     </div>
 
+    @* ── Overview Stats ── *@
     <div class="stat-grid">
         <div class="stat-card">
-            <div class="stat-icon blue">&#128230;</div>
+            <div class="stat-icon blue">&#128176;</div>
             <div>
-                <div class="stat-value">@_totalShipments</div>
-                <div class="stat-label">Total Shipments</div>
+                <div class="stat-value">@_totalOrders</div>
+                <div class="stat-label">Sales Orders</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon yellow">&#128336;</div>
+            <div class="stat-icon green">&#128722;</div>
             <div>
-                <div class="stat-value">@_pendingShipments</div>
-                <div class="stat-label">Pending</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon green">&#10003;</div>
-            <div>
-                <div class="stat-value">@_deliveredShipments</div>
-                <div class="stat-label">Delivered</div>
+                <div class="stat-value">@_totalProducts</div>
+                <div class="stat-label">Products</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon cyan">&#128101;</div>
             <div>
-                <div class="stat-value">@_totalDrivers</div>
-                <div class="stat-label">Active Drivers</div>
+                <div class="stat-value">@_totalCustomers</div>
+                <div class="stat-label">Customers</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon blue">&#128663;</div>
+            <div class="stat-icon yellow">&#128666;</div>
             <div>
-                <div class="stat-value">@_totalVehicles</div>
-                <div class="stat-label">Vehicles</div>
+                <div class="stat-value">@_totalShipments</div>
+                <div class="stat-label">Shipments</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon green">&#127970;</div>
+            <div class="stat-icon blue">&#128203;</div>
             <div>
-                <div class="stat-value">@_totalWarehouses</div>
-                <div class="stat-label">Warehouses</div>
+                <div class="stat-value">@_totalPurchaseOrders</div>
+                <div class="stat-label">Purchase Orders</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">&#128196;</div>
+            <div>
+                <div class="stat-value">@_totalInvoices</div>
+                <div class="stat-label">Invoices</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon cyan">&#128119;</div>
+            <div>
+                <div class="stat-value">@_totalEmployees</div>
+                <div class="stat-label">Employees</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow">&#127873;</div>
+            <div>
+                <div class="stat-value">@_totalPromotions</div>
+                <div class="stat-label">Active Promotions</div>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header-custom">
-            <span class="card-title-custom">Recent Shipments</span>
-            <a href="/shipments" class="btn-outline">View all</a>
-        </div>
-        <div class="table-wrapper">
-            <table class="lh-table">
-                <thead>
-                    <tr>
-                        <th>Tracking No.</th>
-                        <th>Destination</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!_recentShipments.Any())
-                    {
-                        <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128230;</div><div class="empty-state-text">No shipments yet</div></div></td></tr>
-                    }
-                    else
-                    {
-                        @foreach (var s in _recentShipments)
+    @* ── Quick Links ── *@
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        @* Recent Orders *@
+        <div class="card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Recent Sales Orders</span>
+                <a href="/sales-orders" class="btn-outline">View all</a>
+            </div>
+            <div class="table-wrapper">
+                <table class="lh-table">
+                    <thead>
+                        <tr><th>Order #</th><th>Customer</th><th>Status</th><th>Total</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (!_recentOrders.Any())
                         {
-                            <tr style="cursor:pointer" @onclick="@(() => NavToShipment(s.Id))">
-                                <td><strong>@s.TrackingNumber</strong></td>
-                                <td>@s.DestinationAddress</td>
-                                <td><span class="badge-status @GetStatusClass(s.Status)">@s.Status</span></td>
-                                <td>@s.CreatedAt.ToString("MMM d, yyyy")</td>
-                            </tr>
+                            <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128176;</div><div class="empty-state-text">No orders yet</div></div></td></tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            @foreach (var o in _recentOrders)
+                            {
+                                <tr>
+                                    <td><strong>@o.OrderNumber</strong></td>
+                                    <td>@(o.CustomerName ?? "Walk-in")</td>
+                                    <td><span class="badge-status @GetStatusClass(o.Status)">@o.Status</span></td>
+                                    <td>@($"Rp {o.GrandTotal:N0}")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* Recent Shipments *@
+        <div class="card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Recent Shipments</span>
+                <a href="/shipments" class="btn-outline">View all</a>
+            </div>
+            <div class="table-wrapper">
+                <table class="lh-table">
+                    <thead>
+                        <tr><th>Tracking No.</th><th>Destination</th><th>Status</th><th>Created</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (!_recentShipments.Any())
+                        {
+                            <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128666;</div><div class="empty-state-text">No shipments yet</div></div></td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var s in _recentShipments)
+                            {
+                                <tr style="cursor:pointer" @onclick="@(() => Nav.NavigateTo($"/shipments/{s.Id}"))">
+                                    <td><strong>@s.TrackingNumber</strong></td>
+                                    <td>@s.DestinationAddress</td>
+                                    <td><span class="badge-status @GetStatusClass(s.Status)">@s.Status</span></td>
+                                    <td>@s.CreatedAt.ToString("MMM d, yyyy")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    @* ── Notifications ── *@
+    @if (_unreadNotifications > 0)
+    {
+        <div class="card" style="border-left:4px solid #3B82F6">
+            <div class="card-body-custom" style="display:flex;align-items:center;gap:1rem">
+                <span style="font-size:1.5rem">&#128276;</span>
+                <div>
+                    <strong>You have @_unreadNotifications unread notification@(_unreadNotifications > 1 ? "s" : "")</strong>
+                    <div style="color:#64748B;font-size:.875rem">Check your notifications to stay up to date</div>
+                </div>
+                <a href="/notifications" class="btn-primary-custom" style="margin-left:auto">View</a>
+            </div>
+        </div>
+    }
 }
 
 @code {
     private bool _loading = true;
     private string _userName = "User";
-    private int _totalShipments, _pendingShipments, _deliveredShipments;
-    private int _totalDrivers, _totalVehicles, _totalWarehouses;
+    private int _totalOrders, _totalProducts, _totalCustomers, _totalShipments;
+    private int _totalPurchaseOrders, _totalInvoices, _totalEmployees, _totalPromotions;
+    private int _unreadNotifications;
+    private List<SalesOrderDto> _recentOrders = new();
     private List<ShipmentDto> _recentShipments = new();
 
     protected override async Task OnInitializedAsync()
@@ -117,29 +180,40 @@ else
         var user = await AuthSvc.GetCurrentUserAsync();
         _userName = user?.Name ?? "User";
 
-        try
-        {
-            var shipments = await Api.GetShipmentsAsync();
-            _totalShipments = shipments.Count;
-            _pendingShipments = shipments.Count(s => s.Status == "Pending");
-            _deliveredShipments = shipments.Count(s => s.Status == "Delivered");
-            _recentShipments = shipments.Take(8).ToList();
+        // Load all stats in parallel, catching permission errors gracefully
+        var tasks = new List<Task>();
 
-            var drivers = await Api.GetDriversAsync();
-            _totalDrivers = drivers.Count;
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetSalesOrdersAsync(1, 5); _totalOrders = r?.TotalCount ?? 0; _recentOrders = r?.Items ?? new(); } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetProductsAsync(1, 1); _totalProducts = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetCustomersAsync(1, 1); _totalCustomers = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var s = await Api.GetShipmentsAsync(); _totalShipments = s?.Count ?? 0; _recentShipments = s?.Take(5).ToList() ?? new(); } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetPurchaseOrdersAsync(1, 1); _totalPurchaseOrders = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetInvoicesAsync(1, 1); _totalInvoices = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetEmployeesAsync(1, 1); _totalEmployees = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { var r = await Api.GetPromotionsAsync(1, 1); _totalPromotions = r?.TotalCount ?? 0; } catch { }
+        }));
+        tasks.Add(Task.Run(async () => {
+            try { _unreadNotifications = await Api.GetUnreadCountAsync(); } catch { }
+        }));
 
-            var vehicles = await Api.GetVehiclesAsync();
-            _totalVehicles = vehicles.Count;
-
-            var warehouses = await Api.GetWarehousesAsync();
-            _totalWarehouses = warehouses.Count;
-        }
-        catch { /* insufficient permissions — show zeros */ }
-
+        await Task.WhenAll(tasks);
         _loading = false;
     }
-
-    private void NavToShipment(Guid id) => Nav.NavigateTo("/shipments/" + id);
 
     private static string GetStatusClass(string status) =>
         "status-" + status.ToLower().Replace(" ", "");

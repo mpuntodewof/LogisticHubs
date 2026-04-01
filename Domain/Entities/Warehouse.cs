@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using Domain.Interfaces;
 
 namespace Domain.Entities
 {
-    public class Warehouse
+    public class Warehouse : BaseEntity, ITenantScoped, ISoftDeletable
     {
-        [Key]
-        public Guid Id { get; set; }
-
         [Required]
         [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
@@ -22,9 +15,18 @@ namespace Domain.Entities
 
         public int Capacity { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Guid TenantId { get; set; }
+
+        // Soft delete
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public Guid? DeletedBy { get; set; }
 
         // Navigation properties
+        public Tenant Tenant { get; set; } = null!;
         public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+        public ICollection<WarehouseStock> WarehouseStocks { get; set; } = new List<WarehouseStock>();
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+        public ICollection<GoodsReceipt> GoodsReceipts { get; set; } = new List<GoodsReceipt>();
     }
 }

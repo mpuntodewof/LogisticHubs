@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Users;
 using Application.Interfaces;
 
@@ -36,6 +37,34 @@ namespace Application.UseCases.Users
             }
 
             return result;
+        }
+
+        public async Task<PagedResult<UserDto>> GetPagedAsync(PagedRequest request)
+        {
+            var pagedUsers = await _userRepository.GetPagedAsync(request);
+            var dtoItems = new List<UserDto>();
+
+            foreach (var user in pagedUsers.Items)
+            {
+                var roles = await _authRepository.GetUserRoleNamesAsync(user.Id);
+                dtoItems.Add(new UserDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    IsActive = user.IsActive,
+                    CreatedAt = user.CreatedAt,
+                    Roles = roles
+                });
+            }
+
+            return new PagedResult<UserDto>
+            {
+                Items = dtoItems,
+                TotalCount = pagedUsers.TotalCount,
+                Page = pagedUsers.Page,
+                PageSize = pagedUsers.PageSize
+            };
         }
 
         public async Task<UserDto?> GetByIdAsync(Guid id)

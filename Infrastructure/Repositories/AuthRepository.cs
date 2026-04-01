@@ -108,5 +108,98 @@ namespace Infrastructure.Repositories
 
             await _context.SaveChangesAsync();
         }
+
+        // ── Multi-tenancy methods ───────────────────────────────────────────
+
+        public async Task<Tenant?> GetTenantByIdAsync(Guid tenantId)
+        {
+            return await _context.Tenants.FindAsync(tenantId);
+        }
+
+        public async Task<Tenant> CreateTenantAsync(Tenant tenant)
+        {
+            _context.Tenants.Add(tenant);
+            await _context.SaveChangesAsync();
+            return tenant;
+        }
+
+        public async Task<Role?> GetRoleByNameAndTenantAsync(string roleName, Guid tenantId)
+        {
+            return await _context.Roles
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(r => r.Name == roleName && r.TenantId == tenantId);
+        }
+
+        public async Task<User?> GetUserByEmailUnfilteredAsync(string email)
+        {
+            return await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task SeedRolesAndPermissionsForTenantAsync(Guid tenantId)
+        {
+            var permDefinitions = new[]
+            {
+                ("users.create",      "users",      "create"),
+                ("users.read",        "users",      "read"),
+                ("users.update",      "users",      "update"),
+                ("users.delete",      "users",      "delete"),
+                ("roles.assign",      "roles",      "assign"),
+                ("shipments.create",  "shipments",  "create"),
+                ("shipments.read",    "shipments",  "read"),
+                ("shipments.update",  "shipments",  "update"),
+                ("shipments.delete",  "shipments",  "delete"),
+                ("shipments.assign",  "shipments",  "assign"),
+                ("tracking.create",   "tracking",   "create"),
+                ("tracking.read",     "tracking",   "read"),
+                ("drivers.manage",    "drivers",    "manage"),
+                ("vehicles.manage",   "vehicles",   "manage"),
+                ("warehouses.manage", "warehouses", "manage"),
+                ("roles.create",      "roles",      "create"),
+                ("roles.read",        "roles",      "read"),
+                ("roles.update",      "roles",      "update"),
+                ("roles.delete",      "roles",      "delete"),
+            };
+
+            // Create permissions
+            var permIds = new Dictionary<string, Guid>();
+            foreach (var (name, resource, action) in permDefinitions)
+            {
+                var perm = new Permission
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    Resource = resource,
+                    Action = action,
+                    TenantId = tenantId
+                };
+                _context.Permissions.Add(perm);
+                permIds[name] = perm.Id;
+            }
+
+            // Create roles
+            var adminRole = new Role { Id = Guid.NewGuid(), Name = "Admin", Description = "Full system access", IsSystem = true, TenantId = tenantId };
+            var managerRole = new Role { Id = Guid.NewGuid(), Name = "Manager", Description = "Manage shipments, drivers, vehicles", IsSystem = true, TenantId = tenantId };
+            var driverRole = new Role { Id = Guid.NewGuid(), Name = "Driver", Description = "View assignments, update tracking", IsSystem = true, TenantId = tenantId };
+            var viewerRole = new Role { Id = Guid.NewGuid(), Name = "Viewer", Description = "Read-only access", IsSystem = true, TenantId = tenantId };
+
+            _context.Roles.AddRange(adminRole, managerRole, driverRole, viewerRole);
+
+            // Assign permissions to roles
+            foreach (var permId in permIds.Values)
+                _context.RolePermissions.Add(new RolePermission { RoleId = adminRole.Id, PermissionId = permId, TenantId = tenantId });
+
+            foreach (var p in new[] { "users.read", "shipments.create", "shipments.read", "shipments.update", "shipments.assign", "tracking.create", "tracking.read", "drivers.manage", "vehicles.manage", "warehouses.manage" })
+                _context.RolePermissions.Add(new RolePermission { RoleId = managerRole.Id, PermissionId = permIds[p], TenantId = tenantId });
+
+            foreach (var p in new[] { "shipments.read", "tracking.create", "tracking.read" })
+                _context.RolePermissions.Add(new RolePermission { RoleId = driverRole.Id, PermissionId = permIds[p], TenantId = tenantId });
+
+            foreach (var p in new[] { "shipments.read", "tracking.read" })
+                _context.RolePermissions.Add(new RolePermission { RoleId = viewerRole.Id, PermissionId = permIds[p], TenantId = tenantId });
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

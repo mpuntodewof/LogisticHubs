@@ -1,5 +1,7 @@
+using Application.DTOs.Common;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Extensions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +18,26 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Warehouse>> GetAllAsync()
             => await _context.Warehouses.OrderBy(w => w.Name).ToListAsync();
+
+        public async Task<PagedResult<Warehouse>> GetPagedAsync(PagedRequest request)
+        {
+            var query = _context.Warehouses.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var search = request.Search.ToLower();
+                query = query.Where(w => w.Name.ToLower().Contains(search) || w.Location.ToLower().Contains(search));
+            }
+
+            query = request.SortBy?.ToLower() switch
+            {
+                "name" => request.SortDescending ? query.OrderByDescending(w => w.Name) : query.OrderBy(w => w.Name),
+                "location" => request.SortDescending ? query.OrderByDescending(w => w.Location) : query.OrderBy(w => w.Location),
+                _ => query.OrderByDescending(w => w.CreatedAt)
+            };
+
+            return await query.ToPagedResultAsync(request);
+        }
 
         public async Task<Warehouse?> GetByIdAsync(Guid id)
             => await _context.Warehouses.FindAsync(id);

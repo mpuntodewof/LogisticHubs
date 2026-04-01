@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Warehouses;
 using Application.Interfaces;
 using Domain.Entities;
@@ -19,6 +20,18 @@ namespace Application.UseCases.Warehouses
         {
             var warehouses = await _warehouseRepository.GetAllAsync();
             return warehouses.Select(MapToDto);
+        }
+
+        public async Task<PagedResult<WarehouseDto>> GetPagedAsync(PagedRequest request)
+        {
+            var paged = await _warehouseRepository.GetPagedAsync(request);
+            return new PagedResult<WarehouseDto>
+            {
+                Items = paged.Items.Select(MapToDto).ToList(),
+                TotalCount = paged.TotalCount,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
         }
 
         public async Task<WarehouseDto?> GetByIdAsync(Guid id)

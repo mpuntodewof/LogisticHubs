@@ -1,4 +1,5 @@
 using API.Filters;
+using Application.DTOs.Common;
 using Application.DTOs.Shipments;
 using Application.UseCases.Shipments;
 using Microsoft.AspNetCore.Authorization;
@@ -18,13 +19,13 @@ namespace API.Controllers
             _shipmentUseCase = shipmentUseCase;
         }
 
-        /// <summary>Get all shipments.</summary>
+        /// <summary>Get all shipments (paginated).</summary>
         [HttpGet]
         [RequirePermission("shipments.read")]
-        public async Task<ActionResult<IEnumerable<ShipmentDto>>> GetAll()
+        public async Task<ActionResult<PagedResult<ShipmentDto>>> GetAll([FromQuery] PagedRequest request)
         {
-            var shipments = await _shipmentUseCase.GetAllAsync();
-            return Ok(shipments);
+            var result = await _shipmentUseCase.GetPagedAsync(request);
+            return Ok(result);
         }
 
         /// <summary>Get a shipment by ID.</summary>

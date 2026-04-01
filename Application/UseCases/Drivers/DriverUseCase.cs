@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Drivers;
 using Application.Interfaces;
 using Domain.Entities;
@@ -20,6 +21,18 @@ namespace Application.UseCases.Drivers
         {
             var drivers = await _driverRepository.GetAllAsync();
             return drivers.Select(MapToDto);
+        }
+
+        public async Task<PagedResult<DriverDto>> GetPagedAsync(PagedRequest request)
+        {
+            var paged = await _driverRepository.GetPagedAsync(request);
+            return new PagedResult<DriverDto>
+            {
+                Items = paged.Items.Select(MapToDto).ToList(),
+                TotalCount = paged.TotalCount,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
         }
 
         public async Task<DriverDto?> GetByIdAsync(Guid id)

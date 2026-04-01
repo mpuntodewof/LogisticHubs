@@ -18,7 +18,7 @@ namespace Infrastructure.Services
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(User user, IEnumerable<string> roles, IEnumerable<string> permissions)
+        public string GenerateAccessToken(User user, IEnumerable<string> roles, IEnumerable<string> permissions, Guid tenantId)
         {
             var secretKey = _configuration["JwtSettings:SecretKey"]
                 ?? throw new InvalidOperationException("JwtSettings:SecretKey is not configured.");
@@ -31,7 +31,8 @@ namespace Infrastructure.Services
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Email, user.Email),
                 new(JwtRegisteredClaimNames.Name, user.Name),
-                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new("tenant_id", tenantId.ToString())
             };
 
             foreach (var role in roles)
@@ -41,8 +42,8 @@ namespace Infrastructure.Services
                 claims.Add(new Claim("permissions", permission));
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JwtSettings:Issuer"] ?? "logistichub-api",
-                audience: _configuration["JwtSettings:Audience"] ?? "logistichub-client",
+                issuer: _configuration["JwtSettings:Issuer"] ?? "niagaone-api",
+                audience: _configuration["JwtSettings:Audience"] ?? "niagaone-client",
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: credentials

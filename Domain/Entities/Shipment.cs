@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Interfaces;
 
 namespace Domain.Entities
 {
-    public class Shipment
+    public class Shipment : BaseEntity, ITenantScoped, ISoftDeletable
     {
-        [Key]
-        public Guid Id { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string TrackingNumber { get; set; } = string.Empty;
@@ -34,13 +27,21 @@ namespace Domain.Entities
         [MaxLength(50)]
         public string Status { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Guid TenantId { get; set; }
+
+        // Soft delete
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public Guid? DeletedBy { get; set; }
 
         // Navigation properties
+        public Tenant Tenant { get; set; } = null!;
+
         [ForeignKey(nameof(OriginWarehouseId))]
         public Warehouse OriginWarehouse { get; set; } = null!;
 
         public ICollection<ShipmentAssignment> ShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
         public ICollection<ShipmentTracking> TrackingHistory { get; set; } = new List<ShipmentTracking>();
+        public ICollection<ShipmentNote> Notes { get; set; } = new List<ShipmentNote>();
     }
 }

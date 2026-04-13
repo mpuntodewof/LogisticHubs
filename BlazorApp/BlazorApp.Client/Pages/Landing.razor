@@ -1,0 +1,306 @@
+@page "/"
+@layout BlazorApp.Client.Layout.LandingLayout
+
+<PageTitle>StockLedger — Inventory + Finance for Multi-Channel Retailers</PageTitle>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav class="landing-nav">
+    <div class="landing-container nav-inner">
+        <a href="/" class="nav-brand">
+            <div class="nav-brand-icon">SL</div>
+            <span class="nav-brand-text">StockLedger</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it Works</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#faq">FAQ</a>
+        </div>
+        <div class="nav-actions">
+            <a href="/login" class="nav-link-login">Log in</a>
+            <a href="/register" class="btn-cta-sm">Start Free Trial</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero-section">
+    <div class="landing-container hero-inner">
+        <div class="hero-badge">Built for Indonesian Retailers</div>
+        <h1 class="hero-title">
+            Know your <span class="text-gradient">real stock.</span><br/>
+            Know your <span class="text-gradient">real profit.</span>
+        </h1>
+        <p class="hero-subtitle">
+            The single source of truth for inventory and finances — across Tokopedia, Shopee, and your offline toko. Stop updating stock in 3 places. Stop guessing your margins.
+        </p>
+        <div class="hero-actions">
+            <a href="/register" class="btn-cta">Start 14-Day Free Trial</a>
+            <span class="hero-note">No credit card required</span>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">3+</div>
+                <div class="hero-stat-label">Sales Channels Unified</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">10K</div>
+                <div class="hero-stat-label">SKUs Supported</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">11%</div>
+                <div class="hero-stat-label">PPN Auto-Tracked</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PROBLEM ═══ -->
+<section class="problem-section">
+    <div class="landing-container">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Sound familiar?</h2>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">&#128561;</div>
+                <h3>Overselling</h3>
+                <p>"I sold the last 5 units on Tokopedia but forgot to update Shopee. Now I have 3 orders I can't fulfill."</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon">&#128176;</div>
+                <h3>Hidden Losses</h3>
+                <p>"My omzet looks great but after Shopee's 15% fee, shipping, and returns... I might be losing money on some products."</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon">&#128196;</div>
+                <h3>Tax Headaches</h3>
+                <p>"e-Faktur takes me 2 days every month. I copy numbers between 4 spreadsheets and still make mistakes."</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features-section" id="features">
+    <div class="landing-container">
+        <div class="section-label">Core Features</div>
+        <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+        <p class="section-subtitle">StockLedger focuses on two things and does them exceptionally well: inventory and finances.</p>
+
+        <div class="features-grid">
+            <div class="feature-card feature-primary">
+                <div class="feature-icon-wrap blue">&#128230;</div>
+                <h3>Multi-Channel Stock Sync</h3>
+                <p>Import sales from Tokopedia, Shopee, and offline via CSV. One dashboard shows real stock across all warehouses.</p>
+                <ul class="feature-list">
+                    <li>CSV import from marketplace exports</li>
+                    <li>Auto stock deduction on import</li>
+                    <li>Multi-warehouse tracking</li>
+                    <li>Immutable movement audit trail</li>
+                </ul>
+            </div>
+            <div class="feature-card feature-primary">
+                <div class="feature-icon-wrap green">&#128200;</div>
+                <h3>Real Profitability Data</h3>
+                <p>See true margin per product and per channel — after platform fees, shipping, and COGS. Know where your money goes.</p>
+                <ul class="feature-list">
+                    <li>P&L by channel (Tokopedia vs Shopee vs Offline)</li>
+                    <li>Margin per SKU</li>
+                    <li>Platform fee tracking</li>
+                    <li>Double-entry accounting</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap amber">&#128196;</div>
+                <h3>Tax Compliance</h3>
+                <p>PPN 11% auto-tracked on every transaction. e-Faktur numbering built in. Month-end tax prep in hours, not days.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap cyan">&#128666;</div>
+                <h3>Full Purchasing Cycle</h3>
+                <p>Create POs, track approvals, receive goods — stock updates automatically. Complete supplier management.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap purple">&#128272;</div>
+                <h3>Team Permissions</h3>
+                <p>70+ granular permissions. Give warehouse staff inventory access, accountants finance access. Full RBAC.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap slate">&#128270;</div>
+                <h3>Complete Audit Trail</h3>
+                <p>Every stock movement, every journal entry, every login — logged and immutable. Full compliance ready.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="how-section" id="how-it-works">
+    <div class="landing-container">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Up and running in 15 minutes</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Set up your store</h3>
+                <p>Add your products, warehouses, and team members. Import your existing catalog from a CSV.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Import daily sales</h3>
+                <p>Export orders from Tokopedia/Shopee seller center. Upload the CSV. StockLedger matches SKUs and deducts stock.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>See the truth</h3>
+                <p>Real-time stock levels, profit margins by channel, and tax-ready invoices. All in one dashboard.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="pricing-section" id="pricing">
+    <div class="landing-container">
+        <div class="section-label">Simple Pricing</div>
+        <h2 class="section-title">No transaction fees. No surprises.</h2>
+        <p class="section-subtitle">Start with a 14-day free trial. No credit card required.</p>
+
+        <div class="pricing-grid">
+            <div class="price-card">
+                <div class="price-tier">Starter</div>
+                <div class="price-desc">Small retailer, 1-2 channels</div>
+                <div class="price-amount">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-value">299</span>
+                    <span class="price-unit">K/month</span>
+                </div>
+                <div class="price-annual">Rp239K/mo billed annually (save 20%)</div>
+                <a href="/register" class="btn-price">Start Free Trial</a>
+                <ul class="price-features">
+                    <li>Up to 500 active SKUs</li>
+                    <li>1 warehouse</li>
+                    <li>20 CSV imports/month</li>
+                    <li>3 team members</li>
+                    <li>Basic P&L report</li>
+                    <li>PPN tracking + e-Faktur</li>
+                    <li>6-month data history</li>
+                    <li>Email support (48h)</li>
+                </ul>
+            </div>
+
+            <div class="price-card price-featured">
+                <div class="price-badge">Most Popular</div>
+                <div class="price-tier">Professional</div>
+                <div class="price-desc">Growing retailer, 3+ channels</div>
+                <div class="price-amount">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-value">599</span>
+                    <span class="price-unit">K/month</span>
+                </div>
+                <div class="price-annual">Rp479K/mo billed annually (save 20%)</div>
+                <a href="/register" class="btn-price btn-price-featured">Start Free Trial</a>
+                <ul class="price-features">
+                    <li>Up to 5,000 active SKUs</li>
+                    <li>Up to 5 warehouses</li>
+                    <li>100 CSV imports/month</li>
+                    <li>10 team members</li>
+                    <li><strong>P&L by channel</strong></li>
+                    <li><strong>Balance sheet + cash flow</strong></li>
+                    <li>Custom roles & permissions</li>
+                    <li>2-year data history</li>
+                    <li>Email + WhatsApp support (12h)</li>
+                    <li>1x onboarding video call</li>
+                </ul>
+            </div>
+
+            <div class="price-card">
+                <div class="price-tier">Enterprise</div>
+                <div class="price-desc">Multi-branch operation</div>
+                <div class="price-amount">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-value">999</span>
+                    <span class="price-unit">K/month</span>
+                </div>
+                <div class="price-annual">Rp799K/mo billed annually (save 20%)</div>
+                <a href="/register" class="btn-price">Start Free Trial</a>
+                <ul class="price-features">
+                    <li>Unlimited SKUs</li>
+                    <li>Unlimited warehouses</li>
+                    <li>Unlimited CSV imports</li>
+                    <li>Unlimited team members</li>
+                    <li><strong>Custom reports + export</strong></li>
+                    <li><strong>API access</strong></li>
+                    <li>Unlimited data history</li>
+                    <li>Dedicated account manager (4h)</li>
+                    <li>Dedicated onboarding</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section class="faq-section" id="faq">
+    <div class="landing-container">
+        <div class="section-label">FAQ</div>
+        <h2 class="section-title">Common questions</h2>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <h3>Is there a free plan?</h3>
+                <p>We offer a 14-day free trial with full Professional features. After that, plans start at Rp299K/month.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Do you charge per transaction?</h3>
+                <p>Never. Unlike marketplaces, we charge a flat monthly fee regardless of how many orders you process.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Can I switch plans?</h3>
+                <p>Yes, anytime. Upgrade or downgrade — changes take effect on your next billing cycle.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What happens to my data if I cancel?</h3>
+                <p>Your data stays in read-only mode for 30 days. You can export everything as CSV at any time.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Does it connect to Tokopedia/Shopee automatically?</h3>
+                <p>Currently via CSV import (you export from seller center and upload). Direct API sync is on our roadmap.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Is my data safe?</h3>
+                <p>All data is encrypted in transit (HTTPS), isolated per tenant, with full audit trails and automatic backups.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FINAL CTA ═══ -->
+<section class="cta-section">
+    <div class="landing-container cta-inner">
+        <h2>Stop guessing. Start knowing.</h2>
+        <p>Join Indonesian retailers who finally see their real stock and real profit in one place.</p>
+        <a href="/register" class="btn-cta">Start Your 14-Day Free Trial</a>
+        <span class="hero-note">No credit card required. Full Professional access.</span>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="landing-footer">
+    <div class="landing-container footer-inner">
+        <div class="footer-brand">
+            <div class="nav-brand-icon">SL</div>
+            <span class="nav-brand-text">StockLedger</span>
+        </div>
+        <div class="footer-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#faq">FAQ</a>
+            <a href="/login">Login</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 StockLedger. All rights reserved.</div>
+    </div>
+</footer>

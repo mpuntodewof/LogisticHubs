@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using FluentAssertions;
-using NiagaOne.E2E.Tests.Helpers;
+using StockLedger.E2E.Tests.Helpers;
 
-namespace NiagaOne.E2E.Tests.Flows;
+namespace StockLedger.E2E.Tests.Flows;
 
-public class Flow01_CompleteRetailSetupTests : NiagaOneTestBase
+public class Flow01_CompleteRetailSetupTests : StockLedgerTestBase
 {
     [Fact]
     public async Task Admin_Should_Setup_Complete_Retail_Store()
@@ -13,7 +13,7 @@ public class Flow01_CompleteRetailSetupTests : NiagaOneTestBase
         var suffix = Guid.NewGuid().ToString("N")[..8];
 
         // --- Login as admin ---
-        var token = await LoginAsync("admin@niagaone.com", "Admin@123");
+        var token = await LoginAsync("admin@stockledger.io", "Admin@123");
         token.Should().NotBeNullOrWhiteSpace("admin login should return a valid token");
 
         // --- Create Parent Categories ---

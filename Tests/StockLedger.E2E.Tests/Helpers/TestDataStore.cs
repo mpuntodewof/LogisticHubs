@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace NiagaOne.E2E.Tests.Helpers;
+namespace StockLedger.E2E.Tests.Helpers;
 
 public static class TestDataStore
 {

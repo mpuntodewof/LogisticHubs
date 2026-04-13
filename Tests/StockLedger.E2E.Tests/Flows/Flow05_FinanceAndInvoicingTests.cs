@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using FluentAssertions;
-using NiagaOne.E2E.Tests.Helpers;
+using StockLedger.E2E.Tests.Helpers;
 
-namespace NiagaOne.E2E.Tests.Flows;
+namespace StockLedger.E2E.Tests.Flows;
 
-public class Flow05_FinanceAndInvoicingTests : NiagaOneTestBase
+public class Flow05_FinanceAndInvoicingTests : StockLedgerTestBase
 {
     [Fact]
     public async Task Accountant_Should_Create_Invoice_And_Journal_Entry()
@@ -13,7 +13,7 @@ public class Flow05_FinanceAndInvoicingTests : NiagaOneTestBase
         var suffix = Guid.NewGuid().ToString("N")[..8];
 
         // --- Login as accountant ---
-        var accountantToken = await LoginAsync("accountant@niagaone.com", "Accountant@123");
+        var accountantToken = await LoginAsync("accountant@stockledger.io", "Accountant@123");
         accountantToken.Should().NotBeNullOrWhiteSpace("accountant login should return a valid token");
 
         // --- Create Chart of Accounts ---

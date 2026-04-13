@@ -4,12 +4,12 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
-using NiagaOne.E2E.Tests.Helpers;
+using StockLedger.E2E.Tests.Helpers;
 
-namespace NiagaOne.E2E.Tests.Flows;
+namespace StockLedger.E2E.Tests.Flows;
 
 [Collection("E2E")]
-public class Flow10_MultiTenantIsolationTests : NiagaOneTestBase
+public class Flow10_MultiTenantIsolationTests : StockLedgerTestBase
 {
     [Fact]
     public async Task Tenant_B_Data_Is_Invisible_To_Tenant_A()
@@ -87,7 +87,7 @@ public class Flow10_MultiTenantIsolationTests : NiagaOneTestBase
         productResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         // ── Login as Tenant A admin ──────────────────────────────────────
-        var tenantAToken = await LoginAsync("admin@niagaone.com", "Password123!");
+        var tenantAToken = await LoginAsync("admin@stockledger.io", "Password123!");
 
         // ── Search for Tenant B's product from Tenant A ──────────────────
         var searchResponse = await AuthGet(tenantAToken, "/api/products?search=Tenant+B+Secret");

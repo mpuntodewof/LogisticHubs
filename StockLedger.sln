@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorApp.Client", "BlazorA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiagaOne.E2E.Tests", "Tests\NiagaOne.E2E.Tests\NiagaOne.E2E.Tests.csproj", "{2941EB64-C258-4F44-87F3-95EED84273AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockLedger.E2E.Tests", "Tests\StockLedger.E2E.Tests\StockLedger.E2E.Tests.csproj", "{2941EB64-C258-4F44-87F3-95EED84273AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

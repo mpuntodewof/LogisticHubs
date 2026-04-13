@@ -1,9 +1,16 @@
-# NiagaOne ERP - System Architecture & Design Document
+# StockLedger — System Architecture & Design Document
 
-**Version:** 1.0
-**Date:** 2026-03-25
-**Status:** Design Phase
-**Author:** Brainstorming Session (Deep Research + System Design + Product Strategy)
+**Version:** 2.0
+**Date:** 2026-04-13
+**Status:** Active Development
+**Scope:** Inventory + Finance SaaS for Indonesian mid-upper retailers
+
+> **Note:** This document was originally written for the full-ERP vision (22 modules).
+> As of v2.0, StockLedger focuses on Inventory + Finance only. The core architecture
+> (multi-tenancy, Clean Architecture, modular monolith, MySQL) remains valid.
+> References to out-of-scope modules (POS, E-Commerce, HRM, CRM, Loyalty) are
+> retained as future expansion context but are NOT part of the current build plan.
+> See PRODUCT_STRATEGY_CANVAS.md and ERP_FEATURE_BREAKDOWN.md for current scope.
 
 ---
 
@@ -28,7 +35,7 @@
 
 ## 1. Executive Summary
 
-NiagaOne is being evolved from a single-tenant logistics management application into a **multi-tenant SaaS ERP platform** targeting Indonesian mid-market retail businesses (20-1,000 employees) operating physical stores and e-commerce channels.
+StockLedger is a **multi-tenant SaaS platform** providing unified **Inventory management + Financial visibility** for Indonesian mid-to-upper retailers (10-200 employees) who sell across multiple channels (Tokopedia, Shopee, offline toko). The platform evolved from a logistics app through a full-ERP concept, and is now focused on the highest-impact pain points: multi-channel stock sync, profitability tracking, and PPN tax compliance.
 
 ### Key Design Decisions
 
@@ -37,20 +44,20 @@ NiagaOne is being evolved from a single-tenant logistics management application 
 | Multi-tenancy | Single DB, TenantId column | Cost-effective for mid-market, simplest operations |
 | Module structure | Modular monolith | Solo dev team, can extract to microservices later |
 | Cross-module communication | MediatR domain events | Decoupled, testable, no message broker overhead |
-| Storefront tech | Blazor WASM + prerendering | Shared codebase with back-office, single language |
-| Payment integration | Midtrans + Xendit | Covers all Indonesian payment methods |
+| Storefront tech | N/A (back-office only for v1) | Storefront deferred — retailers keep existing channels |
+| Payment integration | Deferred to v2 | v1 records payments manually; gateway integration later |
 | Background jobs | Hangfire with MySQL | Simple, reliable, dashboard included, .NET native |
 | Caching | Redis (L2) + IMemoryCache (L1) | Essential for multi-tenant performance |
 | File storage | MinIO (S3-compatible) | Self-hosted, cheap, migrate to cloud S3 later |
 | Database | MySQL 8.0 (keep existing) | No reason to migrate, Pomelo is mature |
 | PDF generation | QuestPDF | Free, .NET native, excellent for invoices |
-| Notifications | Fonnte (WhatsApp) + SMTP | WhatsApp is dominant in Indonesian commerce |
+| Notifications | Deferred to v2 | Email notifications only for critical alerts in v1 |
 
 ---
 
 ## 2. Current State Assessment
 
-### What Already Exists (NiagaOne)
+### What Already Exists (StockLedger)
 
 **6 projects** following Clean Architecture:
 - **Domain** — 12 entities (User, Driver, Vehicle, Warehouse, Shipment, ShipmentAssignment, ShipmentTracking, Role, Permission, UserRoleAssignment, RolePermission, RefreshToken)
@@ -212,8 +219,8 @@ public abstract class TenantAuditableEntity : ITenantScoped
 **Subdomain-first, header fallback for API consumers.**
 
 ```
-Back-office:  {tenant-slug}.app.niagaone.id
-Storefront:   {tenant-slug}.toko.niagaone.id  OR custom domain (CNAME)
+Back-office:  {tenant-slug}.app.stockledger.io
+Storefront:   {tenant-slug}.toko.stockledger.io  OR custom domain (CNAME)
 API clients:  X-Tenant-Id header (validated against JWT claim)
 ```
 
@@ -361,19 +368,19 @@ public class TenantFeatures
 ```
 src/
 ├── SharedKernel/
-│   └── NiagaOne.SharedKernel/           # ITenantScoped, AuditableEntity, Money,
+│   └── StockLedger.SharedKernel/           # ITenantScoped, AuditableEntity, Money,
 │                                            # DomainEvent, Result<T>, IUnitOfWork
 ├── Modules/
 │   ├── Platform/
-│   │   ├── NiagaOne.Platform.Domain/
-│   │   ├── NiagaOne.Platform.Application/
-│   │   ├── NiagaOne.Platform.Infrastructure/
-│   │   └── NiagaOne.Platform.Api/
+│   │   ├── StockLedger.Platform.Domain/
+│   │   ├── StockLedger.Platform.Application/
+│   │   ├── StockLedger.Platform.Infrastructure/
+│   │   └── StockLedger.Platform.Api/
 │   ├── Catalog/
-│   │   ├── NiagaOne.Catalog.Domain/
-│   │   ├── NiagaOne.Catalog.Application/
-│   │   ├── NiagaOne.Catalog.Infrastructure/
-│   │   └── NiagaOne.Catalog.Api/
+│   │   ├── StockLedger.Catalog.Domain/
+│   │   ├── StockLedger.Catalog.Application/
+│   │   ├── StockLedger.Catalog.Infrastructure/
+│   │   └── StockLedger.Catalog.Api/
 │   ├── Sales/                              # POS + E-commerce + Orders
 │   ├── Inventory/                          # Warehouse entity moves here
 │   ├── Finance/                            # Invoicing + Payments + Tax
@@ -381,14 +388,14 @@ src/
 │   └── Logistics/                          # Existing code refactored here
 │
 ├── Hosts/
-│   ├── NiagaOne.Api.Host/               # Composite API host (all modules)
-│   ├── NiagaOne.BackOffice/             # Blazor Server+WASM hybrid
-│   ├── NiagaOne.Storefront/             # Blazor WASM (standalone)
-│   └── NiagaOne.Worker/                 # Hangfire + background services
+│   ├── StockLedger.Api.Host/               # Composite API host (all modules)
+│   ├── StockLedger.BackOffice/             # Blazor Server+WASM hybrid
+│   ├── StockLedger.Storefront/             # Blazor WASM (standalone)
+│   └── StockLedger.Worker/                 # Hangfire + background services
 │
 └── Tests/
-    ├── NiagaOne.SharedKernel.Tests/
-    ├── NiagaOne.Catalog.Tests/
+    ├── StockLedger.SharedKernel.Tests/
+    ├── StockLedger.Catalog.Tests/
     └── ...
 ```
 
@@ -478,7 +485,7 @@ Webhooks:     /hooks/midtrans                 ← payment callbacks
 ### 7.2 Module Registration (Composite Host)
 
 ```csharp
-// NiagaOne.Api.Host/Program.cs
+// StockLedger.Api.Host/Program.cs
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPlatformModule(builder.Configuration);
@@ -544,7 +551,7 @@ public class ModuleRegistry
 Separate Blazor WASM application with prerendering for SEO. Tenant-aware theming via CSS custom properties loaded at startup.
 
 ```
-NiagaOne.Storefront/
+StockLedger.Storefront/
 ├── Pages/
 │   ├── Home.razor                 # Featured products
 │   ├── ProductList.razor          # Category browsing

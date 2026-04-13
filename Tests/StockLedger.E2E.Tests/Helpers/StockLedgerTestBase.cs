@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NiagaOne.E2E.Tests.Helpers;
+namespace StockLedger.E2E.Tests.Helpers;
 
-public abstract class NiagaOneTestBase
+public abstract class StockLedgerTestBase
 {
     protected static readonly HttpClient Client = new()
     {

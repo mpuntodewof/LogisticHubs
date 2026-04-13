@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using FluentAssertions;
-using NiagaOne.E2E.Tests.Helpers;
+using StockLedger.E2E.Tests.Helpers;
 
-namespace NiagaOne.E2E.Tests.Flows;
+namespace StockLedger.E2E.Tests.Flows;
 
-public class Flow02_PurchaseAndStockInTests : NiagaOneTestBase
+public class Flow02_PurchaseAndStockInTests : StockLedgerTestBase
 {
     [Fact]
     public async Task Manager_Should_Create_PO_And_Warehouse_Should_Receive_Stock()
@@ -13,7 +13,7 @@ public class Flow02_PurchaseAndStockInTests : NiagaOneTestBase
         var suffix = Guid.NewGuid().ToString("N")[..8];
 
         // --- Login as manager ---
-        var managerToken = await LoginAsync("manager@niagaone.com", "Manager@123");
+        var managerToken = await LoginAsync("manager@stockledger.io", "Manager@123");
         managerToken.Should().NotBeNullOrWhiteSpace("manager login should return a valid token");
 
         // --- Create Supplier ---
@@ -83,7 +83,7 @@ public class Flow02_PurchaseAndStockInTests : NiagaOneTestBase
         poItemIds.Should().HaveCount(2, "PO should have 2 line items");
 
         // --- Login as warehouse user ---
-        var whToken = await LoginAsync("warehouse@niagaone.com", "Warehouse@123");
+        var whToken = await LoginAsync("warehouse@stockledger.io", "Warehouse@123");
         whToken.Should().NotBeNullOrWhiteSpace("warehouse login should return a valid token");
 
         // --- Create Goods Receipt ---

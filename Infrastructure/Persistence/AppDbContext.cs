@@ -501,7 +501,7 @@ namespace Infrastructure.Persistence
             {
                 Id = DefaultTenantId,
                 Slug = "default",
-                CompanyName = "NiagaOne Default",
+                CompanyName = "StockLedger Default",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
@@ -691,11 +691,11 @@ namespace Infrastructure.Persistence
             var accountantUserId     = new Guid("10000000-0000-0000-0000-000000000007");
 
             modelBuilder.Entity<User>().HasData(
-                new User { Id = adminUserId,          Name = "Alice Admin",          Email = "admin@niagaone.com",          PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
-                new User { Id = managerUserId,        Name = "Marcus Manager",       Email = "manager@niagaone.com",        PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
-                new User { Id = viewerUserId,         Name = "Victor Viewer",        Email = "viewer@niagaone.com",         PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
-                new User { Id = warehouseStaffUserId, Name = "Wira Warehouse",       Email = "warehouse@niagaone.com",      PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
-                new User { Id = accountantUserId,     Name = "Andi Accountant",      Email = "accountant@niagaone.com",     PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId }
+                new User { Id = adminUserId,          Name = "Alice Admin",          Email = "admin@stockledger.io",        PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
+                new User { Id = managerUserId,        Name = "Marcus Manager",       Email = "manager@stockledger.io",      PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
+                new User { Id = viewerUserId,         Name = "Victor Viewer",        Email = "viewer@stockledger.io",       PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
+                new User { Id = warehouseStaffUserId, Name = "Wira Warehouse",       Email = "warehouse@stockledger.io",    PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId },
+                new User { Id = accountantUserId,     Name = "Andi Accountant",      Email = "accountant@stockledger.io",   PasswordHash = passwordHash, IsActive = true, CreatedAt = createdAt, TenantId = DefaultTenantId }
             );
 
             var adminRoleId          = new Guid("11111111-1111-1111-1111-111111111111");

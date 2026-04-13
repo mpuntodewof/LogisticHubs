@@ -42,8 +42,8 @@ namespace Infrastructure.Services
                 claims.Add(new Claim("permissions", permission));
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JwtSettings:Issuer"] ?? "niagaone-api",
-                audience: _configuration["JwtSettings:Audience"] ?? "niagaone-client",
+                issuer: _configuration["JwtSettings:Issuer"] ?? "stockledger-api",
+                audience: _configuration["JwtSettings:Audience"] ?? "stockledger-client",
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: credentials

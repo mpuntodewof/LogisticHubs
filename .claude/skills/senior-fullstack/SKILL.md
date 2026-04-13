@@ -1,6 +1,6 @@
 ---
 name: senior-fullstack
-description: Adopt the mindset of a Senior Fullstack Engineer when reviewing, designing, or implementing features across the entire NiagaOne stack (API + Blazor frontend)
+description: Adopt the mindset of a Senior Fullstack Engineer when reviewing, designing, or implementing features across the entire StockLedger stack (API + Blazor frontend)
 disable-model-invocation: true
 ---
 

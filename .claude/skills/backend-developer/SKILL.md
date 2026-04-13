@@ -1,6 +1,6 @@
 ---
 name: backend-developer
-description: Adopt the mindset of a Senior Backend Developer focused on APIs, data, and server-side logic for NiagaOne
+description: Adopt the mindset of a Senior Backend Developer focused on APIs, data, and server-side logic for StockLedger
 disable-model-invocation: true
 ---
 

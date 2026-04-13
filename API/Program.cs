@@ -30,7 +30,7 @@ builder.Services.AddControllers(opts =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "NiagaOne API", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "StockLedger API", Version = "v1" });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -67,8 +67,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "niagaone-api",
-            ValidAudience = builder.Configuration["JwtSettings:Audience"] ?? "niagaone-client",
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "stockledger-api",
+            ValidAudience = builder.Configuration["JwtSettings:Audience"] ?? "stockledger-client",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.Zero
         };

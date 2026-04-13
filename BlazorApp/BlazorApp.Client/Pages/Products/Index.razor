@@ -152,15 +152,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try { _categories = await Api.GetCategoriesAsync(1, 100, null); } catch { }
-        try { _brands = await Api.GetBrandsAsync(1, 100, null); } catch { }
+        var catResult = await Api.GetCategoriesAsync(1, 100, null); if (catResult.Success) _categories = catResult.Data;
+        var brdResult = await Api.GetBrandsAsync(1, 100, null); if (brdResult.Success) _brands = brdResult.Data;
         await LoadDataAsync();
         _loading = false;
     }
 
     private async Task LoadDataAsync()
     {
-        try { _pagedResult = await Api.GetProductsAsync(_page, _pageSize, _search); } catch { }
+        var apiResult = await Api.GetProductsAsync(_page, _pageSize, _search); if (apiResult.Success) _pagedResult = apiResult.Data;
     }
 
     private async Task SearchAsync()
@@ -183,7 +183,7 @@ else
         _createError = string.Empty;
 
         var result = await Api.CreateProductAsync(_newItem);
-        if (result != null)
+        if (result.Success && result.Data != null)
         {
             _showCreate = false;
             _page = 1;
@@ -191,7 +191,7 @@ else
         }
         else
         {
-            _createError = "Failed to create product.";
+            _createError = result.ErrorMessage ?? "Failed to create product.";
         }
 
         _creating = false;

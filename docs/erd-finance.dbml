@@ -1,0 +1,236 @@
+// ==========================================
+// NiagaOne — Finance Domain ERD
+// 8 Finance tables + 2 related Inventory tables
+// Import at https://dbdiagram.io
+// ==========================================
+
+// ------------------------------------------
+// FINANCE: Accounting
+// ------------------------------------------
+
+Table ChartOfAccounts {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ParentAccountId char(36) [ref: > ChartOfAccounts.Id]
+  AccountCode varchar(20) [not null]
+  Name varchar(200) [not null]
+  AccountType varchar(50) [not null, note: 'Asset|Liability|Equity|Revenue|Expense']
+  AccountSubType varchar(50)
+  NormalBalance varchar(10) [not null, note: 'Debit or Credit']
+  Description varchar(1000)
+  IsSystemAccount tinyint(1) [not null, default: false]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, AccountCode) [unique]
+  }
+}
+
+Table JournalEntries {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  EntryNumber varchar(50) [not null]
+  EntryDate datetime(6) [not null]
+  Description varchar(2000)
+  Reference varchar(200)
+  Status varchar(50) [not null, note: 'Draft|Posted|Voided']
+  TotalDebit decimal(18,2) [not null]
+  TotalCredit decimal(18,2) [not null, note: 'Must equal TotalDebit']
+  ReferenceDocumentType varchar(50) [note: 'e.g. Invoice']
+  ReferenceDocumentId char(36) [note: 'Generic ref, no FK']
+  PostedAt datetime(6)
+  VoidedAt datetime(6)
+  VoidReason varchar(1000)
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, EntryNumber) [unique]
+  }
+}
+
+Table JournalEntryLines {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  JournalEntryId char(36) [not null, ref: > JournalEntries.Id]
+  AccountId char(36) [not null, ref: > ChartOfAccounts.Id]
+  Description varchar(500)
+  DebitAmount decimal(18,2) [not null]
+  CreditAmount decimal(18,2) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+Table PaymentTerms {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Code varchar(20) [not null]
+  Description varchar(500)
+  DueDays int [not null, note: 'e.g. 30 = Net 30']
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Code) [unique]
+  }
+}
+
+// ------------------------------------------
+// FINANCE: Tax
+// ------------------------------------------
+
+Table TaxRates {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Code varchar(20) [not null]
+  Description varchar(500)
+  TaxType varchar(50) [not null, note: 'PPN|PPnBM|Exempt']
+  Rate decimal(5,4) [not null, note: 'e.g. 0.1100 = 11%']
+  EffectiveFrom datetime(6) [not null]
+  EffectiveTo datetime(6) [note: 'null = no end date']
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Code) [unique]
+  }
+}
+
+Table ProductTaxRates {
+  ProductId char(36) [not null, ref: > Products.Id, note: 'Bridge to Inventory']
+  TaxRateId char(36) [not null, ref: > TaxRates.Id]
+  TenantId char(36) [not null]
+
+  indexes {
+    (ProductId, TaxRateId) [pk]
+  }
+}
+
+// ------------------------------------------
+// FINANCE: Invoicing
+// ------------------------------------------
+
+Table Invoices {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  PaymentTermId char(36) [ref: > PaymentTerms.Id]
+  InvoiceNumber varchar(50) [not null]
+  InvoiceDate datetime(6) [not null]
+  DueDate datetime(6) [not null]
+  Status varchar(50) [not null, note: 'Draft|Issued|Paid|Cancelled|CreditNoted']
+  CounterpartyName varchar(255)
+  SubTotal decimal(18,2) [not null]
+  DiscountAmount decimal(18,2) [not null]
+  TaxableAmount decimal(18,2) [not null]
+  TaxAmount decimal(18,2) [not null]
+  GrandTotal decimal(18,2) [not null]
+  TaxInvoiceNumber varchar(30) [note: 'Faktur Pajak number']
+  ReferenceDocumentType varchar(50) [note: 'Generic ref']
+  ReferenceDocumentId char(36)
+  ReferenceDocumentNumber varchar(100)
+  Notes varchar(2000)
+  IssuedAt datetime(6)
+  PaidAt datetime(6)
+  CancelledAt datetime(6)
+  CancellationReason varchar(1000)
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, InvoiceNumber) [unique]
+  }
+}
+
+Table InvoiceItems {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  InvoiceId char(36) [not null, ref: > Invoices.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id, note: 'Bridge to Inventory']
+  TaxRateId char(36) [ref: > TaxRates.Id]
+  ProductName varchar(500) [not null, note: 'Snapshot at creation']
+  VariantName varchar(500) [not null, note: 'Snapshot at creation']
+  Sku varchar(100) [not null, note: 'Snapshot at creation']
+  Quantity int [not null]
+  UnitPrice decimal(18,2) [not null]
+  DiscountAmount decimal(18,2) [not null]
+  TaxRateValue decimal(5,4) [not null, note: 'Snapshot of rate']
+  TaxAmount decimal(18,2) [not null]
+  LineTotal decimal(18,2) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ------------------------------------------
+// RELATED: Inventory tables referenced by Finance
+// (included for FK completeness)
+// ------------------------------------------
+
+Table Products [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(500) [not null]
+  Slug varchar(500) [not null]
+  Status varchar(50) [not null]
+
+  note: 'From Inventory domain — see erd-inventory.dbml for full schema'
+}
+
+Table ProductVariants [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ProductId char(36) [not null, ref: > Products.Id]
+  Sku varchar(100) [not null]
+  Name varchar(500) [not null]
+  CostPrice decimal(18,2) [not null]
+  SellingPrice decimal(18,2) [not null]
+
+  note: 'From Inventory domain — see erd-inventory.dbml for full schema'
+}
+
+// ------------------------------------------
+// PLATFORM: Tenant (shared dependency)
+// ------------------------------------------
+
+Table Tenants [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  CompanyName varchar(255) [not null]
+  Slug varchar(100) [not null, unique]
+  IsActive tinyint(1) [not null, default: true]
+
+  note: 'Foundation table — all entities are tenant-scoped'
+}

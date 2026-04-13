@@ -172,13 +172,13 @@ else
         try
         {
             var result = await Api.GetChartOfAccountsAsync(_page, _pageSize, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
-            if (result != null)
+            if (result.Success && result.Data != null)
             {
-                _items = result.Items;
-                _totalCount = result.TotalCount;
-                _totalPages = result.TotalPages;
-                _hasPrevious = result.HasPreviousPage;
-                _hasNext = result.HasNextPage;
+                _items = result.Data.Items;
+                _totalCount = result.Data.TotalCount;
+                _totalPages = result.Data.TotalPages;
+                _hasPrevious = result.Data.HasPreviousPage;
+                _hasNext = result.Data.HasNextPage;
             }
         }
         catch { }
@@ -208,7 +208,7 @@ else
         _formError = string.Empty;
 
         var result = await Api.CreateChartOfAccountAsync(_createReq);
-        if (result != null)
+        if (result.Success && result.Data != null)
         {
             _showCreate = false;
             _page = 1;
@@ -216,7 +216,7 @@ else
         }
         else
         {
-            _formError = "Failed to create account.";
+            _formError = result.ErrorMessage ?? "Failed to create account.";
         }
 
         _saving = false;

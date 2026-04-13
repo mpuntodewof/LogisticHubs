@@ -291,9 +291,9 @@ else if (_user != null)
         try
         {
             var request = new UpdateUserRequest { Name = _editName.Trim() };
-            var success = await Api.UpdateUserAsync(_user!.Id, request);
+            var updateResult = await Api.UpdateUserAsync(_user!.Id, request);
 
-            if (success)
+            if (updateResult.Success)
             {
                 // Update local state
                 _user.Name = _editName.Trim();
@@ -334,9 +334,9 @@ else if (_user != null)
         _saving = true;
         try
         {
-            var success = await Api.DeleteUserAsync(_user!.Id);
+            var delResult = await Api.DeleteUserAsync(_user!.Id);
 
-            if (success)
+            if (delResult.Success)
             {
                 await AuthSvc.LogoutAsync();
                 Nav.NavigateTo("/login", forceLoad: true);

@@ -1,0 +1,622 @@
+// NiagaOne ERP Database Schema
+// Generated from EF Core AppDbContextModelSnapshot
+// Import this file at https://dbdiagram.io
+
+// ==========================================
+// MULTI-TENANCY
+// ==========================================
+
+Table Tenants {
+  Id char(36) [pk]
+  CompanyName varchar(255) [not null]
+  Slug varchar(100) [not null, unique]
+  IsActive tinyint(1) [not null, default: true]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+Table TenantSettings {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Key varchar(200) [not null]
+  Value text [not null]
+  ValueType varchar(50)
+  Group varchar(100)
+  Description varchar(500)
+  IsReadOnly tinyint(1) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Key) [unique]
+  }
+}
+
+Table SystemSettings {
+  Id char(36) [pk]
+  Key varchar(200) [not null, unique]
+  Value text [not null]
+  ValueType varchar(50)
+  Group varchar(100)
+  Description varchar(500)
+  IsReadOnly tinyint(1) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ==========================================
+// IDENTITY & ACCESS MANAGEMENT
+// ==========================================
+
+Table Users {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Email varchar(255) [not null]
+  PasswordHash varchar(500) [not null]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Email) [unique]
+  }
+}
+
+Table Roles {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Description varchar(500)
+  IsSystem tinyint(1) [not null, default: false]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Name) [unique]
+  }
+}
+
+Table Permissions {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(200) [not null]
+  Resource varchar(100) [not null]
+  Action varchar(100) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Name) [unique]
+    (TenantId, Resource, Action) [unique]
+  }
+}
+
+Table UserRoles {
+  UserId char(36) [not null, ref: > Users.Id]
+  RoleId char(36) [not null, ref: > Roles.Id]
+  TenantId char(36) [not null]
+  AssignedAt datetime(6) [not null]
+  AssignedBy char(36)
+
+  indexes {
+    (UserId, RoleId) [pk]
+  }
+}
+
+Table RolePermissions {
+  RoleId char(36) [not null, ref: > Roles.Id]
+  PermissionId char(36) [not null, ref: > Permissions.Id]
+  TenantId char(36) [not null]
+
+  indexes {
+    (RoleId, PermissionId) [pk]
+  }
+}
+
+Table RefreshTokens {
+  Id char(36) [pk]
+  TenantId char(36) [not null]
+  UserId char(36) [not null, ref: > Users.Id]
+  TokenHash varchar(500) [not null, unique]
+  ExpiresAt datetime(6) [not null]
+  CreatedByIp varchar(45)
+  RevokedAt datetime(6)
+  RevokedByIp varchar(45)
+  ReplacedByToken varchar(500)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (UserId, RevokedAt)
+  }
+}
+
+// ==========================================
+// PRODUCT CATALOG
+// ==========================================
+
+Table Categories {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ParentCategoryId char(36) [ref: > Categories.Id]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null]
+  Description varchar(1000)
+  SortOrder int [not null]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table Brands {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null]
+  Description varchar(1000)
+  LogoUrl varchar(500)
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table UnitsOfMeasure {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Abbreviation varchar(20) [not null]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Abbreviation) [unique]
+  }
+}
+
+Table UnitConversions {
+  Id char(36) [pk]
+  TenantId char(36) [not null]
+  FromUnitId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  ToUnitId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  ConversionFactor decimal(18,6) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, FromUnitId, ToUnitId) [unique]
+  }
+}
+
+Table Products {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  CategoryId char(36) [ref: > Categories.Id]
+  BrandId char(36) [ref: > Brands.Id]
+  BaseUnitOfMeasureId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  Name varchar(500) [not null]
+  Slug varchar(500) [not null]
+  Description varchar(2000)
+  Status varchar(50) [not null]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table ProductVariants {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ProductId char(36) [not null, ref: > Products.Id]
+  Name varchar(500) [not null]
+  Sku varchar(100) [not null]
+  Barcode varchar(100)
+  CostPrice decimal(18,2) [not null]
+  SellingPrice decimal(18,2) [not null]
+  Weight decimal(18,4)
+  VariantAttributes varchar(2000)
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Sku) [unique]
+  }
+}
+
+Table ProductImages {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ProductId char(36) [not null, ref: > Products.Id]
+  ProductVariantId char(36) [ref: > ProductVariants.Id]
+  ImageUrl varchar(1000) [not null]
+  AltText varchar(255)
+  IsPrimary tinyint(1) [not null]
+  SortOrder int [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ==========================================
+// TAX
+// ==========================================
+
+Table TaxRates {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Code varchar(20) [not null]
+  Description varchar(500)
+  TaxType varchar(50) [not null]
+  Rate decimal(5,4) [not null]
+  EffectiveFrom datetime(6) [not null]
+  EffectiveTo datetime(6)
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Code) [unique]
+  }
+}
+
+Table ProductTaxRates {
+  ProductId char(36) [not null, ref: > Products.Id]
+  TaxRateId char(36) [not null, ref: > TaxRates.Id]
+  TenantId char(36) [not null]
+
+  indexes {
+    (ProductId, TaxRateId) [pk]
+  }
+}
+
+// ==========================================
+// INVENTORY & WAREHOUSING
+// ==========================================
+
+Table Warehouses {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Location varchar(500) [not null]
+  Capacity int [not null]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+Table WarehouseStocks {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  WarehouseId char(36) [not null, ref: > Warehouses.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  QuantityOnHand int [not null, note: 'CHECK >= 0']
+  QuantityReserved int [not null]
+  ReorderPoint int
+  MaxStock int
+  RowVersion timestamp(6) [not null, note: 'Concurrency token']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, WarehouseId, ProductVariantId) [unique]
+  }
+}
+
+Table StockMovements {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  WarehouseId char(36) [not null, ref: > Warehouses.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  SourceWarehouseId char(36) [ref: > Warehouses.Id]
+  DestinationWarehouseId char(36) [ref: > Warehouses.Id]
+  MovementType varchar(50) [not null]
+  Reason varchar(50) [not null]
+  Quantity int [not null]
+  QuantityBefore int [not null]
+  QuantityAfter int [not null]
+  ReferenceDocumentType varchar(100)
+  ReferenceDocumentId char(36)
+  ReferenceDocumentNumber varchar(100)
+  Notes varchar(1000)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, WarehouseId, ProductVariantId)
+  }
+}
+
+// ==========================================
+// ACCOUNTING
+// ==========================================
+
+Table ChartOfAccounts {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ParentAccountId char(36) [ref: > ChartOfAccounts.Id]
+  AccountCode varchar(20) [not null]
+  Name varchar(200) [not null]
+  AccountType varchar(50) [not null]
+  AccountSubType varchar(50)
+  NormalBalance varchar(10) [not null]
+  Description varchar(1000)
+  IsSystemAccount tinyint(1) [not null, default: false]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, AccountCode) [unique]
+  }
+}
+
+Table PaymentTerms {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Code varchar(20) [not null]
+  Description varchar(500)
+  DueDays int [not null]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Code) [unique]
+  }
+}
+
+Table JournalEntries {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  EntryNumber varchar(50) [not null]
+  EntryDate datetime(6) [not null]
+  Description varchar(2000)
+  Reference varchar(200)
+  Status varchar(50) [not null]
+  TotalDebit decimal(18,2) [not null]
+  TotalCredit decimal(18,2) [not null]
+  ReferenceDocumentType varchar(50)
+  ReferenceDocumentId char(36)
+  PostedAt datetime(6)
+  VoidedAt datetime(6)
+  VoidReason varchar(1000)
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, EntryNumber) [unique]
+  }
+}
+
+Table JournalEntryLines {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  JournalEntryId char(36) [not null, ref: > JournalEntries.Id]
+  AccountId char(36) [not null, ref: > ChartOfAccounts.Id]
+  Description varchar(500)
+  DebitAmount decimal(18,2) [not null]
+  CreditAmount decimal(18,2) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ==========================================
+// INVOICING
+// ==========================================
+
+Table Invoices {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  PaymentTermId char(36) [ref: > PaymentTerms.Id]
+  InvoiceNumber varchar(50) [not null]
+  InvoiceDate datetime(6) [not null]
+  DueDate datetime(6) [not null]
+  Status varchar(50) [not null]
+  CounterpartyName varchar(255)
+  SubTotal decimal(18,2) [not null]
+  DiscountAmount decimal(18,2) [not null]
+  TaxableAmount decimal(18,2) [not null]
+  TaxAmount decimal(18,2) [not null]
+  GrandTotal decimal(18,2) [not null]
+  TaxInvoiceNumber varchar(30)
+  ReferenceDocumentType varchar(50)
+  ReferenceDocumentId char(36)
+  ReferenceDocumentNumber varchar(100)
+  Notes varchar(2000)
+  IssuedAt datetime(6)
+  PaidAt datetime(6)
+  CancelledAt datetime(6)
+  CancellationReason varchar(1000)
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, InvoiceNumber) [unique]
+  }
+}
+
+Table InvoiceItems {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  InvoiceId char(36) [not null, ref: > Invoices.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  TaxRateId char(36) [ref: > TaxRates.Id]
+  ProductName varchar(500) [not null]
+  VariantName varchar(500) [not null]
+  Sku varchar(100) [not null]
+  Quantity int [not null]
+  UnitPrice decimal(18,2) [not null]
+  DiscountAmount decimal(18,2) [not null]
+  TaxRateValue decimal(5,4) [not null]
+  TaxAmount decimal(18,2) [not null]
+  LineTotal decimal(18,2) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ==========================================
+// OBSERVABILITY & AUDIT
+// ==========================================
+
+Table AuditLogs {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  UserId char(36)
+  UserEmail varchar(255)
+  EntityType varchar(200) [not null]
+  EntityId char(36)
+  Action varchar(50) [not null]
+  OldValuesJson text
+  NewValuesJson text
+  IpAddress varchar(100)
+  UserAgent varchar(500)
+  AdditionalInfo varchar(500)
+  Timestamp datetime(6) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Timestamp)
+    (TenantId, EntityType, EntityId)
+  }
+}
+
+Table SystemLogs {
+  Id char(36) [pk]
+  TenantId char(36) [ref: > Tenants.Id]
+  UserId char(36)
+  Level varchar(50) [not null]
+  Message text [not null]
+  Source varchar(200)
+  Exception text
+  AdditionalDataJson text
+  RequestMethod varchar(10)
+  RequestPath varchar(500)
+  Timestamp datetime(6) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (Level, Timestamp)
+  }
+}
+
+// ==========================================
+// INFRASTRUCTURE
+// ==========================================
+
+Table IdempotencyRecords {
+  IdempotencyKey varchar(100) [pk]
+  Endpoint varchar(50) [not null]
+  StatusCode int [not null]
+  ResponseBody longtext
+  CreatedAt datetime(6) [not null]
+  ExpiresAt datetime(6) [not null]
+
+  indexes {
+    ExpiresAt
+  }
+}

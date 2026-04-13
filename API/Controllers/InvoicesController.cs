@@ -40,14 +40,14 @@ namespace API.Controllers
             return Ok(invoice);
         }
 
-        /// <summary>Create an invoice from a sales order.</summary>
+        /// <summary>Create a new invoice.</summary>
         [HttpPost]
         [RequirePermission("invoices.create")]
-        public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceFromOrderRequest request)
+        public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceRequest request)
         {
             try
             {
-                var invoice = await _invoiceUseCase.CreateFromSalesOrderAsync(request);
+                var invoice = await _invoiceUseCase.CreateAsync(request);
                 return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice);
             }
             catch (InvalidOperationException ex)

@@ -45,10 +45,5 @@ namespace Domain.Entities
         public Product Product { get; set; } = null!;
         public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public ICollection<WarehouseStock> WarehouseStocks { get; set; } = new List<WarehouseStock>();
-        public ICollection<SalesOrderItem> SalesOrderItems { get; set; } = new List<SalesOrderItem>();
-        public ICollection<ShoppingCartItem> ShoppingCartItems { get; set; } = new List<ShoppingCartItem>();
-        public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
-        public ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
-        public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = new List<PurchaseOrderItem>();
     }
 }

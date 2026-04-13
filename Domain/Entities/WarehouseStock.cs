@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Domain.Interfaces;
 
 namespace Domain.Entities
@@ -13,6 +14,9 @@ namespace Domain.Entities
 
         public int? ReorderPoint { get; set; }
         public int? MaxStock { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = null!;
 
         public Guid TenantId { get; set; }
 

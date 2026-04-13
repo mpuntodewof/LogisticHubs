@@ -184,31 +184,31 @@ else
         var tasks = new List<Task>();
 
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetSalesOrdersAsync(1, 5); _totalOrders = r?.TotalCount ?? 0; _recentOrders = r?.Items ?? new(); } catch { }
+            try { var r = await Api.GetSalesOrdersAsync(1, 5); if (r.Success && r.Data != null) { _totalOrders = r.Data.TotalCount; _recentOrders = r.Data.Items; } } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetProductsAsync(1, 1); _totalProducts = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetProductsAsync(1, 1); if (r.Success && r.Data != null) _totalProducts = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetCustomersAsync(1, 1); _totalCustomers = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetCustomersAsync(1, 1); if (r.Success && r.Data != null) _totalCustomers = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var s = await Api.GetShipmentsAsync(); _totalShipments = s?.Count ?? 0; _recentShipments = s?.Take(5).ToList() ?? new(); } catch { }
+            try { var r = await Api.GetShipmentsAsync(); if (r.Success && r.Data != null) { _totalShipments = r.Data.Count; _recentShipments = r.Data.Take(5).ToList(); } } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetPurchaseOrdersAsync(1, 1); _totalPurchaseOrders = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetPurchaseOrdersAsync(1, 1); if (r.Success && r.Data != null) _totalPurchaseOrders = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetInvoicesAsync(1, 1); _totalInvoices = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetInvoicesAsync(1, 1); if (r.Success && r.Data != null) _totalInvoices = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetEmployeesAsync(1, 1); _totalEmployees = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetEmployeesAsync(1, 1); if (r.Success && r.Data != null) _totalEmployees = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetPromotionsAsync(1, 1); _totalPromotions = r?.TotalCount ?? 0; } catch { }
+            try { var r = await Api.GetPromotionsAsync(1, 1); if (r.Success && r.Data != null) _totalPromotions = r.Data.TotalCount; } catch { }
         }));
         tasks.Add(Task.Run(async () => {
-            try { _unreadNotifications = await Api.GetUnreadCountAsync(); } catch { }
+            try { var r = await Api.GetUnreadCountAsync(); if (r.Success) _unreadNotifications = r.Data; } catch { }
         }));
 
         await Task.WhenAll(tasks);

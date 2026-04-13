@@ -13,9 +13,15 @@ namespace Domain.Entities
         [MaxLength(30)]
         public string? TaxInvoiceNumber { get; set; }
 
-        public Guid SalesOrderId { get; set; }
-        public Guid? CustomerId { get; set; }
-        public Guid? BranchId { get; set; }
+        [MaxLength(50)]
+        public string? ReferenceDocumentType { get; set; }
+        public Guid? ReferenceDocumentId { get; set; }
+        [MaxLength(100)]
+        public string? ReferenceDocumentNumber { get; set; }
+
+        [MaxLength(255)]
+        public string? CounterpartyName { get; set; }
+
         public Guid? PaymentTermId { get; set; }
 
         [Required]
@@ -58,9 +64,6 @@ namespace Domain.Entities
 
         // Navigation
         public Tenant Tenant { get; set; } = null!;
-        public SalesOrder SalesOrder { get; set; } = null!;
-        public Customer? Customer { get; set; }
-        public Branch? Branch { get; set; }
         public PaymentTerm? PaymentTerm { get; set; }
         public ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
     }

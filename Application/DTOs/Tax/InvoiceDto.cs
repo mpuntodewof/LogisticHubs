@@ -7,12 +7,10 @@ namespace Application.DTOs.Tax
         public Guid Id { get; set; }
         public string InvoiceNumber { get; set; } = string.Empty;
         public string? TaxInvoiceNumber { get; set; }
-        public Guid SalesOrderId { get; set; }
-        public string? SalesOrderNumber { get; set; }
-        public Guid? CustomerId { get; set; }
-        public string? CustomerName { get; set; }
-        public Guid? BranchId { get; set; }
-        public string? BranchName { get; set; }
+        public string? ReferenceDocumentType { get; set; }
+        public Guid? ReferenceDocumentId { get; set; }
+        public string? ReferenceDocumentNumber { get; set; }
+        public string? CounterpartyName { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime InvoiceDate { get; set; }
         public DateTime DueDate { get; set; }
@@ -49,14 +47,38 @@ namespace Application.DTOs.Tax
         public decimal LineTotal { get; set; }
     }
 
-    public class CreateInvoiceFromOrderRequest
+    public class CreateInvoiceRequest
     {
-        [Required]
-        public Guid SalesOrderId { get; set; }
-
         public Guid? PaymentTermId { get; set; }
         public string? TaxInvoiceNumber { get; set; }
+        public string? CounterpartyName { get; set; }
+        public string? ReferenceDocumentType { get; set; }
+        public Guid? ReferenceDocumentId { get; set; }
+        public string? ReferenceDocumentNumber { get; set; }
         public string? Notes { get; set; }
+        public DateTime? DueDate { get; set; }
+
+        [Required]
+        public List<CreateInvoiceItemRequest> Items { get; set; } = new();
+    }
+
+    public class CreateInvoiceItemRequest
+    {
+        [Required]
+        public Guid ProductVariantId { get; set; }
+
+        [Required]
+        public string ProductName { get; set; } = string.Empty;
+
+        [Required]
+        public string VariantName { get; set; } = string.Empty;
+
+        [Required]
+        public string Sku { get; set; } = string.Empty;
+
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal DiscountAmount { get; set; }
     }
 
     public class AssignTaxInvoiceNumberRequest

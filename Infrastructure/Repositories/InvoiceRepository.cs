@@ -18,11 +18,7 @@ namespace Infrastructure.Repositories
 
         public async Task<PagedResult<Invoice>> GetPagedAsync(PagedRequest request, string? status = null)
         {
-            var query = _context.Invoices
-                .Include(i => i.SalesOrder)
-                .Include(i => i.Customer)
-                .Include(i => i.Branch)
-                .AsQueryable();
+            var query = _context.Invoices.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -33,7 +29,8 @@ namespace Infrastructure.Repositories
             {
                 var search = request.Search.ToLower();
                 query = query.Where(i => i.InvoiceNumber.ToLower().Contains(search)
-                    || (i.TaxInvoiceNumber != null && i.TaxInvoiceNumber.ToLower().Contains(search)));
+                    || (i.TaxInvoiceNumber != null && i.TaxInvoiceNumber.ToLower().Contains(search))
+                    || (i.CounterpartyName != null && i.CounterpartyName.ToLower().Contains(search)));
             }
 
             query = request.SortBy?.ToLower() switch
@@ -49,24 +46,19 @@ namespace Infrastructure.Repositories
 
         public async Task<Invoice?> GetByIdAsync(Guid id)
             => await _context.Invoices
-                .Include(i => i.SalesOrder)
-                .Include(i => i.Customer)
-                .Include(i => i.Branch)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
         public async Task<Invoice?> GetDetailByIdAsync(Guid id)
             => await _context.Invoices
                 .Include(i => i.Items)
                     .ThenInclude(item => item.TaxRateEntity)
-                .Include(i => i.SalesOrder)
-                .Include(i => i.Customer)
-                .Include(i => i.Branch)
                 .Include(i => i.PaymentTerm)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
-        public async Task<Invoice?> GetBySalesOrderIdAsync(Guid salesOrderId)
+        public async Task<Invoice?> GetByReferenceAsync(string referenceDocumentType, Guid referenceDocumentId)
             => await _context.Invoices
-                .FirstOrDefaultAsync(i => i.SalesOrderId == salesOrderId);
+                .FirstOrDefaultAsync(i => i.ReferenceDocumentType == referenceDocumentType
+                    && i.ReferenceDocumentId == referenceDocumentId);
 
         public async Task<bool> InvoiceNumberExistsAsync(string invoiceNumber)
             => await _context.Invoices.AnyAsync(i => i.InvoiceNumber == invoiceNumber);

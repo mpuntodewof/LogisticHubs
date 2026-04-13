@@ -285,8 +285,8 @@ else
         var user = await AuthSvc.GetCurrentUserAsync();
         _isAdmin = user?.Roles.Contains("Admin") ?? false;
 
-        try { _users = await Api.GetUsersAsync(); } catch { }
-        try { _allRoles = await Api.GetRolesAsync(); } catch { }
+        var ur = await Api.GetUsersAsync(); if (ur.Success) _users = ur.Data ?? new();
+        var rr = await Api.GetRolesAsync(); if (rr.Success) _allRoles = rr.Data ?? new();
         ApplyFilter();
         _loading = false;
     }
@@ -348,13 +348,13 @@ else
         _saving = true;
         _formError = string.Empty;
         var ok = await Api.CreateUserAsync(_createReq);
-        if (ok)
+        if (ok.Success)
         {
-            try { _users = await Api.GetUsersAsync(); } catch { }
+            var ur = await Api.GetUsersAsync(); if (ur.Success) _users = ur.Data ?? new();
             ApplyFilter();
             _showCreate = false;
         }
-        else _formError = "Failed to create user. Email may already exist.";
+        else _formError = ok.ErrorMessage ?? "Failed to create user. Email may already exist.";
         _saving = false;
     }
 
@@ -364,15 +364,15 @@ else
         _saving = true;
         _formError = string.Empty;
         _updateReq.IsActive = _editActive == "true";
-        var ok = await Api.UpdateUserAsync(_editTarget.Id, _updateReq);
-        if (ok)
+        var updateResult = await Api.UpdateUserAsync(_editTarget.Id, _updateReq);
+        if (updateResult.Success)
         {
             _editTarget.Name = _updateReq.Name ?? _editTarget.Name;
             _editTarget.IsActive = _updateReq.IsActive ?? _editTarget.IsActive;
             ApplyFilter();
             _showEdit = false;
         }
-        else _formError = "Failed to update user.";
+        else _formError = updateResult.ErrorMessage ?? "Failed to update user.";
         _saving = false;
     }
 
@@ -382,8 +382,8 @@ else
     {
         if (_deleteTarget == null) return;
         _saving = true;
-        var ok = await Api.DeleteUserAsync(_deleteTarget.Id);
-        if (ok) { _users.Remove(_deleteTarget); ApplyFilter(); }
+        var delResult = await Api.DeleteUserAsync(_deleteTarget.Id);
+        if (delResult.Success) { _users.Remove(_deleteTarget); ApplyFilter(); }
         _showDelete = false;
         _saving = false;
     }
@@ -403,26 +403,23 @@ else
         _togglingRole = true;
         _roleError = string.Empty;
 
-        bool ok;
+        Models.ApiResult roleResult;
         if (assign)
         {
-            ok = await Api.AssignUserRoleAsync(_roleTarget.Id, new AssignRoleRequest { RoleId = role.Id });
+            roleResult = await Api.AssignUserRoleAsync(_roleTarget.Id, new AssignRoleRequest { RoleId = role.Id });
         }
         else
         {
-            ok = await Api.RevokeUserRoleAsync(_roleTarget.Id, role.Id);
+            roleResult = await Api.RevokeUserRoleAsync(_roleTarget.Id, role.Id);
         }
 
-        if (ok)
+        if (roleResult.Success)
         {
             // Refresh user data to get updated roles
-            try
-            {
-                _users = await Api.GetUsersAsync();
-                _roleTarget = _users.FirstOrDefault(u => u.Id == _roleTarget.Id);
-                ApplyFilter();
-            }
-            catch { }
+            var ur = await Api.GetUsersAsync();
+            if (ur.Success) _users = ur.Data ?? new();
+            _roleTarget = _users.FirstOrDefault(u => u.Id == _roleTarget.Id);
+            ApplyFilter();
         }
         else
         {

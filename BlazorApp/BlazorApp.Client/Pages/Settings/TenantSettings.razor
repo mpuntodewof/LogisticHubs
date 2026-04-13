@@ -125,7 +125,7 @@ else
 
     private async Task LoadDataAsync()
     {
-        try { _pagedResult = await Api.GetTenantSettingsAsync(_page, _pageSize, _search); } catch { }
+        var apiResult = await Api.GetTenantSettingsAsync(_page, _pageSize, _search); if (apiResult.Success) _pagedResult = apiResult.Data;
     }
 
     private async Task SearchAsync() { _page = 1; await LoadDataAsync(); }
@@ -149,7 +149,7 @@ else
     {
         _saving = true;
         var ok = await Api.UpdateTenantSettingAsync(s.Id, new { Value = _editValue });
-        if (ok)
+        if (ok.Success)
         {
             _editingId = null;
             await LoadDataAsync();

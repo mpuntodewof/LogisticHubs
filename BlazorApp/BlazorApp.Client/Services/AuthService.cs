@@ -22,20 +22,21 @@ namespace BlazorApp.Client.Services
         public async Task<bool> LoginAsync(LoginRequest request)
         {
             var result = await _api.LoginAsync(request);
-            if (result == null) return false;
+            if (!result.Success || result.Data == null) return false;
 
-            await _localStorage.SetItemAsync("access_token", result.AccessToken);
-            await _localStorage.SetItemAsync("refresh_token", result.RefreshToken);
-            await _localStorage.SetItemAsync("user_info", result.User);
+            await _localStorage.SetItemAsync("access_token", result.Data.AccessToken);
+            await _localStorage.SetItemAsync("refresh_token", result.Data.RefreshToken);
+            await _localStorage.SetItemAsync("user_info", result.Data.User);
 
-            ((JwtAuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.AccessToken);
-            StartRefreshTimer(result.AccessToken);
+            ((JwtAuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Data.AccessToken);
+            StartRefreshTimer(result.Data.AccessToken);
             return true;
         }
 
         public async Task<bool> RegisterAsync(RegisterRequest request)
         {
-            return await _api.RegisterAsync(request);
+            var result = await _api.RegisterAsync(request);
+            return result.Success;
         }
 
         public async Task LogoutAsync()
@@ -63,14 +64,14 @@ namespace BlazorApp.Client.Services
             if (string.IsNullOrEmpty(refreshToken)) return false;
 
             var result = await _api.RefreshTokenAsync(refreshToken);
-            if (result == null) return false;
+            if (!result.Success || result.Data == null) return false;
 
-            await _localStorage.SetItemAsync("access_token", result.AccessToken);
-            await _localStorage.SetItemAsync("refresh_token", result.RefreshToken);
-            await _localStorage.SetItemAsync("user_info", result.User);
+            await _localStorage.SetItemAsync("access_token", result.Data.AccessToken);
+            await _localStorage.SetItemAsync("refresh_token", result.Data.RefreshToken);
+            await _localStorage.SetItemAsync("user_info", result.Data.User);
 
-            ((JwtAuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.AccessToken);
-            StartRefreshTimer(result.AccessToken);
+            ((JwtAuthStateProvider)_authStateProvider).NotifyUserAuthentication(result.Data.AccessToken);
+            StartRefreshTimer(result.Data.AccessToken);
             return true;
         }
 

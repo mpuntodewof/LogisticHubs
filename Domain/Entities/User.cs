@@ -29,10 +29,7 @@ namespace Domain.Entities
 
         // Navigation properties
         public Tenant Tenant { get; set; } = null!;
-        public ICollection<Driver> Drivers { get; set; } = new List<Driver>();
         public ICollection<UserRoleAssignment> UserRoleAssignments { get; set; } = new List<UserRoleAssignment>();
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-        public ICollection<BranchUser> BranchUsers { get; set; } = new List<BranchUser>();
-        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

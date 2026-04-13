@@ -9,20 +9,20 @@ namespace Application.UseCases.Tax
     public class InvoiceUseCase
     {
         private readonly IInvoiceRepository _invoiceRepository;
-        private readonly ISalesOrderRepository _salesOrderRepository;
         private readonly ITaxRateRepository _taxRateRepository;
         private readonly IPaymentTermRepository _paymentTermRepository;
+        private readonly ITransactionManager _transactionManager;
 
         public InvoiceUseCase(
             IInvoiceRepository invoiceRepository,
-            ISalesOrderRepository salesOrderRepository,
             ITaxRateRepository taxRateRepository,
-            IPaymentTermRepository paymentTermRepository)
+            IPaymentTermRepository paymentTermRepository,
+            ITransactionManager transactionManager)
         {
             _invoiceRepository = invoiceRepository;
-            _salesOrderRepository = salesOrderRepository;
             _taxRateRepository = taxRateRepository;
             _paymentTermRepository = paymentTermRepository;
+            _transactionManager = transactionManager;
         }
 
         public async Task<PagedResult<InvoiceDto>> GetPagedAsync(PagedRequest request, string? status = null)
@@ -44,105 +44,110 @@ namespace Application.UseCases.Tax
             return invoice == null ? null : MapToDetailDto(invoice);
         }
 
-        public async Task<InvoiceDto> CreateFromSalesOrderAsync(CreateInvoiceFromOrderRequest request)
+        public async Task<InvoiceDto> CreateAsync(CreateInvoiceRequest request)
         {
-            var order = await _salesOrderRepository.GetDetailByIdAsync(request.SalesOrderId)
-                ?? throw new InvalidOperationException("Sales order not found.");
+            if (request.Items == null || request.Items.Count == 0)
+                throw new InvalidOperationException("Invoice must have at least one item.");
 
-            if (order.Status != SalesOrderStatus.Confirmed.ToString())
-                throw new InvalidOperationException("Only confirmed sales orders can be invoiced.");
-
-            // Check if invoice already exists for this order
-            var existing = await _invoiceRepository.GetBySalesOrderIdAsync(request.SalesOrderId);
-            if (existing != null)
-                throw new InvalidOperationException("An invoice already exists for this sales order.");
-
-            var invoiceNumber = await GenerateInvoiceNumberAsync();
-            var invoiceDate = DateTime.UtcNow;
-
-            // Determine due date
-            DateTime dueDate;
-            if (request.PaymentTermId.HasValue)
+            await _transactionManager.BeginTransactionAsync();
+            try
             {
-                var paymentTerm = await _paymentTermRepository.GetByIdAsync(request.PaymentTermId.Value)
-                    ?? throw new InvalidOperationException("Payment term not found.");
-                dueDate = invoiceDate.AddDays(paymentTerm.DueDays);
-            }
-            else
-            {
-                dueDate = invoiceDate.AddDays(30);
-            }
+                var invoiceNumber = await GenerateInvoiceNumberAsync();
+                var invoiceDate = DateTime.UtcNow;
 
-            var invoice = new Invoice
-            {
-                Id = Guid.NewGuid(),
-                InvoiceNumber = invoiceNumber,
-                TaxInvoiceNumber = request.TaxInvoiceNumber,
-                SalesOrderId = order.Id,
-                CustomerId = order.CustomerId,
-                BranchId = order.BranchId,
-                PaymentTermId = request.PaymentTermId,
-                Status = InvoiceStatus.Draft.ToString(),
-                InvoiceDate = invoiceDate,
-                DueDate = dueDate,
-                Notes = request.Notes,
-                CreatedAt = DateTime.UtcNow
-            };
+                DateTime dueDate;
+                if (request.DueDate.HasValue)
+                {
+                    dueDate = request.DueDate.Value;
+                }
+                else if (request.PaymentTermId.HasValue)
+                {
+                    var paymentTerm = await _paymentTermRepository.GetByIdAsync(request.PaymentTermId.Value)
+                        ?? throw new InvalidOperationException("Payment term not found.");
+                    dueDate = invoiceDate.AddDays(paymentTerm.DueDays);
+                }
+                else
+                {
+                    dueDate = invoiceDate.AddDays(30);
+                }
 
-            var items = new List<InvoiceItem>();
-            decimal subTotal = 0;
-            decimal totalDiscount = 0;
-            decimal totalTax = 0;
-
-            foreach (var orderItem in order.Items)
-            {
-                var lineSubTotal = orderItem.UnitPrice * orderItem.Quantity;
-                var lineDiscount = orderItem.DiscountAmount;
-                var taxableAmount = lineSubTotal - lineDiscount;
-
-                // Lookup active tax rates for this product
-                var taxRates = await _taxRateRepository.GetActiveByProductIdAsync(orderItem.ProductVariantId);
-                var taxRate = taxRates.FirstOrDefault();
-
-                var taxRateValue = taxRate?.Rate ?? 0m;
-                var taxAmount = taxableAmount * taxRateValue;
-                var lineTotal = taxableAmount + taxAmount;
-
-                var invoiceItem = new InvoiceItem
+                var invoice = new Invoice
                 {
                     Id = Guid.NewGuid(),
-                    InvoiceId = invoice.Id,
-                    SalesOrderItemId = orderItem.Id,
-                    ProductVariantId = orderItem.ProductVariantId,
-                    ProductName = orderItem.ProductName,
-                    VariantName = orderItem.VariantName,
-                    Sku = orderItem.Sku,
-                    Quantity = orderItem.Quantity,
-                    UnitPrice = orderItem.UnitPrice,
-                    DiscountAmount = lineDiscount,
-                    TaxRateId = taxRate?.Id,
-                    TaxRateValue = taxRateValue,
-                    TaxAmount = taxAmount,
-                    LineTotal = lineTotal,
+                    InvoiceNumber = invoiceNumber,
+                    TaxInvoiceNumber = request.TaxInvoiceNumber,
+                    ReferenceDocumentType = request.ReferenceDocumentType,
+                    ReferenceDocumentId = request.ReferenceDocumentId,
+                    ReferenceDocumentNumber = request.ReferenceDocumentNumber,
+                    CounterpartyName = request.CounterpartyName,
+                    PaymentTermId = request.PaymentTermId,
+                    Status = InvoiceStatus.Draft.ToString(),
+                    InvoiceDate = invoiceDate,
+                    DueDate = dueDate,
+                    Notes = request.Notes,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                items.Add(invoiceItem);
+                var items = new List<InvoiceItem>();
+                decimal subTotal = 0;
+                decimal totalDiscount = 0;
+                decimal totalTax = 0;
 
-                subTotal += lineSubTotal;
-                totalDiscount += lineDiscount;
-                totalTax += taxAmount;
+                foreach (var requestItem in request.Items)
+                {
+                    var lineSubTotal = requestItem.UnitPrice * requestItem.Quantity;
+                    var lineDiscount = requestItem.DiscountAmount;
+                    var taxableAmount = lineSubTotal - lineDiscount;
+
+                    var taxRates = await _taxRateRepository.GetActiveByProductIdAsync(requestItem.ProductVariantId);
+                    var taxRate = taxRates.FirstOrDefault();
+
+                    var taxRateValue = taxRate?.Rate ?? 0m;
+                    var taxAmount = taxableAmount * taxRateValue;
+                    var lineTotal = taxableAmount + taxAmount;
+
+                    var invoiceItem = new InvoiceItem
+                    {
+                        Id = Guid.NewGuid(),
+                        InvoiceId = invoice.Id,
+                        ProductVariantId = requestItem.ProductVariantId,
+                        ProductName = requestItem.ProductName,
+                        VariantName = requestItem.VariantName,
+                        Sku = requestItem.Sku,
+                        Quantity = requestItem.Quantity,
+                        UnitPrice = requestItem.UnitPrice,
+                        DiscountAmount = lineDiscount,
+                        TaxRateId = taxRate?.Id,
+                        TaxRateValue = taxRateValue,
+                        TaxAmount = taxAmount,
+                        LineTotal = lineTotal,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    items.Add(invoiceItem);
+
+                    subTotal += lineSubTotal;
+                    totalDiscount += lineDiscount;
+                    totalTax += taxAmount;
+                }
+
+                invoice.Items = items;
+                invoice.SubTotal = subTotal;
+                invoice.DiscountAmount = totalDiscount;
+                invoice.TaxableAmount = subTotal - totalDiscount;
+                invoice.TaxAmount = totalTax;
+                invoice.GrandTotal = invoice.TaxableAmount + totalTax;
+
+                var created = await _invoiceRepository.CreateAsync(invoice);
+
+                await _transactionManager.CommitAsync();
+                return MapToDto(created);
             }
-
-            invoice.Items = items;
-            invoice.SubTotal = subTotal;
-            invoice.DiscountAmount = totalDiscount;
-            invoice.TaxableAmount = subTotal - totalDiscount;
-            invoice.TaxAmount = totalTax;
-            invoice.GrandTotal = invoice.TaxableAmount + totalTax;
-
-            var created = await _invoiceRepository.CreateAsync(invoice);
-            return MapToDto(created);
+            catch
+            {
+                await _transactionManager.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task IssueAsync(Guid id)
@@ -150,8 +155,7 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            if (invoice.Status != InvoiceStatus.Draft.ToString())
-                throw new InvalidOperationException("Only draft invoices can be issued.");
+            ValidateTransition(invoice.Status, InvoiceStatus.Issued.ToString());
 
             invoice.Status = InvoiceStatus.Issued.ToString();
             invoice.IssuedAt = DateTime.UtcNow;
@@ -176,8 +180,7 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            if (invoice.Status != InvoiceStatus.Issued.ToString())
-                throw new InvalidOperationException("Only issued invoices can be marked as paid.");
+            ValidateTransition(invoice.Status, InvoiceStatus.Paid.ToString());
 
             invoice.Status = InvoiceStatus.Paid.ToString();
             invoice.PaidAt = DateTime.UtcNow;
@@ -191,8 +194,7 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            if (invoice.Status != InvoiceStatus.Draft.ToString() && invoice.Status != InvoiceStatus.Issued.ToString())
-                throw new InvalidOperationException("Only draft or issued invoices can be cancelled.");
+            ValidateTransition(invoice.Status, InvoiceStatus.Cancelled.ToString());
 
             invoice.Status = InvoiceStatus.Cancelled.ToString();
             invoice.CancelledAt = DateTime.UtcNow;
@@ -213,16 +215,30 @@ namespace Application.UseCases.Tax
             await _invoiceRepository.DeleteAsync(invoice);
         }
 
+        private static readonly Dictionary<string, HashSet<string>> _validTransitions = new()
+        {
+            [InvoiceStatus.Draft.ToString()] = new() { InvoiceStatus.Issued.ToString(), InvoiceStatus.Cancelled.ToString() },
+            [InvoiceStatus.Issued.ToString()] = new() { InvoiceStatus.Paid.ToString(), InvoiceStatus.Cancelled.ToString() },
+            [InvoiceStatus.Paid.ToString()] = new(),
+            [InvoiceStatus.Cancelled.ToString()] = new()
+        };
+
+        private static void ValidateTransition(string currentStatus, string targetStatus)
+        {
+            if (!_validTransitions.TryGetValue(currentStatus, out var allowed) || !allowed.Contains(targetStatus))
+                throw new InvalidOperationException($"Cannot transition invoice from '{currentStatus}' to '{targetStatus}'.");
+        }
+
         private async Task<string> GenerateInvoiceNumberAsync()
         {
-            var random = new Random();
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var prefix = $"INV-{DateTime.UtcNow:yyyyMMdd}-";
+            var counter = 1;
             string invoiceNumber;
 
             do
             {
-                var suffix = new string(Enumerable.Range(0, 4).Select(_ => chars[random.Next(chars.Length)]).ToArray());
-                invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{suffix}";
+                invoiceNumber = $"{prefix}{counter:D4}";
+                counter++;
             }
             while (await _invoiceRepository.InvoiceNumberExistsAsync(invoiceNumber));
 
@@ -234,12 +250,10 @@ namespace Application.UseCases.Tax
             Id = i.Id,
             InvoiceNumber = i.InvoiceNumber,
             TaxInvoiceNumber = i.TaxInvoiceNumber,
-            SalesOrderId = i.SalesOrderId,
-            SalesOrderNumber = i.SalesOrder?.OrderNumber,
-            CustomerId = i.CustomerId,
-            CustomerName = i.Customer?.Name,
-            BranchId = i.BranchId,
-            BranchName = i.Branch?.Name,
+            ReferenceDocumentType = i.ReferenceDocumentType,
+            ReferenceDocumentId = i.ReferenceDocumentId,
+            ReferenceDocumentNumber = i.ReferenceDocumentNumber,
+            CounterpartyName = i.CounterpartyName,
             Status = i.Status,
             InvoiceDate = i.InvoiceDate,
             DueDate = i.DueDate,
@@ -256,12 +270,10 @@ namespace Application.UseCases.Tax
             Id = i.Id,
             InvoiceNumber = i.InvoiceNumber,
             TaxInvoiceNumber = i.TaxInvoiceNumber,
-            SalesOrderId = i.SalesOrderId,
-            SalesOrderNumber = i.SalesOrder?.OrderNumber,
-            CustomerId = i.CustomerId,
-            CustomerName = i.Customer?.Name,
-            BranchId = i.BranchId,
-            BranchName = i.Branch?.Name,
+            ReferenceDocumentType = i.ReferenceDocumentType,
+            ReferenceDocumentId = i.ReferenceDocumentId,
+            ReferenceDocumentNumber = i.ReferenceDocumentNumber,
+            CounterpartyName = i.CounterpartyName,
             Status = i.Status,
             InvoiceDate = i.InvoiceDate,
             DueDate = i.DueDate,

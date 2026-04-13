@@ -1,0 +1,251 @@
+// ==========================================
+// NiagaOne — Foundation Domain ERD
+// Multi-Tenancy, Auth & RBAC, Audit Trail,
+// Settings, Infrastructure
+// Import at https://dbdiagram.io
+// ==========================================
+
+// ------------------------------------------
+// MULTI-TENANCY
+// ------------------------------------------
+
+Table Tenants {
+  Id char(36) [pk]
+  CompanyName varchar(255) [not null]
+  Slug varchar(100) [not null, unique, note: 'URL-safe tenant identifier']
+  IsActive tinyint(1) [not null, default: true]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  note: 'Root entity — NOT tenant-scoped. Every other entity references this.'
+}
+
+Table TenantSettings {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Key varchar(200) [not null]
+  Value text [not null]
+  ValueType varchar(50) [note: 'string|int|bool|json']
+  Group varchar(100) [note: 'Logical grouping for UI']
+  Description varchar(500)
+  IsReadOnly tinyint(1) [not null, note: 'Protected settings cannot be updated']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Key) [unique]
+  }
+}
+
+Table SystemSettings {
+  Id char(36) [pk]
+  Key varchar(200) [not null, unique, note: 'Global, not tenant-scoped']
+  Value text [not null]
+  ValueType varchar(50)
+  Group varchar(100)
+  Description varchar(500)
+  IsReadOnly tinyint(1) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  note: 'NOT tenant-scoped — system-wide configuration'
+}
+
+// ------------------------------------------
+// IDENTITY & ACCESS MANAGEMENT
+// ------------------------------------------
+
+Table Users {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Email varchar(255) [not null]
+  PasswordHash varchar(500) [not null, note: 'BCrypt, workFactor=12']
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Email) [unique]
+  }
+
+  note: 'Soft-deletable. Email unique per tenant, not globally.'
+}
+
+Table Roles {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Description varchar(500)
+  IsSystem tinyint(1) [not null, default: false, note: 'System roles cannot be deleted or renamed']
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Name) [unique]
+  }
+
+  note: 'Seed: Admin, Manager, Viewer, Warehouse Staff, Accountant'
+}
+
+Table Permissions {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(200) [not null, note: 'e.g. products.read']
+  Resource varchar(100) [not null, note: 'e.g. products']
+  Action varchar(100) [not null, note: 'e.g. read, create, update, delete']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Name) [unique]
+    (TenantId, Resource, Action) [unique]
+  }
+
+  note: 'Resource-Action permission model. ~62 seeded permissions.'
+}
+
+Table UserRoles {
+  UserId char(36) [not null, ref: > Users.Id]
+  RoleId char(36) [not null, ref: > Roles.Id]
+  TenantId char(36) [not null]
+  AssignedAt datetime(6) [not null]
+  AssignedBy char(36) [note: 'Who assigned the role']
+
+  indexes {
+    (UserId, RoleId) [pk]
+  }
+
+  note: 'Many-to-many: Users <-> Roles. Tracks assignment audit.'
+}
+
+Table RolePermissions {
+  RoleId char(36) [not null, ref: > Roles.Id]
+  PermissionId char(36) [not null, ref: > Permissions.Id]
+  TenantId char(36) [not null]
+
+  indexes {
+    (RoleId, PermissionId) [pk]
+  }
+
+  note: 'Many-to-many: Roles <-> Permissions'
+}
+
+// ------------------------------------------
+// AUTHENTICATION: JWT Token Management
+// ------------------------------------------
+
+Table RefreshTokens {
+  Id char(36) [pk]
+  TenantId char(36) [not null]
+  UserId char(36) [not null, ref: > Users.Id]
+  TokenHash varchar(500) [not null, unique, note: 'SHA256 hash of token']
+  ExpiresAt datetime(6) [not null, note: '7-day expiry']
+  CreatedByIp varchar(45) [note: 'IPv4/IPv6']
+  RevokedAt datetime(6) [note: 'null = active']
+  RevokedByIp varchar(45)
+  ReplacedByToken varchar(500) [note: 'Token rotation chain']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (UserId, RevokedAt)
+  }
+
+  note: 'Token rotation with revocation tracking. IsActive = RevokedAt == null && not expired.'
+}
+
+// ------------------------------------------
+// AUDIT TRAIL
+// ------------------------------------------
+
+Table AuditLogs {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  UserId char(36) [note: 'Who performed the action']
+  UserEmail varchar(255) [note: 'Snapshot of email at action time']
+  Action varchar(50) [not null, note: 'Create|Update|Delete|StatusChange|Login|Logout|Export']
+  EntityType varchar(200) [not null, note: 'e.g. Product, Invoice']
+  EntityId char(36) [note: 'ID of affected entity']
+  OldValuesJson text [note: 'JSON snapshot before change']
+  NewValuesJson text [note: 'JSON snapshot after change']
+  IpAddress varchar(100)
+  UserAgent varchar(500)
+  AdditionalInfo varchar(500)
+  Timestamp datetime(6) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Timestamp)
+    (TenantId, EntityType, EntityId)
+  }
+
+  note: 'Immutable audit trail. Records before/after JSON for every data change.'
+}
+
+Table SystemLogs {
+  Id char(36) [pk]
+  TenantId char(36) [ref: > Tenants.Id, note: 'Optional — system errors may not have tenant']
+  UserId char(36) [note: 'Optional — system events may not have user']
+  Level varchar(50) [not null, note: 'Trace|Debug|Information|Warning|Error|Critical']
+  Message text [not null]
+  Source varchar(200) [note: 'Class/method that generated the log']
+  Exception text [note: 'Full stack trace if error']
+  AdditionalDataJson text [note: 'Flexible JSON metadata']
+  RequestMethod varchar(10) [note: 'GET|POST|PUT|DELETE']
+  RequestPath varchar(500) [note: 'API endpoint path']
+  Timestamp datetime(6) [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (Level, Timestamp)
+    TenantId
+  }
+
+  note: 'NOT strictly tenant-scoped — system-wide logging with optional tenant context.'
+}
+
+// ------------------------------------------
+// INFRASTRUCTURE: API Reliability
+// ------------------------------------------
+
+Table IdempotencyRecords {
+  IdempotencyKey varchar(100) [pk, note: 'Client-provided key via Idempotency-Key header']
+  Endpoint varchar(50) [not null, note: 'API endpoint that was called']
+  StatusCode int [not null, note: 'HTTP status code of cached response']
+  ResponseBody longtext [note: 'Cached response body']
+  CreatedAt datetime(6) [not null]
+  ExpiresAt datetime(6) [not null, note: '24-hour TTL']
+
+  indexes {
+    ExpiresAt [note: 'For cleanup queries']
+  }
+
+  note: 'NOT tenant-scoped. Prevents duplicate POST/PUT/PATCH requests. 24h expiry.'
+}

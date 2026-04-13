@@ -128,7 +128,7 @@ else
 
     private async Task LoadDataAsync()
     {
-        try { _pagedResult = await Api.GetBrandsAsync(_page, _pageSize, _search); } catch { }
+        var apiResult = await Api.GetBrandsAsync(_page, _pageSize, _search); if (apiResult.Success) _pagedResult = apiResult.Data;
     }
 
     private async Task SearchAsync()
@@ -151,7 +151,7 @@ else
         _createError = string.Empty;
 
         var result = await Api.CreateBrandAsync(_newItem);
-        if (result != null)
+        if (result.Success && result.Data != null)
         {
             _showCreate = false;
             _page = 1;
@@ -159,7 +159,7 @@ else
         }
         else
         {
-            _createError = "Failed to create brand.";
+            _createError = result.ErrorMessage ?? "Failed to create brand.";
         }
 
         _creating = false;

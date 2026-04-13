@@ -7,7 +7,6 @@ namespace Domain.Entities
     public class InvoiceItem : BaseEntity, ITenantScoped
     {
         public Guid InvoiceId { get; set; }
-        public Guid? SalesOrderItemId { get; set; }
         public Guid ProductVariantId { get; set; }
 
         [Required]
@@ -46,7 +45,6 @@ namespace Domain.Entities
         // Navigation
         public Tenant Tenant { get; set; } = null!;
         public Invoice Invoice { get; set; } = null!;
-        public SalesOrderItem? SalesOrderItem { get; set; }
         public ProductVariant ProductVariant { get; set; } = null!;
         public TaxRate? TaxRateEntity { get; set; }
     }

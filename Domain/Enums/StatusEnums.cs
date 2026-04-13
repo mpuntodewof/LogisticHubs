@@ -1,41 +1,13 @@
-﻿namespace Domain.Enums
+namespace Domain.Enums
 {
     public enum UserRole
     {
         Admin,
         Manager,
-        Driver,
         Viewer
     }
 
-    public enum DriverStatus
-    {
-        Available,
-        OnDuty,
-        OffDuty,
-        Suspended
-    }
-
-    public enum VehicleStatus
-    {
-        Available,
-        InUse,
-        UnderMaintenance,
-        Retired
-    }
-
-    public enum ShipmentStatus
-    {
-        Pending,
-        Assigned,
-        PickedUp,
-        InTransit,
-        OutForDelivery,
-        Delivered,
-        Failed,
-        Cancelled
-    }
-
+    // Catalog
     public enum ProductStatus
     {
         Draft,
@@ -43,6 +15,7 @@
         Discontinued
     }
 
+    // Inventory
     public enum StockMovementType
     {
         In,
@@ -64,56 +37,6 @@
         StockTake,
         Correction,
         Other
-    }
-
-    public enum CustomerType
-    {
-        Individual,
-        Company
-    }
-
-    public enum AddressType
-    {
-        Billing,
-        Shipping,
-        Both
-    }
-
-    public enum SalesOrderStatus
-    {
-        Draft,
-        Confirmed,
-        Processing,
-        Shipped,
-        Delivered,
-        Completed,
-        Cancelled,
-        Refunded
-    }
-
-    public enum SalesOrderType
-    {
-        POS,
-        Online
-    }
-
-    public enum PaymentMethod
-    {
-        Cash,
-        BankTransfer,
-        CreditCard,
-        DebitCard,
-        EWallet,
-        QRIS,
-        Other
-    }
-
-    public enum PaymentStatus
-    {
-        Pending,
-        Paid,
-        Failed,
-        Refunded
     }
 
     // Finance
@@ -150,196 +73,24 @@
         CreditNoted
     }
 
-    // Payment Gateway
-    public enum PaymentGatewayProvider
+    // Payment
+    public enum PaymentMethod
     {
-        Midtrans,
-        Xendit,
-        Doku,
+        Cash,
+        BankTransfer,
+        CreditCard,
+        DebitCard,
+        EWallet,
+        QRIS,
         Other
     }
 
-    public enum PaymentTransactionStatus
+    public enum PaymentStatus
     {
         Pending,
-        Processing,
-        Success,
+        Paid,
         Failed,
-        Expired,
-        Refunded,
-        Cancelled
-    }
-
-    // E-commerce
-    public enum DiscountType
-    {
-        Percentage,
-        FixedAmount
-    }
-
-    public enum BannerPosition
-    {
-        Homepage,
-        Category,
-        Sidebar,
-        Popup
-    }
-
-    public enum PageStatus
-    {
-        Draft,
-        Published,
-        Archived
-    }
-
-    public enum ReviewStatus
-    {
-        Pending,
-        Approved,
-        Rejected
-    }
-
-    // Logistics Enhancements
-    public enum DeliveryRateType
-    {
-        FlatRate,
-        PerKg,
-        WeightRange
-    }
-
-    public enum ShipmentNoteType
-    {
-        General,
-        DriverInstruction,
-        WarehouseNote,
-        CustomerNote,
-        Issue
-    }
-
-    // Promotions
-    public enum PromotionType
-    {
-        BuyXGetY,
-        BundleDiscount,
-        FlashSale,
-        FreeShipping,
-        PercentageDiscount,
-        FixedAmountDiscount
-    }
-
-    public enum PromotionStatus
-    {
-        Draft,
-        Active,
-        Paused,
-        Expired,
-        Cancelled
-    }
-
-    public enum PromotionRuleType
-    {
-        MinQuantity,
-        MinOrderAmount,
-        SpecificProducts,
-        SpecificCategories,
-        CustomerGroup,
-        FirstOrder
-    }
-
-    // Loyalty
-    public enum LoyaltyTransactionType
-    {
-        Earn,
-        Redeem,
-        Expire,
-        Adjust,
-        Bonus
-    }
-
-    public enum LoyaltyProgramStatus
-    {
-        Active,
-        Paused,
-        Archived
-    }
-
-    // Purchase
-    public enum PurchaseOrderStatus
-    {
-        Draft,
-        Submitted,
-        Approved,
-        Received,
-        Cancelled
-    }
-
-    public enum GoodsReceiptStatus
-    {
-        Draft,
-        Confirmed,
-        Cancelled
-    }
-
-    // Notification
-    public enum NotificationChannel
-    {
-        Email,
-        SMS,
-        Push
-    }
-
-    public enum NotificationStatus
-    {
-        Unread,
-        Read,
-        Archived
-    }
-
-    // HRM
-    public enum LeaveRequestStatus
-    {
-        Pending,
-        Approved,
-        Rejected
-    }
-
-    public enum LeaveType
-    {
-        Annual,
-        Sick,
-        Maternity,
-        Paternity,
-        Unpaid,
-        Other
-    }
-
-    public enum EmploymentStatus
-    {
-        Active,
-        OnLeave,
-        Terminated,
-        Probation
-    }
-
-    // Reporting
-    public enum ReportType
-    {
-        Sales, Inventory, Finance, Tax, Purchase, HRM, Loyalty, Custom
-    }
-
-    public enum ReportExecutionStatus
-    {
-        Queued, Running, Completed, Failed, Cancelled
-    }
-
-    public enum ReportScheduleFrequency
-    {
-        None, Daily, Weekly, Monthly
-    }
-
-    public enum DashboardWidgetType
-    {
-        KPI, Chart, Table, List, Summary
+        Refunded
     }
 
     // Audit
@@ -351,16 +102,5 @@
     public enum SystemLogLevel
     {
         Trace, Debug, Information, Warning, Error, Critical
-    }
-
-    // API / Webhooks
-    public enum WebhookEventType
-    {
-        Created, Updated, Deleted, StatusChanged
-    }
-
-    public enum WebhookDeliveryStatus
-    {
-        Pending, Success, Failed, Expired
     }
 }

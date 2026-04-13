@@ -95,7 +95,7 @@ else
 
     private async Task LoadDataAsync()
     {
-        try { _pagedResult = await Api.GetAuditLogsAsync(_page, _pageSize, _search); } catch { }
+        var apiResult = await Api.GetAuditLogsAsync(_page, _pageSize, _search); if (apiResult.Success) _pagedResult = apiResult.Data;
     }
 
     private async Task SearchAsync() { _page = 1; await LoadDataAsync(); }

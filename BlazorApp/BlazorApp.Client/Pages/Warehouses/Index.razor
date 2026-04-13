@@ -158,7 +158,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try { _warehouses = await Api.GetWarehousesAsync(); } catch { }
+        var wr = await Api.GetWarehousesAsync(); if (wr.Success) _warehouses = wr.Data ?? new();
         _loading = false;
     }
 
@@ -191,20 +191,20 @@ else
         {
             _updateReq.Capacity = _editCapacity;
             var ok = await Api.UpdateWarehouseAsync(_editTarget.Id, _updateReq);
-            if (ok)
+            if (ok.Success)
             {
                 _editTarget.Name = _updateReq.Name ?? _editTarget.Name;
                 _editTarget.Location = _updateReq.Location ?? _editTarget.Location;
                 _editTarget.Capacity = _editCapacity;
                 _showForm = false;
             }
-            else _formError = "Failed to update warehouse.";
+            else _formError = ok.ErrorMessage ?? "Failed to update warehouse.";
         }
         else
         {
             var result = await Api.CreateWarehouseAsync(_createReq);
-            if (result != null) { _warehouses.Insert(0, result); _showForm = false; }
-            else _formError = "Failed to create warehouse.";
+            if (result.Success && result.Data != null) { _warehouses.Insert(0, result.Data); _showForm = false; }
+            else _formError = result.ErrorMessage ?? "Failed to create warehouse.";
         }
 
         _saving = false;
@@ -217,7 +217,7 @@ else
         if (_deleteTarget == null) return;
         _saving = true;
         var ok = await Api.DeleteWarehouseAsync(_deleteTarget.Id);
-        if (ok) _warehouses.Remove(_deleteTarget);
+        if (ok.Success) _warehouses.Remove(_deleteTarget);
         _showDelete = false;
         _saving = false;
     }

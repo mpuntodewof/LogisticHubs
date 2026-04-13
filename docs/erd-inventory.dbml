@@ -1,0 +1,271 @@
+// ==========================================
+// NiagaOne — Inventory Domain ERD
+// 10 Inventory tables + 3 related Finance tables
+// Import at https://dbdiagram.io
+// ==========================================
+
+// ------------------------------------------
+// INVENTORY: Product Catalog
+// ------------------------------------------
+
+Table Categories {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ParentCategoryId char(36) [ref: > Categories.Id]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null]
+  Description varchar(1000)
+  SortOrder int [not null]
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table Brands {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null]
+  Description varchar(1000)
+  LogoUrl varchar(500)
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table UnitsOfMeasure {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Abbreviation varchar(20) [not null]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Abbreviation) [unique]
+  }
+}
+
+Table UnitConversions {
+  Id char(36) [pk]
+  TenantId char(36) [not null]
+  FromUnitId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  ToUnitId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  ConversionFactor decimal(18,6) [not null, note: 'e.g. 1 box = 12 pcs']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, FromUnitId, ToUnitId) [unique]
+  }
+}
+
+Table Products {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  CategoryId char(36) [ref: > Categories.Id]
+  BrandId char(36) [ref: > Brands.Id]
+  BaseUnitOfMeasureId char(36) [not null, ref: > UnitsOfMeasure.Id]
+  Name varchar(500) [not null]
+  Slug varchar(500) [not null]
+  Description varchar(2000)
+  Status varchar(50) [not null, note: 'Draft|Active|Discontinued']
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Slug) [unique]
+  }
+}
+
+Table ProductVariants {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ProductId char(36) [not null, ref: > Products.Id]
+  Name varchar(500) [not null]
+  Sku varchar(100) [not null]
+  Barcode varchar(100)
+  CostPrice decimal(18,2) [not null]
+  SellingPrice decimal(18,2) [not null]
+  Weight decimal(18,4)
+  VariantAttributes varchar(2000) [note: 'JSON: size, color, etc.']
+  IsActive tinyint(1) [not null, default: true]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, Sku) [unique]
+  }
+}
+
+Table ProductImages {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  ProductId char(36) [not null, ref: > Products.Id]
+  ProductVariantId char(36) [ref: > ProductVariants.Id]
+  ImageUrl varchar(1000) [not null]
+  AltText varchar(255)
+  IsPrimary tinyint(1) [not null]
+  SortOrder int [not null]
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+// ------------------------------------------
+// INVENTORY: Warehousing & Stock
+// ------------------------------------------
+
+Table Warehouses {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(255) [not null]
+  Location varchar(500) [not null]
+  Capacity int [not null]
+  IsDeleted tinyint(1) [not null, default: false]
+  DeletedAt datetime(6)
+  DeletedBy char(36)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+}
+
+Table WarehouseStocks {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  WarehouseId char(36) [not null, ref: > Warehouses.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  QuantityOnHand int [not null, note: 'CHECK >= 0']
+  QuantityReserved int [not null]
+  ReorderPoint int [note: 'Low stock alert threshold']
+  MaxStock int
+  RowVersion timestamp(6) [not null, note: 'Optimistic concurrency token']
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, WarehouseId, ProductVariantId) [unique]
+  }
+}
+
+Table StockMovements {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  WarehouseId char(36) [not null, ref: > Warehouses.Id]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  SourceWarehouseId char(36) [ref: > Warehouses.Id, note: 'For transfers']
+  DestinationWarehouseId char(36) [ref: > Warehouses.Id, note: 'For transfers']
+  MovementType varchar(50) [not null, note: 'In|Out|Transfer|Adjustment']
+  Reason varchar(50) [not null, note: 'Purchase|Sale|Damaged|Expired|TransferIn|TransferOut|StockTake|Correction|InitialStock|CustomerReturn|Other']
+  Quantity int [not null]
+  QuantityBefore int [not null, note: 'Snapshot before movement']
+  QuantityAfter int [not null, note: 'Snapshot after movement']
+  ReferenceDocumentType varchar(100) [note: 'e.g. Invoice']
+  ReferenceDocumentId char(36) [note: 'Generic ref, no FK']
+  ReferenceDocumentNumber varchar(100)
+  Notes varchar(1000)
+  CreatedAt datetime(6) [not null]
+  CreatedBy char(36)
+  UpdatedAt datetime(6)
+  UpdatedBy char(36)
+
+  indexes {
+    (TenantId, WarehouseId, ProductVariantId)
+  }
+}
+
+// ------------------------------------------
+// RELATED: Finance tables referenced by Inventory
+// (included for FK completeness)
+// ------------------------------------------
+
+Table ProductTaxRates [headercolor: #d3d3d3] {
+  ProductId char(36) [not null, ref: > Products.Id]
+  TaxRateId char(36) [not null, ref: > TaxRates.Id]
+  TenantId char(36) [not null]
+
+  indexes {
+    (ProductId, TaxRateId) [pk]
+  }
+
+  note: 'Bridge to Finance domain — see erd-finance.dbml for full schema'
+}
+
+Table TaxRates [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  TenantId char(36) [not null, ref: > Tenants.Id]
+  Name varchar(100) [not null]
+  Code varchar(20) [not null]
+  TaxType varchar(50) [not null]
+  Rate decimal(5,4) [not null]
+  IsActive tinyint(1) [not null, default: true]
+
+  note: 'From Finance domain — see erd-finance.dbml for full schema'
+}
+
+Table InvoiceItems [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  InvoiceId char(36) [not null]
+  ProductVariantId char(36) [not null, ref: > ProductVariants.Id]
+  TaxRateId char(36) [ref: > TaxRates.Id]
+  ProductName varchar(500) [not null]
+  Sku varchar(100) [not null]
+  Quantity int [not null]
+  UnitPrice decimal(18,2) [not null]
+  LineTotal decimal(18,2) [not null]
+
+  note: 'From Finance domain — see erd-finance.dbml for full schema'
+}
+
+// ------------------------------------------
+// PLATFORM: Tenant (shared dependency)
+// ------------------------------------------
+
+Table Tenants [headercolor: #d3d3d3] {
+  Id char(36) [pk]
+  CompanyName varchar(255) [not null]
+  Slug varchar(100) [not null, unique]
+  IsActive tinyint(1) [not null, default: true]
+
+  note: 'Foundation table — all entities are tenant-scoped'
+}

@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412062007_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,85 +163,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Brands");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "PT Indofood Sukses Makmur — Indonesia's largest food company",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Indofood",
-                            Slug = "indofood",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Wings Group — FMCG household and personal care",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Wings",
-                            Slug = "wings",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Unilever Indonesia — global consumer goods",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Unilever",
-                            Slug = "unilever",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "PT Santos Jaya Abadi — Indonesia's #1 coffee brand",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Kapal Api",
-                            Slug = "kapal-api",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000005"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "PT Ultra Jaya Milk — UHT milk and dairy products",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ultra Jaya",
-                            Slug = "ultra-jaya",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000006"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "PT Mayora Indah — biscuits, confectionery, beverages",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Mayora",
-                            Slug = "mayora",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000000-0000-0000-0000-000000000007"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Danone-Aqua — Indonesia's leading bottled water",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Aqua",
-                            Slug = "aqua",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Category", b =>
@@ -308,81 +232,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Drinks, juices, water, and ready-to-drink beverages",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Beverages",
-                            Slug = "beverages",
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Chips, crackers, biscuits, and packaged snacks",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Snacks",
-                            Slug = "snacks",
-                            SortOrder = 2,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Milk, yogurt, cheese, and dairy products",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Dairy",
-                            Slug = "dairy",
-                            SortOrder = 3,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Rice, flour, cooking oil, and pantry essentials",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Rice & Staples",
-                            Slug = "rice-and-staples",
-                            SortOrder = 4,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000005"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Soap, shampoo, toothpaste, and hygiene products",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Personal Care",
-                            Slug = "personal-care",
-                            SortOrder = 5,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000006"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Ground coffee, instant coffee, and tea",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Coffee & Tea",
-                            ParentCategoryId = new Guid("c0000000-0000-0000-0000-000000000001"),
-                            Slug = "coffee-and-tea",
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.ChartOfAccount", b =>
@@ -941,7 +790,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0001-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3641),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6049),
                             Name = "users.create",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -950,7 +799,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0002-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3654),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6064),
                             Name = "users.read",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -959,7 +808,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0003-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3659),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6069),
                             Name = "users.update",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -968,7 +817,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0004-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3669),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6083),
                             Name = "users.delete",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -977,7 +826,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0005-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3673),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6087),
                             Name = "roles.assign",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -986,7 +835,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0006-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3678),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6093),
                             Name = "roles.create",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -995,7 +844,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0007-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3682),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6098),
                             Name = "roles.read",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1004,7 +853,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0008-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3691),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6177),
                             Name = "roles.update",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1013,7 +862,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0009-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3695),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6183),
                             Name = "roles.delete",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1022,7 +871,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0010-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3700),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6190),
                             Name = "categories.create",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1031,7 +880,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0011-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3705),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6195),
                             Name = "categories.read",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1040,7 +889,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0012-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3709),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6200),
                             Name = "categories.update",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1049,7 +898,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0013-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3713),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6204),
                             Name = "categories.delete",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1058,7 +907,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0014-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3717),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6209),
                             Name = "brands.create",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1067,7 +916,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0015-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3721),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6213),
                             Name = "brands.read",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1076,7 +925,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0016-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3725),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6218),
                             Name = "brands.update",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1085,7 +934,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0017-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3769),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6222),
                             Name = "brands.delete",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1094,7 +943,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0018-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3787),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6246),
                             Name = "units.create",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1103,7 +952,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0019-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3792),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6251),
                             Name = "units.read",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1112,7 +961,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0020-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3796),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6256),
                             Name = "units.update",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1121,7 +970,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0021-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3799),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6260),
                             Name = "units.delete",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1130,7 +979,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0022-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3803),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6264),
                             Name = "products.create",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1139,7 +988,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0023-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3807),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6269),
                             Name = "products.read",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1148,7 +997,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0024-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3815),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6280),
                             Name = "products.update",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1157,7 +1006,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0025-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3828),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6296),
                             Name = "products.delete",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1166,7 +1015,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0026-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3832),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6301),
                             Name = "inventory.read",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1175,7 +1024,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0027-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3836),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6305),
                             Name = "inventory.create",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1184,7 +1033,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0028-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6309),
                             Name = "inventory.update",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1193,7 +1042,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0029-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "transfer",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3844),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6363),
                             Name = "inventory.transfer",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1202,7 +1051,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0030-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "manage",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3887),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6401),
                             Name = "warehouses.manage",
                             Resource = "warehouses",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1211,7 +1060,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0031-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3891),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6406),
                             Name = "chart-of-accounts.create",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1220,7 +1069,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0032-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3895),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6411),
                             Name = "chart-of-accounts.read",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1229,7 +1078,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0033-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3899),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6415),
                             Name = "chart-of-accounts.update",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1238,7 +1087,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0034-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3905),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6421),
                             Name = "chart-of-accounts.delete",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1247,7 +1096,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0035-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3909),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6425),
                             Name = "journal-entries.create",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1256,7 +1105,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0036-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3912),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6429),
                             Name = "journal-entries.read",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1265,7 +1114,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0037-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "post",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3916),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6434),
                             Name = "journal-entries.post",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1274,7 +1123,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0038-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "void",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3968),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6450),
                             Name = "journal-entries.void",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1283,7 +1132,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0039-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3972),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6454),
                             Name = "journal-entries.delete",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1292,7 +1141,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0040-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3976),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6458),
                             Name = "payment-terms.create",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1301,7 +1150,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0041-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3980),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6463),
                             Name = "payment-terms.read",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1310,7 +1159,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0042-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3984),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6467),
                             Name = "payment-terms.update",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1319,7 +1168,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0043-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3988),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6471),
                             Name = "payment-terms.delete",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1328,7 +1177,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0044-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3991),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6507),
                             Name = "tax-rates.create",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1337,7 +1186,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0045-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3995),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6512),
                             Name = "tax-rates.read",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1346,7 +1195,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0046-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3999),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6516),
                             Name = "tax-rates.update",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1355,7 +1204,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0047-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4003),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6521),
                             Name = "tax-rates.delete",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1364,7 +1213,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0048-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4007),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6525),
                             Name = "tax-rates.assign",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1373,7 +1222,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0049-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4010),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6528),
                             Name = "invoices.create",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1382,7 +1231,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0050-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4014),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6533),
                             Name = "invoices.read",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1391,7 +1240,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0051-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "issue",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4018),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6537),
                             Name = "invoices.issue",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1400,7 +1249,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0052-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign-tax-number",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4022),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6542),
                             Name = "invoices.assign-tax-number",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1409,7 +1258,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0053-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "pay",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4026),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6547),
                             Name = "invoices.pay",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1418,7 +1267,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0054-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "cancel",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4030),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6551),
                             Name = "invoices.cancel",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1427,7 +1276,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0055-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4058),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6555),
                             Name = "invoices.delete",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1436,7 +1285,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0056-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4063),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6562),
                             Name = "audit-logs.read",
                             Resource = "audit-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1445,7 +1294,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0057-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "export",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4068),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6566),
                             Name = "audit-logs.export",
                             Resource = "audit-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1454,7 +1303,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0058-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4071),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6570),
                             Name = "system-logs.read",
                             Resource = "system-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1463,7 +1312,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0059-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4075),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6574),
                             Name = "tenant-settings.read",
                             Resource = "tenant-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1472,7 +1321,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0060-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4079),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6579),
                             Name = "tenant-settings.update",
                             Resource = "tenant-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1481,7 +1330,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0061-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4083),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6583),
                             Name = "system-settings.read",
                             Resource = "system-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1490,7 +1339,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0062-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4087),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(6588),
                             Name = "system-settings.update",
                             Resource = "system-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1576,157 +1425,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Products");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000001"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000001"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Indonesia's iconic instant fried noodle, original flavor",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Indomie Mi Goreng",
-                            Slug = "indomie-mi-goreng",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000007"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Natural mineral water from mountain springs",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Aqua Mineral Water",
-                            Slug = "aqua-mineral-water",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000003"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000004"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000006"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Premium ground coffee blend, rich and aromatic",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Kapal Api Kopi Spesial",
-                            Slug = "kapal-api-kopi-spesial",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000004"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000005"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "UHT processed full cream milk, rich in calcium and vitamin D",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ultra Milk UHT Full Cream",
-                            Slug = "ultra-milk-uht-full-cream",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000005"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000003"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Premium fragrant pandan wangi rice, locally sourced from Central Java",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Beras Premium Pandan Wangi",
-                            Slug = "beras-premium-pandan-wangi",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000006"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000004"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000001"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Premium cooking oil, twice-filtered for clarity and health",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Bimoli Minyak Goreng",
-                            Slug = "bimoli-minyak-goreng",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000007"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000006"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Classic coconut-flavored cream biscuit, a household favorite",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Roma Kelapa Biscuit",
-                            Slug = "roma-kelapa-biscuit",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000008"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000003"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000005"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Antibacterial body wash with ActiveSilver formula",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Lifebuoy Body Wash",
-                            Slug = "lifebuoy-body-wash",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000009"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000002"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000005"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Concentrated liquid laundry detergent with softener",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "So Klin Liquid Detergent",
-                            Slug = "so-klin-liquid-detergent",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000000-0000-0000-0000-000000000010"),
-                            BaseUnitOfMeasureId = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            BrandId = new Guid("b0000000-0000-0000-0000-000000000006"),
-                            CategoryId = new Guid("c0000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Ready-to-drink jasmine green tea brewed from young tea leaves",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Teh Pucuk Harum",
-                            Slug = "teh-pucuk-harum",
-                            Status = "Active",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductImage", b =>
@@ -1780,118 +1478,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("ProductImages");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000001"),
-                            AltText = "Indomie Mi Goreng pack",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/indomie-goreng.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000001"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000002"),
-                            AltText = "Aqua mineral water bottle",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/aqua-mineral.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000003"),
-                            AltText = "Kapal Api Kopi Spesial pack",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/kapal-api-special.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000003"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000004"),
-                            AltText = "Ultra Milk Full Cream carton",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/ultra-milk-fc.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000004"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000005"),
-                            AltText = "Beras Pandan Wangi sack",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/beras-pandan-wangi.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000005"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000006"),
-                            AltText = "Bimoli cooking oil bottle",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/bimoli-cooking-oil.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000006"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000007"),
-                            AltText = "Roma Kelapa biscuit pack",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/roma-kelapa.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000007"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000008"),
-                            AltText = "Lifebuoy body wash bottle",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/lifebuoy-body-wash.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000008"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000009"),
-                            AltText = "So Klin liquid detergent",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/so-klin-liquid.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000009"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e1000000-0000-0000-0000-000000000010"),
-                            AltText = "Teh Pucuk Harum bottle",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "/images/products/teh-pucuk-harum.jpg",
-                            IsPrimary = true,
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000010"),
-                            SortOrder = 1,
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductTaxRate", b =>
@@ -1912,68 +1498,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("ProductTaxRates");
-
-                    b.HasData(
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000001"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000003"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000004"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000005"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000006"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000007"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000008"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000009"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000010"),
-                            TaxRateId = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductVariant", b =>
@@ -2053,308 +1577,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ProductVariants");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000001"),
-                            Barcode = "8901234560001",
-                            CostPrice = 2200m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Indomie Mi Goreng - Single Pack",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000001"),
-                            SellingPrice = 3000m,
-                            Sku = "IDM-GRG-001",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.085m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000002"),
-                            Barcode = "8901234560002",
-                            CostPrice = 82000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Indomie Mi Goreng - Box (40 pcs)",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000001"),
-                            SellingPrice = 110000m,
-                            Sku = "IDM-GRG-040",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 3.4m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000003"),
-                            Barcode = "8901234560003",
-                            CostPrice = 2000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Aqua 330ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            SellingPrice = 3500m,
-                            Sku = "AQU-330-001",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.33m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000004"),
-                            Barcode = "8901234560004",
-                            CostPrice = 2800m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Aqua 600ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            SellingPrice = 4500m,
-                            Sku = "AQU-600-001",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.6m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000005"),
-                            Barcode = "8901234560005",
-                            CostPrice = 4500m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Aqua 1500ml (Gallon-ette)",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000002"),
-                            SellingPrice = 7500m,
-                            Sku = "AQU-1500-01",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 1.5m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000006"),
-                            Barcode = "8901234560006",
-                            CostPrice = 12000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Kapal Api Special 165g",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000003"),
-                            SellingPrice = 17500m,
-                            Sku = "KPA-SPL-165",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.165m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000007"),
-                            Barcode = "8901234560007",
-                            CostPrice = 25000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Kapal Api Special 380g",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000003"),
-                            SellingPrice = 35000m,
-                            Sku = "KPA-SPL-380",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.38m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000008"),
-                            Barcode = "8901234560008",
-                            CostPrice = 4500m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ultra Milk Full Cream 250ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000004"),
-                            SellingPrice = 6500m,
-                            Sku = "ULT-FC-0250",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.26m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000009"),
-                            Barcode = "8901234560009",
-                            CostPrice = 15000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ultra Milk Full Cream 1000ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000004"),
-                            SellingPrice = 19500m,
-                            Sku = "ULT-FC-1000",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 1.03m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000010"),
-                            Barcode = "8901234560010",
-                            CostPrice = 62000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Beras Pandan Wangi 5kg",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000005"),
-                            SellingPrice = 75000m,
-                            Sku = "BRS-PW-005K",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 5.0m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000011"),
-                            Barcode = "8901234560011",
-                            CostPrice = 290000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Beras Pandan Wangi 25kg",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000005"),
-                            SellingPrice = 350000m,
-                            Sku = "BRS-PW-025K",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 25.0m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000012"),
-                            Barcode = "8901234560012",
-                            CostPrice = 17000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Bimoli Minyak Goreng 1L",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000006"),
-                            SellingPrice = 22000m,
-                            Sku = "BMI-MG-001L",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.92m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000013"),
-                            Barcode = "8901234560013",
-                            CostPrice = 32000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Bimoli Minyak Goreng 2L",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000006"),
-                            SellingPrice = 42000m,
-                            Sku = "BMI-MG-002L",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 1.84m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000014"),
-                            Barcode = "8901234560014",
-                            CostPrice = 8500m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Roma Kelapa 300g",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000007"),
-                            SellingPrice = 12500m,
-                            Sku = "ROM-KLP-300",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.3m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000015"),
-                            Barcode = "8901234560015",
-                            CostPrice = 22000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Lifebuoy Body Wash 400ml - Cool",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000008"),
-                            SellingPrice = 32000m,
-                            Sku = "LFB-BW-400C",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.42m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000016"),
-                            Barcode = "8901234560016",
-                            CostPrice = 22000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Lifebuoy Body Wash 400ml - Total",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000008"),
-                            SellingPrice = 32000m,
-                            Sku = "LFB-BW-400T",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.42m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000017"),
-                            Barcode = "8901234560017",
-                            CostPrice = 14000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "So Klin Liquid 800ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000009"),
-                            SellingPrice = 19500m,
-                            Sku = "SKL-LQ-0800",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.82m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000018"),
-                            Barcode = "8901234560018",
-                            CostPrice = 24000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "So Klin Liquid 1600ml Refill",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000009"),
-                            SellingPrice = 34000m,
-                            Sku = "SKL-LQ-1600",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 1.62m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000019"),
-                            Barcode = "8901234560019",
-                            CostPrice = 2500m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Teh Pucuk Harum 350ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000010"),
-                            SellingPrice = 4000m,
-                            Sku = "TPH-350-001",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.36m
-                        },
-                        new
-                        {
-                            Id = new Guid("f0000000-0000-0000-0000-000000000020"),
-                            Barcode = "8901234560020",
-                            CostPrice = 3200m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Teh Pucuk Harum 480ml",
-                            ProductId = new Guid("d0000000-0000-0000-0000-000000000010"),
-                            SellingPrice = 5500m,
-                            Sku = "TPH-480-001",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Weight = 0.49m
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
@@ -2475,7 +1697,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3455),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(5894),
                             Description = "Full system access",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2485,7 +1707,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3459),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(5900),
                             Description = "Full operational access across all modules",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2495,7 +1717,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3461),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(5903),
                             Description = "Read-only access across all modules",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2505,7 +1727,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3463),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(5905),
                             Description = "Inventory management, stock movements, receiving",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2515,7 +1737,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("77777777-7777-7777-7777-777777777777"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3465),
+                            CreatedAt = new DateTime(2026, 4, 12, 6, 20, 4, 133, DateTimeKind.Utc).AddTicks(5907),
                             Description = "Finance, tax, invoicing, and payment management",
                             IsDeleted = false,
                             IsSystem = true,
@@ -3702,36 +2924,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("TaxRates");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("ae000000-0000-0000-0000-000000000001"),
-                            Code = "PPN-11",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Pajak Pertambahan Nilai 11%",
-                            EffectiveFrom = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PPN 11%",
-                            Rate = 0.1100m,
-                            TaxType = "PPN",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("ae000000-0000-0000-0000-000000000002"),
-                            Code = "TAX-EX",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Tax exempt (basic necessities)",
-                            EffectiveFrom = new DateTime(2022, 4, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Exempt",
-                            Rate = 0.0000m,
-                            TaxType = "Exempt",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Tenant", b =>
@@ -3883,35 +3075,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UnitConversions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("ac000000-0000-0000-0000-000000000001"),
-                            ConversionFactor = 12m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FromUnitId = new Guid("a0000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            ToUnitId = new Guid("a0000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("ac000000-0000-0000-0000-000000000002"),
-                            ConversionFactor = 12m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FromUnitId = new Guid("a0000000-0000-0000-0000-000000000005"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            ToUnitId = new Guid("a0000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("ac000000-0000-0000-0000-000000000003"),
-                            ConversionFactor = 1000m,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            FromUnitId = new Guid("a0000000-0000-0000-0000-000000000003"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            ToUnitId = new Guid("a0000000-0000-0000-0000-000000000003")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.UnitOfMeasure", b =>
@@ -3964,53 +3127,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UnitsOfMeasure");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            Abbreviation = "pcs",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Name = "Piece",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000002"),
-                            Abbreviation = "box",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Name = "Box",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000003"),
-                            Abbreviation = "kg",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Name = "Kilogram",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000004"),
-                            Abbreviation = "L",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Name = "Liter",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000005"),
-                            Abbreviation = "dzn",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDeleted = false,
-                            Name = "Dozen",
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>

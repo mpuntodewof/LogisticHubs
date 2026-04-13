@@ -41,7 +41,5 @@ namespace Domain.Entities
         public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
         public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public ICollection<ProductTaxRate> ProductTaxRates { get; set; } = new List<ProductTaxRate>();
-        public ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
-        public ICollection<PromotionProduct> PromotionProducts { get; set; } = new List<PromotionProduct>();
     }
 }

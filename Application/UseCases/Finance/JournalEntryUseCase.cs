@@ -9,11 +9,16 @@ namespace Application.UseCases.Finance
     {
         private readonly IJournalEntryRepository _repository;
         private readonly IChartOfAccountRepository _accountRepository;
+        private readonly ITransactionManager _transactionManager;
 
-        public JournalEntryUseCase(IJournalEntryRepository repository, IChartOfAccountRepository accountRepository)
+        public JournalEntryUseCase(
+            IJournalEntryRepository repository,
+            IChartOfAccountRepository accountRepository,
+            ITransactionManager transactionManager)
         {
             _repository = repository;
             _accountRepository = accountRepository;
+            _transactionManager = transactionManager;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -57,41 +62,52 @@ namespace Application.UseCases.Finance
                     throw new KeyNotFoundException($"Account {line.AccountId} not found.");
             }
 
-            // Generate entry number
-            var entryNumber = await GenerateEntryNumberAsync(request.EntryDate);
-
-            var entry = new JournalEntry
+            await _transactionManager.BeginTransactionAsync();
+            try
             {
-                Id = Guid.NewGuid(),
-                EntryNumber = entryNumber,
-                EntryDate = request.EntryDate,
-                Description = request.Description,
-                Reference = request.Reference,
-                Status = "Draft",
-                TotalDebit = totalDebit,
-                TotalCredit = totalCredit,
-                CreatedAt = DateTime.UtcNow
-            };
+                // Generate entry number inside transaction
+                var entryNumber = await GenerateEntryNumberAsync(request.EntryDate);
 
-            foreach (var line in request.Lines)
-            {
-                entry.Lines.Add(new JournalEntryLine
+                var entry = new JournalEntry
                 {
                     Id = Guid.NewGuid(),
-                    JournalEntryId = entry.Id,
-                    AccountId = line.AccountId,
-                    Description = line.Description,
-                    DebitAmount = line.DebitAmount,
-                    CreditAmount = line.CreditAmount,
+                    EntryNumber = entryNumber,
+                    EntryDate = request.EntryDate,
+                    Description = request.Description,
+                    Reference = request.Reference,
+                    Status = "Draft",
+                    TotalDebit = totalDebit,
+                    TotalCredit = totalCredit,
                     CreatedAt = DateTime.UtcNow
-                });
+                };
+
+                foreach (var line in request.Lines)
+                {
+                    entry.Lines.Add(new JournalEntryLine
+                    {
+                        Id = Guid.NewGuid(),
+                        JournalEntryId = entry.Id,
+                        AccountId = line.AccountId,
+                        Description = line.Description,
+                        DebitAmount = line.DebitAmount,
+                        CreditAmount = line.CreditAmount,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
+                var created = await _repository.CreateAsync(entry);
+
+                await _transactionManager.CommitAsync();
+
+                // Reload with lines and accounts for the response
+                var detail = await _repository.GetDetailByIdAsync(created.Id);
+                return MapToDetailDto(detail!);
             }
-
-            var created = await _repository.CreateAsync(entry);
-
-            // Reload with lines and accounts for the response
-            var detail = await _repository.GetDetailByIdAsync(created.Id);
-            return MapToDetailDto(detail!);
+            catch
+            {
+                await _transactionManager.RollbackAsync();
+                throw;
+            }
         }
 
         // ── Post ─────────────────────────────────────────────────────────────────

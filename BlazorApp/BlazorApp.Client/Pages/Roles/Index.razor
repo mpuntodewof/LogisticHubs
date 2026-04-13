@@ -268,12 +268,8 @@ else
         var user = await AuthSvc.GetCurrentUserAsync();
         _isAdmin = user?.Roles.Contains("Admin") ?? false;
 
-        try
-        {
-            _roles = await Api.GetRolesAsync();
-            _allPermissions = await Api.GetPermissionsAsync();
-        }
-        catch { }
+        var rr = await Api.GetRolesAsync(); if (rr.Success) _roles = rr.Data ?? new();
+        var pr = await Api.GetPermissionsAsync(); if (pr.Success) _allPermissions = pr.Data ?? new();
 
         ApplyFilter();
         _loading = false;
@@ -325,14 +321,14 @@ else
     {
         _saving = true;
         _formError = string.Empty;
-        var role = await Api.CreateRoleAsync(_createReq);
-        if (role != null)
+        var roleResult = await Api.CreateRoleAsync(_createReq);
+        if (roleResult.Success && roleResult.Data != null)
         {
-            _roles.Add(role);
+            _roles.Add(roleResult.Data);
             ApplyFilter();
             _showCreate = false;
         }
-        else _formError = "Failed to create role. Name may already exist.";
+        else _formError = roleResult.ErrorMessage ?? "Failed to create role. Name may already exist.";
         _saving = false;
     }
 
@@ -356,13 +352,13 @@ else
         if (!(_editTarget.IsSystem)) req.Name = _updateReq.Name;
 
         var ok = await Api.UpdateRoleAsync(_editTarget.Id, req);
-        if (ok)
+        if (ok.Success)
         {
-            try { _roles = await Api.GetRolesAsync(); } catch { }
+            var rr = await Api.GetRolesAsync(); if (rr.Success) _roles = rr.Data ?? new();
             ApplyFilter();
             _showEdit = false;
         }
-        else _formError = "Failed to update role.";
+        else _formError = ok.ErrorMessage ?? "Failed to update role.";
         _saving = false;
     }
 
@@ -388,18 +384,18 @@ else
         _saving = true;
         _formError = string.Empty;
 
-        var ok = await Api.UpdateRolePermissionsAsync(_permTarget.Id, new UpdateRolePermissionsRequest
+        var permResult = await Api.UpdateRolePermissionsAsync(_permTarget.Id, new UpdateRolePermissionsRequest
         {
             PermissionIds = _selectedPermissionIds.ToList()
         });
 
-        if (ok)
+        if (permResult.Success)
         {
-            try { _roles = await Api.GetRolesAsync(); } catch { }
+            var rr = await Api.GetRolesAsync(); if (rr.Success) _roles = rr.Data ?? new();
             ApplyFilter();
             _showPermissions = false;
         }
-        else _formError = "Failed to update permissions.";
+        else _formError = permResult.ErrorMessage ?? "Failed to update permissions.";
         _saving = false;
     }
 
@@ -411,8 +407,8 @@ else
     {
         if (_deleteTarget == null) return;
         _saving = true;
-        var ok = await Api.DeleteRoleAsync(_deleteTarget.Id);
-        if (ok) { _roles.Remove(_deleteTarget); ApplyFilter(); }
+        var delResult = await Api.DeleteRoleAsync(_deleteTarget.Id);
+        if (delResult.Success) { _roles.Remove(_deleteTarget); ApplyFilter(); }
         _showDelete = false;
         _saving = false;
     }

@@ -14,6 +14,14 @@
     </div>
 </div>
 
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert-custom alert-error" style="margin-bottom:1rem">
+        &#9888; @_error
+        <button style="float:right;background:none;border:none;cursor:pointer;font-size:1rem" @onclick="() => _error = string.Empty">&times;</button>
+    </div>
+}
+
 @* ── Search ── *@
 <div class="card" style="margin-bottom:1rem;padding:1rem">
     <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
@@ -85,6 +93,7 @@ else
 @code {
     private bool _loading = true;
     private string _search = string.Empty;
+    private string _error = string.Empty;
 
     private List<InvoiceDto> _items = new();
 
@@ -100,19 +109,20 @@ else
     private async Task LoadAsync()
     {
         _loading = true;
-        try
+        _error = string.Empty;
+        var result = await Api.GetInvoicesAsync(_page, _pageSize, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
+        if (result.Success && result.Data != null)
         {
-            var result = await Api.GetInvoicesAsync(_page, _pageSize, string.IsNullOrWhiteSpace(_search) ? null : _search.Trim());
-            if (result != null)
-            {
-                _items = result.Items;
-                _totalCount = result.TotalCount;
-                _totalPages = result.TotalPages;
-                _hasPrevious = result.HasPreviousPage;
-                _hasNext = result.HasNextPage;
-            }
+            _items = result.Data.Items;
+            _totalCount = result.Data.TotalCount;
+            _totalPages = result.Data.TotalPages;
+            _hasPrevious = result.Data.HasPreviousPage;
+            _hasNext = result.Data.HasNextPage;
         }
-        catch { }
+        else
+        {
+            _error = result.IsServerError ? "Something went wrong. Please try again." : (result.ErrorMessage ?? "Failed to load invoices.");
+        }
         _loading = false;
     }
 

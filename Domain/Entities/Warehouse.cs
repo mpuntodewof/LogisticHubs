@@ -24,9 +24,6 @@ namespace Domain.Entities
 
         // Navigation properties
         public Tenant Tenant { get; set; } = null!;
-        public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
         public ICollection<WarehouseStock> WarehouseStocks { get; set; } = new List<WarehouseStock>();
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
-        public ICollection<GoodsReceipt> GoodsReceipts { get; set; } = new List<GoodsReceipt>();
     }
 }

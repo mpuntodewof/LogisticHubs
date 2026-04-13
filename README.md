@@ -166,86 +166,126 @@ dotnet test Tests/StockLedger.E2E.Tests/StockLedger.E2E.Tests.csproj
 
 ---
 
-## Default Test Accounts
+## Core Business Journeys
 
-The database is seeded with five test users on first migration. All share the same default password.
+StockLedger supports **5 core workflows** that map to the daily, weekly, and monthly operations of a multi-channel retailer:
 
-| Role | Email |
-|------|-------|
-| Admin | admin@stockledger.io |
-| Manager | manager@stockledger.io |
-| Warehouse Staff | warehouse@stockledger.io |
-| Accountant | accountant@stockledger.io |
-| Viewer | viewer@stockledger.io |
+### Journey 1: "Set Up My Store" — Initial Configuration
 
-> **Password:** See the seed data in `Infrastructure/Persistence/AppDbContext.cs` for the default password. Change these immediately in any non-local environment.
+**Actor:** Admin / Owner | **Frequency:** One-time (first 15 minutes)
 
----
+```
+Register Account
+  ├── Create Warehouses (Gudang Utama Jakarta, Gudang Surabaya)
+  ├── Create Product Catalog
+  │     ├── Categories (hierarchical)
+  │     ├── Brands, Units of Measure
+  │     ├── Products + Variants (with SKU, cost price, selling price)
+  │     └── Product Images
+  ├── Configure Finance
+  │     ├── Chart of Accounts (AR, AP, Revenue, COGS, Tax Payable)
+  │     ├── Tax Rates (PPN 11%)
+  │     └── Payment Terms (COD, Net 30, Net 60)
+  └── Set Up Team (invite warehouse staff, accountant, viewer with RBAC)
+```
 
-## API Authentication
+### Journey 2: "Stock the Shelves" — Purchasing & Receiving
 
-All API endpoints (except login/register) require a JWT Bearer token and tenant header.
+**Actors:** Manager + Warehouse Staff | **Frequency:** Weekly
 
-```bash
-# 1. Login to get tokens
-POST /api/auth/login
-Content-Type: application/json
+```
+Low stock detected
+  ├── Create Purchase Order (supplier, warehouse, line items)
+  ├── Submit → Approve (approval workflow)
+  └── Goods Receipt (confirm received quantities)
+        ├── WarehouseStock auto-updated
+        ├── StockMovement created (Type: In, Reason: Purchase)
+        └── Full audit trail
+```
 
-{
-  "email": "<user-email>",
-  "password": "<user-password>"
-}
+### Journey 3: "Record My Sales" — Multi-Channel Sales Import
 
-# Response includes accessToken and refreshToken
+**Actor:** Owner / Manager | **Frequency:** Daily
 
-# 2. Use the accessToken in subsequent requests
-GET /api/products
-Authorization: Bearer {accessToken}
-X-Tenant-Id: {your-tenant-id}
+```
+End of day:
+  ├── Tokopedia: Export CSV → Upload → SKU matching → Stock deduction
+  ├── Shopee: Export CSV → Upload → SKU matching → Stock deduction
+  └── Offline toko: Manual entry → Stock deduction
+        ├── StockMovement per channel (Type: Out, Reason: Sale)
+        ├── Revenue + platform fees recorded
+        └── Dashboard updates in real-time
+```
 
-# 3. Refresh when the access token expires (15 min)
-POST /api/auth/refresh
-{
-  "refreshToken": "{refreshToken}"
-}
+### Journey 4: "Close the Books" — Monthly Finance & Tax
+
+**Actor:** Accountant | **Frequency:** Monthly
+
+```
+Month-end:
+  ├── Review & create invoices (with e-Faktur numbering)
+  ├── Record journal entries (double-entry, balanced)
+  ├── Generate P&L by channel (revenue - COGS - platform fees)
+  └── Tax compliance (PPN output - PPN input = net payable)
+```
+
+### Journey 5: "Check My Business" — Dashboards & Decisions
+
+**Actor:** Owner | **Frequency:** On-demand
+
+```
+Dashboard:
+  ├── Stock Health: levels, low stock alerts, overstock warnings
+  ├── Sales Performance: by channel, top products, trends
+  ├── Profitability: margin per product, margin per channel
+  └── Action Items: reorder suggestions, pricing alerts
 ```
 
 ---
 
-## Configuration
+## Features — Build Status
 
-**appsettings.json:**
+### Built and Tested
 
-| Setting | Value |
-|---------|-------|
-| Database | `stockledger` on MySQL 127.0.0.1:3306 |
-| JWT Issuer | `stockledger-api` |
-| JWT Audience | `stockledger-client` |
-| Access Token Expiry | 15 minutes |
-| Refresh Token Expiry | 7 days |
+| Module | Key Features |
+|--------|-------------|
+| **Multi-Tenancy** | Single-DB TenantId isolation, global query filters, tenant settings |
+| **Auth & RBAC** | JWT + refresh tokens, BCrypt, 70+ permissions, custom roles |
+| **Audit** | Immutable audit log, system logs, idempotency middleware |
+| **Product Catalog** | Categories (hierarchical), brands, units of measure + conversions, products, variants (SKU, pricing, barcode), images |
+| **Warehouses** | Multi-warehouse management, per-variant stock tracking, reorder points, optimistic concurrency |
+| **Stock Movements** | Immutable ledger (In/Out/Transfer/Adjust), quantity before/after, reference linking |
+| **Purchasing** | Suppliers, POs (Draft → Submit → Approve → Receive), goods receipt with auto-stock update |
+| **Chart of Accounts** | Full CoA (Asset, Liability, Equity, Revenue, Expense), parent-child hierarchy |
+| **Journal Entries** | Double-entry with multi-line, balance validation, Draft → Posted → Voided |
+| **Invoicing** | Line items, e-Faktur numbering, payment tracking, Draft → Issued → Paid |
+| **Tax Management** | PPN 11%, effective dates, product-tax mapping |
+| **Payment Terms** | Configurable terms (COD, Net 30, Net 60) |
 
----
+> **75 features built** across 12 modules
 
-## Documentation
+### To Build — P0 (Launch)
 
-### Product & Strategy
+| Feature | Description |
+|---------|-------------|
+| **CSV Import Engine** | Upload marketplace CSVs, column mapping, SKU matching, auto stock deduction, duplicate detection |
+| **Financial Reports** | P&L by channel, margin per product, margin per channel, revenue breakdown |
 
-| Document | Description |
-|----------|-------------|
-| [Product Strategy](docs/PRODUCT_STRATEGY_CANVAS.md) | Vision, customer segments, competitive positioning, go-to-market |
-| [Pricing & Monetization](docs/MONETIZATION_STRATEGY.md) | Subscription tiers, revenue projections, trial strategy |
-| [Core Business Journeys](docs/CORE_BUSINESS_JOURNEYS.md) | End-to-end user workflows with data flows |
-| [Feature Breakdown](docs/ERP_FEATURE_BREAKDOWN.md) | Complete feature list with priorities and build status |
+### To Build — P1 (Post-Launch)
 
-### Technical
+| Feature | Description |
+|---------|-------------|
+| Stock Reconciliation | Physical count, variance report, adjustment entries |
+| Inter-Warehouse Transfer | Transfer requests with confirmation and dual stock movements |
+| Purchase Cost Tracking | Landed cost, cost history per variant, COGS calculation |
+| Auto Journal Entries | Auto-create entries from goods receipt and invoice payment |
+| Balance Sheet & Cash Flow | Standard financial statements |
+| PPN Summary | Input/output summary for DJP e-Faktur filing |
+| Dashboards | Stock health, sales performance, profitability, smart recommendations |
 
-| Document | Description |
-|----------|-------------|
-| [System Architecture](docs/ERP_SYSTEM_DESIGN.md) | Technical architecture, multi-tenancy, domain model, API design |
-| [Full Database Schema](docs/dbdiagram.dbml) | Complete database diagram (all tables) |
-| [ERD — Foundation](docs/erd-foundation.dbml) | Tenants, users, roles, permissions, audit logs |
-| [ERD — Inventory](docs/erd-inventory.dbml) | Products, categories, warehouses, stock movements, purchasing |
-| [ERD — Finance](docs/erd-finance.dbml) | Chart of accounts, journal entries, invoices, tax rates, payment terms |
+### Explicitly Out of Scope
+
+POS, e-commerce storefront, CRM, loyalty programs, HRM, driver/vehicle management, shipment tracking — these are not part of StockLedger's focused inventory + finance product.
 
 ---
 

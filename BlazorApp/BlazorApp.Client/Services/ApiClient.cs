@@ -257,7 +257,8 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<WarehouseDto>>("api/warehouses") ?? new();
+                var paged = await _http.GetFromJsonAsync<PagedResult<WarehouseDto>>("api/warehouses?page=1&pageSize=200");
+                var data = paged?.Items ?? new();
                 return ApiResult<List<WarehouseDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -301,7 +302,8 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<UserDto>>("api/users") ?? new();
+                var paged = await _http.GetFromJsonAsync<PagedResult<UserDto>>("api/users?page=1&pageSize=200");
+                var data = paged?.Items ?? new();
                 return ApiResult<List<UserDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -376,7 +378,8 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<RoleDto>>("api/roles") ?? new();
+                var paged = await _http.GetFromJsonAsync<PagedResult<RoleDto>>("api/roles?page=1&pageSize=200");
+                var data = paged?.Items ?? new();
                 return ApiResult<List<RoleDto>>.Ok(data);
             }
             catch (HttpRequestException ex)

@@ -123,9 +123,17 @@ StockLedger/
 
 ```sql
 CREATE DATABASE stockledger;
-CREATE USER 'log_user'@'%' IDENTIFIED BY 'Omelete123*#';
-GRANT ALL PRIVILEGES ON stockledger.* TO 'log_user'@'%';
+CREATE USER 'stockledger_user'@'%' IDENTIFIED BY '<your-password>';
+GRANT ALL PRIVILEGES ON stockledger.* TO 'stockledger_user'@'%';
 FLUSH PRIVILEGES;
+```
+
+Then update `API/appsettings.json` with your connection string:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "server=127.0.0.1;port=3306;database=stockledger;user=stockledger_user;password=<your-password>;AllowUserVariables=true"
+}
 ```
 
 ### Run the API
@@ -160,29 +168,46 @@ dotnet test Tests/StockLedger.E2E.Tests/StockLedger.E2E.Tests.csproj
 
 ## Default Test Accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@stockledger.io | P@ssw0rd123 |
-| Manager | manager@stockledger.io | P@ssw0rd123 |
-| Warehouse | warehouse@stockledger.io | P@ssw0rd123 |
-| Accountant | accountant@stockledger.io | P@ssw0rd123 |
-| Viewer | viewer@stockledger.io | P@ssw0rd123 |
+The database is seeded with five test users on first migration. All share the same default password.
+
+| Role | Email |
+|------|-------|
+| Admin | admin@stockledger.io |
+| Manager | manager@stockledger.io |
+| Warehouse Staff | warehouse@stockledger.io |
+| Accountant | accountant@stockledger.io |
+| Viewer | viewer@stockledger.io |
+
+> **Password:** See the seed data in `Infrastructure/Persistence/AppDbContext.cs` for the default password. Change these immediately in any non-local environment.
 
 ---
 
 ## API Authentication
 
+All API endpoints (except login/register) require a JWT Bearer token and tenant header.
+
 ```bash
-# Login
+# 1. Login to get tokens
 POST /api/auth/login
+Content-Type: application/json
+
 {
-  "email": "admin@stockledger.io",
-  "password": "P@ssw0rd123"
+  "email": "<user-email>",
+  "password": "<user-password>"
 }
 
-# Use the accessToken in subsequent requests
+# Response includes accessToken and refreshToken
+
+# 2. Use the accessToken in subsequent requests
+GET /api/products
 Authorization: Bearer {accessToken}
-X-Tenant-Id: 00000000-0000-0000-0000-000000000001
+X-Tenant-Id: {your-tenant-id}
+
+# 3. Refresh when the access token expires (15 min)
+POST /api/auth/refresh
+{
+  "refreshToken": "{refreshToken}"
+}
 ```
 
 ---
@@ -203,14 +228,24 @@ X-Tenant-Id: 00000000-0000-0000-0000-000000000001
 
 ## Documentation
 
+### Product & Strategy
+
 | Document | Description |
 |----------|-------------|
 | [Product Strategy](docs/PRODUCT_STRATEGY_CANVAS.md) | Vision, customer segments, competitive positioning, go-to-market |
 | [Pricing & Monetization](docs/MONETIZATION_STRATEGY.md) | Subscription tiers, revenue projections, trial strategy |
 | [Core Business Journeys](docs/CORE_BUSINESS_JOURNEYS.md) | End-to-end user workflows with data flows |
 | [Feature Breakdown](docs/ERP_FEATURE_BREAKDOWN.md) | Complete feature list with priorities and build status |
+
+### Technical
+
+| Document | Description |
+|----------|-------------|
 | [System Architecture](docs/ERP_SYSTEM_DESIGN.md) | Technical architecture, multi-tenancy, domain model, API design |
-| [Database Schema](docs/dbdiagram.dbml) | Full database diagram |
+| [Full Database Schema](docs/dbdiagram.dbml) | Complete database diagram (all tables) |
+| [ERD — Foundation](docs/erd-foundation.dbml) | Tenants, users, roles, permissions, audit logs |
+| [ERD — Inventory](docs/erd-inventory.dbml) | Products, categories, warehouses, stock movements, purchasing |
+| [ERD — Finance](docs/erd-finance.dbml) | Chart of accounts, journal entries, invoices, tax rates, payment terms |
 
 ---
 

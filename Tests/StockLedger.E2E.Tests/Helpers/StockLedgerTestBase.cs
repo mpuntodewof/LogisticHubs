@@ -10,7 +10,7 @@ public abstract class StockLedgerTestBase
 {
     protected static readonly HttpClient Client = new()
     {
-        BaseAddress = new Uri("http://localhost:59980")
+        BaseAddress = new Uri("http://localhost:5164")
     };
 
     protected const string DefaultTenantId = "00000000-0000-0000-0000-000000000001";

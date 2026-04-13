@@ -8,7 +8,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 // HTTP client pointing at the API
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:59980/")
+    BaseAddress = new Uri("http://localhost:5164/")
 });
 
 // Auth

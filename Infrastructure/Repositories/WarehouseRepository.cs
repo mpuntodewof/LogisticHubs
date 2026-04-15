@@ -48,20 +48,17 @@ namespace Infrastructure.Repositories
         public async Task<Warehouse> CreateAsync(Warehouse warehouse)
         {
             _context.Warehouses.Add(warehouse);
-            await _context.SaveChangesAsync();
             return warehouse;
         }
 
         public async Task UpdateAsync(Warehouse warehouse)
         {
             _context.Warehouses.Update(warehouse);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Warehouse warehouse)
         {
             _context.Warehouses.Remove(warehouse);
-            await _context.SaveChangesAsync();
         }
     }
 }

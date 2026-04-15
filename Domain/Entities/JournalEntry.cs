@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Enums;
 using Domain.Interfaces;
 
 namespace Domain.Entities
@@ -48,5 +49,42 @@ namespace Domain.Entities
         // Navigation
         public Tenant Tenant { get; set; } = null!;
         public ICollection<JournalEntryLine> Lines { get; set; } = new List<JournalEntryLine>();
+
+        // ── Domain behavior ──────────────────────────────────────────────────
+
+        public bool IsDraft => Status == JournalEntryStatus.Draft.ToString();
+        public bool IsPosted => Status == JournalEntryStatus.Posted.ToString();
+        public bool IsVoided => Status == JournalEntryStatus.Voided.ToString();
+
+        public void Post()
+        {
+            if (!IsDraft)
+                throw new InvalidOperationException("Only draft journal entries can be posted.");
+            Status = JournalEntryStatus.Posted.ToString();
+            PostedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Void(string? reason)
+        {
+            if (!IsPosted)
+                throw new InvalidOperationException("Only posted journal entries can be voided.");
+            Status = JournalEntryStatus.Voided.ToString();
+            VoidedAt = DateTime.UtcNow;
+            VoidReason = reason;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void EnsureCanDelete()
+        {
+            if (!IsDraft)
+                throw new InvalidOperationException("Only draft journal entries can be deleted.");
+        }
+
+        public void EnsureCanUpdate()
+        {
+            if (!IsDraft)
+                throw new InvalidOperationException("Only draft journal entries can be modified.");
+        }
     }
 }

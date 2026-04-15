@@ -9,10 +9,12 @@ namespace Application.UseCases.Categories
     public class CategoryUseCase
     {
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CategoryUseCase(ICategoryRepository categoryRepository)
+        public CategoryUseCase(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
         {
             _categoryRepository = categoryRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -75,6 +77,7 @@ namespace Application.UseCases.Categories
             };
 
             var created = await _categoryRepository.CreateAsync(category);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -97,6 +100,7 @@ namespace Application.UseCases.Categories
             if (request.IsActive.HasValue) category.IsActive = request.IsActive.Value;
 
             await _categoryRepository.UpdateAsync(category);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -113,6 +117,7 @@ namespace Application.UseCases.Categories
                 throw new InvalidOperationException("Cannot delete a category that has associated products.");
 
             await _categoryRepository.DeleteAsync(category);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

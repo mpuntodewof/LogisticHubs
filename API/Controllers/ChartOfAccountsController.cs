@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.Finance;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/chart-of-accounts")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/chart-of-accounts")]
     [Authorize]
     public class ChartOfAccountsController : ControllerBase
     {

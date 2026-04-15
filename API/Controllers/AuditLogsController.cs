@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Audit;
 using Application.DTOs.Common;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/audit-logs")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/audit-logs")]
     [Authorize]
     public class AuditLogsController : ControllerBase
     {

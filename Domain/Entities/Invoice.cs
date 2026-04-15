@@ -1,11 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Enums;
 using Domain.Interfaces;
 
 namespace Domain.Entities
 {
     public class Invoice : BaseEntity, ITenantScoped, ISoftDeletable
     {
+        private static readonly Dictionary<string, HashSet<string>> ValidTransitions = new()
+        {
+            [InvoiceStatus.Draft.ToString()] = [InvoiceStatus.Issued.ToString(), InvoiceStatus.Cancelled.ToString()],
+            [InvoiceStatus.Issued.ToString()] = [InvoiceStatus.Paid.ToString(), InvoiceStatus.Cancelled.ToString()],
+            [InvoiceStatus.Paid.ToString()] = [],
+            [InvoiceStatus.Cancelled.ToString()] = []
+        };
+
         [Required]
         [MaxLength(50)]
         public string InvoiceNumber { get; set; } = string.Empty;
@@ -66,5 +75,56 @@ namespace Domain.Entities
         public Tenant Tenant { get; set; } = null!;
         public PaymentTerm? PaymentTerm { get; set; }
         public ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
+
+        // ── Domain behavior ──────────────────────────────────────────────────
+
+        public bool IsDraft => Status == InvoiceStatus.Draft.ToString();
+        public bool IsIssued => Status == InvoiceStatus.Issued.ToString();
+        public bool IsPaid => Status == InvoiceStatus.Paid.ToString();
+        public bool IsCancelled => Status == InvoiceStatus.Cancelled.ToString();
+
+        public void Issue()
+        {
+            EnsureTransition(InvoiceStatus.Issued);
+            Status = InvoiceStatus.Issued.ToString();
+            IssuedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void MarkPaid()
+        {
+            EnsureTransition(InvoiceStatus.Paid);
+            Status = InvoiceStatus.Paid.ToString();
+            PaidAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Cancel(string? reason)
+        {
+            EnsureTransition(InvoiceStatus.Cancelled);
+            Status = InvoiceStatus.Cancelled.ToString();
+            CancelledAt = DateTime.UtcNow;
+            CancellationReason = reason;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void EnsureCanDelete()
+        {
+            if (!IsDraft)
+                throw new InvalidOperationException("Only draft invoices can be deleted.");
+        }
+
+        public void EnsureCanUpdate()
+        {
+            if (!IsDraft)
+                throw new InvalidOperationException("Only draft invoices can be modified.");
+        }
+
+        private void EnsureTransition(InvoiceStatus target)
+        {
+            var targetStr = target.ToString();
+            if (!ValidTransitions.TryGetValue(Status, out var allowed) || !allowed.Contains(targetStr))
+                throw new InvalidOperationException($"Cannot transition invoice from '{Status}' to '{targetStr}'.");
+        }
     }
 }

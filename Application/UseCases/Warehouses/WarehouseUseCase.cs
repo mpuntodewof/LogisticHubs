@@ -8,10 +8,12 @@ namespace Application.UseCases.Warehouses
     public class WarehouseUseCase
     {
         private readonly IWarehouseRepository _warehouseRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public WarehouseUseCase(IWarehouseRepository warehouseRepository)
+        public WarehouseUseCase(IWarehouseRepository warehouseRepository, IUnitOfWork unitOfWork)
         {
             _warehouseRepository = warehouseRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ namespace Application.UseCases.Warehouses
             };
 
             var created = await _warehouseRepository.CreateAsync(warehouse);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -80,6 +83,7 @@ namespace Application.UseCases.Warehouses
             if (request.Capacity.HasValue) warehouse.Capacity = request.Capacity.Value;
 
             await _warehouseRepository.UpdateAsync(warehouse);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -90,6 +94,7 @@ namespace Application.UseCases.Warehouses
                 ?? throw new KeyNotFoundException($"Warehouse {id} not found.");
 
             await _warehouseRepository.DeleteAsync(warehouse);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

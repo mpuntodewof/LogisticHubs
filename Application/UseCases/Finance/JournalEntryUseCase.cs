@@ -10,15 +10,18 @@ namespace Application.UseCases.Finance
         private readonly IJournalEntryRepository _repository;
         private readonly IChartOfAccountRepository _accountRepository;
         private readonly ITransactionManager _transactionManager;
+        private readonly IUnitOfWork _unitOfWork;
 
         public JournalEntryUseCase(
             IJournalEntryRepository repository,
             IChartOfAccountRepository accountRepository,
-            ITransactionManager transactionManager)
+            ITransactionManager transactionManager,
+            IUnitOfWork unitOfWork)
         {
             _repository = repository;
             _accountRepository = accountRepository;
             _transactionManager = transactionManager;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -97,6 +100,7 @@ namespace Application.UseCases.Finance
 
                 var created = await _repository.CreateAsync(entry);
 
+                await _unitOfWork.SaveChangesAsync();
                 await _transactionManager.CommitAsync();
 
                 // Reload with lines and accounts for the response
@@ -117,13 +121,10 @@ namespace Application.UseCases.Finance
             var entry = await _repository.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException($"Journal entry {id} not found.");
 
-            if (entry.Status != "Draft")
-                throw new InvalidOperationException("Only draft journal entries can be posted.");
-
-            entry.Status = "Posted";
-            entry.PostedAt = DateTime.UtcNow;
+            entry.Post();
 
             await _repository.UpdateAsync(entry);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Void ─────────────────────────────────────────────────────────────────
@@ -133,14 +134,10 @@ namespace Application.UseCases.Finance
             var entry = await _repository.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException($"Journal entry {id} not found.");
 
-            if (entry.Status != "Posted")
-                throw new InvalidOperationException("Only posted journal entries can be voided.");
-
-            entry.Status = "Voided";
-            entry.VoidedAt = DateTime.UtcNow;
-            entry.VoidReason = request.Reason;
+            entry.Void(request.Reason);
 
             await _repository.UpdateAsync(entry);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -150,10 +147,10 @@ namespace Application.UseCases.Finance
             var entry = await _repository.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException($"Journal entry {id} not found.");
 
-            if (entry.Status != "Draft")
-                throw new InvalidOperationException("Only draft journal entries can be deleted.");
+            entry.EnsureCanDelete();
 
             await _repository.DeleteAsync(entry);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

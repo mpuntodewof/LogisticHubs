@@ -28,7 +28,6 @@ namespace Infrastructure.Repositories
         public async Task<User> CreateUserAsync(User user)
         {
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
             return user;
         }
 
@@ -41,7 +40,6 @@ namespace Infrastructure.Repositories
                 AssignedAt = DateTime.UtcNow
             };
             _context.UserRoleAssignments.Add(assignment);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<string>> GetUserRoleNamesAsync(Guid userId)
@@ -73,7 +71,6 @@ namespace Infrastructure.Repositories
         public async Task SaveRefreshTokenAsync(RefreshToken token)
         {
             _context.RefreshTokens.Add(token);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<RefreshToken?> GetActiveRefreshTokenByHashAsync(string tokenHash)
@@ -90,7 +87,6 @@ namespace Infrastructure.Repositories
             token.RevokedAt = DateTime.UtcNow;
             token.RevokedByIp = revokedByIp;
             token.ReplacedByToken = replacedByToken;
-            await _context.SaveChangesAsync();
         }
 
         public async Task RevokeAllUserRefreshTokensAsync(Guid userId, string? revokedByIp)
@@ -106,7 +102,6 @@ namespace Infrastructure.Repositories
                 token.RevokedByIp = revokedByIp;
             }
 
-            await _context.SaveChangesAsync();
         }
 
         // ── Multi-tenancy methods ───────────────────────────────────────────
@@ -119,7 +114,6 @@ namespace Infrastructure.Repositories
         public async Task<Tenant> CreateTenantAsync(Tenant tenant)
         {
             _context.Tenants.Add(tenant);
-            await _context.SaveChangesAsync();
             return tenant;
         }
 
@@ -199,7 +193,6 @@ namespace Infrastructure.Repositories
             foreach (var p in new[] { "shipments.read", "tracking.read" })
                 _context.RolePermissions.Add(new RolePermission { RoleId = viewerRole.Id, PermissionId = permIds[p], TenantId = tenantId });
 
-            await _context.SaveChangesAsync();
         }
     }
 }

@@ -9,13 +9,16 @@ namespace Application.UseCases.UnitsOfMeasure
     {
         private readonly IUnitOfMeasureRepository _unitRepository;
         private readonly IUnitConversionRepository _conversionRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public UnitOfMeasureUseCase(
             IUnitOfMeasureRepository unitRepository,
-            IUnitConversionRepository conversionRepository)
+            IUnitConversionRepository conversionRepository,
+            IUnitOfWork unitOfWork)
         {
             _unitRepository = unitRepository;
             _conversionRepository = conversionRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── UOM Get ──────────────────────────────────────────────────────────────
@@ -54,6 +57,7 @@ namespace Application.UseCases.UnitsOfMeasure
             };
 
             var created = await _unitRepository.CreateAsync(unit);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -68,6 +72,7 @@ namespace Application.UseCases.UnitsOfMeasure
             if (request.Abbreviation != null) unit.Abbreviation = request.Abbreviation;
 
             await _unitRepository.UpdateAsync(unit);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── UOM Delete ───────────────────────────────────────────────────────────
@@ -81,6 +86,7 @@ namespace Application.UseCases.UnitsOfMeasure
                 throw new InvalidOperationException("Cannot delete a unit of measure that is in use by products.");
 
             await _unitRepository.DeleteAsync(unit);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Conversions Get ──────────────────────────────────────────────────────
@@ -117,6 +123,7 @@ namespace Application.UseCases.UnitsOfMeasure
             };
 
             var created = await _conversionRepository.CreateAsync(conversion);
+            await _unitOfWork.SaveChangesAsync();
             return MapConversionToDto(created);
         }
 
@@ -130,6 +137,7 @@ namespace Application.UseCases.UnitsOfMeasure
             conversion.ConversionFactor = request.ConversionFactor;
 
             await _conversionRepository.UpdateAsync(conversion);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Conversions Delete ───────────────────────────────────────────────────
@@ -140,6 +148,7 @@ namespace Application.UseCases.UnitsOfMeasure
                 ?? throw new KeyNotFoundException($"Unit conversion {id} not found.");
 
             await _conversionRepository.DeleteAsync(conversion);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

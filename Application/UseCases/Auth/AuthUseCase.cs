@@ -15,17 +15,20 @@ namespace Application.UseCases.Auth
         private readonly IPasswordHasher _passwordHasher;
         private readonly ITokenService _tokenService;
         private readonly ITenantContext _tenantContext;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthUseCase(
             IAuthRepository authRepository,
             IPasswordHasher passwordHasher,
             ITokenService tokenService,
-            ITenantContext tenantContext)
+            ITenantContext tenantContext,
+            IUnitOfWork unitOfWork)
         {
             _authRepository = authRepository;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
             _tenantContext = tenantContext;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Register ────────────────────────────────────────────────────────────
@@ -59,12 +62,14 @@ namespace Application.UseCases.Auth
                 };
 
                 await _authRepository.CreateTenantAsync(newTenant);
+                await _unitOfWork.SaveChangesAsync();
                 tenantId = newTenant.Id;
                 isNewTenant = true;
 
                 // Seed default roles and permissions for the new tenant
                 _tenantContext.SetTenantId(tenantId);
                 await _authRepository.SeedRolesAndPermissionsForTenantAsync(tenantId);
+                await _unitOfWork.SaveChangesAsync();
             }
             else
             {
@@ -93,6 +98,7 @@ namespace Application.UseCases.Auth
             };
 
             var created = await _authRepository.CreateUserAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
             // Assign default role(s)
             if (isNewTenant)
@@ -110,17 +116,27 @@ namespace Application.UseCases.Auth
                     await _authRepository.AssignRoleToUserAsync(created.Id, viewerRole.Id);
             }
 
+            await _unitOfWork.SaveChangesAsync();
             return created.Id;
         }
 
         // ── Login ────────────────────────────────────────────────────────────────
+
+        // Lazily-initialized dummy hash to burn ~same CPU time when user not found (prevents timing-based email enumeration)
+        private string? _dummyHash;
+        private string DummyHash => _dummyHash ??= _passwordHasher.Hash("timing-safe-dummy");
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request, string? ipAddress)
         {
             // Use unfiltered query — we don't know the tenant yet
             var user = await _authRepository.GetUserByEmailUnfilteredAsync(request.Email.ToLowerInvariant());
 
-            if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+            // Always verify against a hash to prevent timing-based email enumeration.
+            // If user is null, verify against a dummy hash so the response time is consistent.
+            var hashToVerify = user?.PasswordHash ?? DummyHash;
+            var passwordValid = _passwordHasher.Verify(request.Password, hashToVerify);
+
+            if (user == null || !passwordValid)
                 throw new UnauthorizedAccessException("Invalid email or password.");
 
             if (!user.IsActive)
@@ -170,6 +186,8 @@ namespace Application.UseCases.Auth
                 TenantId = user.TenantId
             });
 
+            await _unitOfWork.SaveChangesAsync();
+
             return new LoginResponse
             {
                 AccessToken = _tokenService.GenerateAccessToken(user, roles, permissions, user.TenantId),
@@ -187,12 +205,16 @@ namespace Application.UseCases.Auth
             var token = await _authRepository.GetActiveRefreshTokenByHashAsync(tokenHash);
 
             if (token != null)
+            {
                 await _authRepository.RevokeRefreshTokenAsync(token, ipAddress, null);
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
 
         public async Task LogoutAllAsync(Guid userId, string? ipAddress)
         {
             await _authRepository.RevokeAllUserRefreshTokensAsync(userId, ipAddress);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
@@ -214,6 +236,8 @@ namespace Application.UseCases.Auth
                 CreatedByIp = ipAddress,
                 TenantId = user.TenantId
             });
+
+            await _unitOfWork.SaveChangesAsync();
 
             return new LoginResponse
             {

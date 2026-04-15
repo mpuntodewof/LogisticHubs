@@ -4,6 +4,7 @@ using Domain.Entities;
 using Infrastructure.Extensions;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using ConcurrencyConflictException = Application.Interfaces.ConcurrencyConflictException;
 
 namespace Infrastructure.Repositories
 {
@@ -79,14 +80,20 @@ namespace Infrastructure.Repositories
         public async Task<WarehouseStock> CreateAsync(WarehouseStock stock)
         {
             _context.Set<WarehouseStock>().Add(stock);
-            await _context.SaveChangesAsync();
             return stock;
         }
 
         public async Task UpdateAsync(WarehouseStock stock)
         {
-            _context.Set<WarehouseStock>().Update(stock);
-            await _context.SaveChangesAsync();
+            // No-op: entity is already tracked by DbContext change tracker.
+            // The [Timestamp] RowVersion field triggers optimistic concurrency checks
+            // when the UnitOfWork calls SaveChangesAsync.
+            await Task.CompletedTask;
+        }
+
+        public async Task ReloadAsync(WarehouseStock stock)
+        {
+            await _context.Entry(stock).ReloadAsync();
         }
     }
 }

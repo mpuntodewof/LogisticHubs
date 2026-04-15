@@ -9,13 +9,16 @@ namespace Application.UseCases.Products
     {
         private readonly IProductVariantRepository _variantRepository;
         private readonly IProductRepository _productRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public ProductVariantUseCase(
             IProductVariantRepository variantRepository,
-            IProductRepository productRepository)
+            IProductRepository productRepository,
+            IUnitOfWork unitOfWork)
         {
             _variantRepository = variantRepository;
             _productRepository = productRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<ProductVariantDto>> GetPagedAsync(PagedRequest request, Guid? productId = null)
@@ -70,6 +73,7 @@ namespace Application.UseCases.Products
             };
 
             var created = await _variantRepository.CreateAsync(variant);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -90,6 +94,7 @@ namespace Application.UseCases.Products
             variant.UpdatedAt = DateTime.UtcNow;
 
             await _variantRepository.UpdateAsync(variant);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -98,6 +103,7 @@ namespace Application.UseCases.Products
                 ?? throw new InvalidOperationException("Product variant not found.");
 
             await _variantRepository.DeleteAsync(variant);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static ProductVariantDto MapToDto(ProductVariant v) => new()

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.Inventory;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/stock-movements")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/stock-movements")]
     [Authorize]
     public class StockMovementsController : ControllerBase
     {
@@ -56,6 +58,15 @@ namespace API.Controllers
             {
                 return Conflict(new { error = ex.Message });
             }
+        }
+
+        /// <summary>Record a manual offline sale.</summary>
+        [HttpPost("manual-sale")]
+        [RequirePermission("inventory.create")]
+        public async Task<ActionResult<StockMovementDto>> RecordManualSale([FromBody] RecordManualSaleRequest request)
+        {
+            var result = await _stockMovementUseCase.RecordManualSaleAsync(request);
+            return CreatedAtAction(null, null, result);
         }
 
         /// <summary>Create a stock transfer between warehouses.</summary>

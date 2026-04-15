@@ -12,17 +12,20 @@ namespace Application.UseCases.Tax
         private readonly ITaxRateRepository _taxRateRepository;
         private readonly IPaymentTermRepository _paymentTermRepository;
         private readonly ITransactionManager _transactionManager;
+        private readonly IUnitOfWork _unitOfWork;
 
         public InvoiceUseCase(
             IInvoiceRepository invoiceRepository,
             ITaxRateRepository taxRateRepository,
             IPaymentTermRepository paymentTermRepository,
-            ITransactionManager transactionManager)
+            ITransactionManager transactionManager,
+            IUnitOfWork unitOfWork)
         {
             _invoiceRepository = invoiceRepository;
             _taxRateRepository = taxRateRepository;
             _paymentTermRepository = paymentTermRepository;
             _transactionManager = transactionManager;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<InvoiceDto>> GetPagedAsync(PagedRequest request, string? status = null)
@@ -140,6 +143,7 @@ namespace Application.UseCases.Tax
 
                 var created = await _invoiceRepository.CreateAsync(invoice);
 
+                await _unitOfWork.SaveChangesAsync();
                 await _transactionManager.CommitAsync();
                 return MapToDto(created);
             }
@@ -155,13 +159,10 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            ValidateTransition(invoice.Status, InvoiceStatus.Issued.ToString());
-
-            invoice.Status = InvoiceStatus.Issued.ToString();
-            invoice.IssuedAt = DateTime.UtcNow;
-            invoice.UpdatedAt = DateTime.UtcNow;
+            invoice.Issue();
 
             await _invoiceRepository.UpdateAsync(invoice);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task AssignTaxInvoiceNumberAsync(Guid id, AssignTaxInvoiceNumberRequest request)
@@ -173,6 +174,7 @@ namespace Application.UseCases.Tax
             invoice.UpdatedAt = DateTime.UtcNow;
 
             await _invoiceRepository.UpdateAsync(invoice);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task MarkPaidAsync(Guid id)
@@ -180,13 +182,10 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            ValidateTransition(invoice.Status, InvoiceStatus.Paid.ToString());
-
-            invoice.Status = InvoiceStatus.Paid.ToString();
-            invoice.PaidAt = DateTime.UtcNow;
-            invoice.UpdatedAt = DateTime.UtcNow;
+            invoice.MarkPaid();
 
             await _invoiceRepository.UpdateAsync(invoice);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task CancelAsync(Guid id, string reason)
@@ -194,14 +193,10 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            ValidateTransition(invoice.Status, InvoiceStatus.Cancelled.ToString());
-
-            invoice.Status = InvoiceStatus.Cancelled.ToString();
-            invoice.CancelledAt = DateTime.UtcNow;
-            invoice.CancellationReason = reason;
-            invoice.UpdatedAt = DateTime.UtcNow;
+            invoice.Cancel(reason);
 
             await _invoiceRepository.UpdateAsync(invoice);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -209,24 +204,10 @@ namespace Application.UseCases.Tax
             var invoice = await _invoiceRepository.GetByIdAsync(id)
                 ?? throw new InvalidOperationException("Invoice not found.");
 
-            if (invoice.Status != InvoiceStatus.Draft.ToString())
-                throw new InvalidOperationException("Only draft invoices can be deleted.");
+            invoice.EnsureCanDelete();
 
             await _invoiceRepository.DeleteAsync(invoice);
-        }
-
-        private static readonly Dictionary<string, HashSet<string>> _validTransitions = new()
-        {
-            [InvoiceStatus.Draft.ToString()] = new() { InvoiceStatus.Issued.ToString(), InvoiceStatus.Cancelled.ToString() },
-            [InvoiceStatus.Issued.ToString()] = new() { InvoiceStatus.Paid.ToString(), InvoiceStatus.Cancelled.ToString() },
-            [InvoiceStatus.Paid.ToString()] = new(),
-            [InvoiceStatus.Cancelled.ToString()] = new()
-        };
-
-        private static void ValidateTransition(string currentStatus, string targetStatus)
-        {
-            if (!_validTransitions.TryGetValue(currentStatus, out var allowed) || !allowed.Contains(targetStatus))
-                throw new InvalidOperationException($"Cannot transition invoice from '{currentStatus}' to '{targetStatus}'.");
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private async Task<string> GenerateInvoiceNumberAsync()

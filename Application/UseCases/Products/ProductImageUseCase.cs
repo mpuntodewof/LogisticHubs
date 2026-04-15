@@ -7,10 +7,12 @@ namespace Application.UseCases.Products
     public class ProductImageUseCase
     {
         private readonly IProductImageRepository _imageRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ProductImageUseCase(IProductImageRepository imageRepository)
+        public ProductImageUseCase(IProductImageRepository imageRepository, IUnitOfWork unitOfWork)
         {
             _imageRepository = imageRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -38,6 +40,7 @@ namespace Application.UseCases.Products
             };
 
             var created = await _imageRepository.CreateAsync(image);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -49,6 +52,7 @@ namespace Application.UseCases.Products
                 ?? throw new KeyNotFoundException($"Product image {id} not found.");
 
             await _imageRepository.DeleteAsync(image);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

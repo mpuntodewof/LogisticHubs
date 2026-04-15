@@ -7,10 +7,12 @@ namespace Application.UseCases.Settings
     public class SystemSettingUseCase
     {
         private readonly ISystemSettingRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public SystemSettingUseCase(ISystemSettingRepository repository)
+        public SystemSettingUseCase(ISystemSettingRepository repository, IUnitOfWork unitOfWork)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<List<SystemSettingDto>> GetAllAsync(string? group = null)
@@ -36,6 +38,7 @@ namespace Application.UseCases.Settings
             setting.Value = request.Value;
 
             await _repository.UpdateAsync(setting);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static SystemSettingDto MapToDto(SystemSetting s) => new()

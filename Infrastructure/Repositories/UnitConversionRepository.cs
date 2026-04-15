@@ -33,20 +33,17 @@ namespace Infrastructure.Repositories
         public async Task<UnitConversion> CreateAsync(UnitConversion conversion)
         {
             _context.UnitConversions.Add(conversion);
-            await _context.SaveChangesAsync();
             return conversion;
         }
 
         public async Task UpdateAsync(UnitConversion conversion)
         {
             _context.UnitConversions.Update(conversion);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(UnitConversion conversion)
         {
             _context.UnitConversions.Remove(conversion);
-            await _context.SaveChangesAsync();
         }
     }
 }

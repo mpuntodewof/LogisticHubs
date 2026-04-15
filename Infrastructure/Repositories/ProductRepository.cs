@@ -62,20 +62,17 @@ namespace Infrastructure.Repositories
         public async Task<Product> CreateAsync(Product product)
         {
             _context.Set<Product>().Add(product);
-            await _context.SaveChangesAsync();
             return product;
         }
 
         public async Task UpdateAsync(Product product)
         {
             _context.Set<Product>().Update(product);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Product product)
         {
             _context.Set<Product>().Remove(product);
-            await _context.SaveChangesAsync();
         }
     }
 }

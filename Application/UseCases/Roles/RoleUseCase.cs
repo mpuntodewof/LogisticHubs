@@ -8,10 +8,12 @@ namespace Application.UseCases.Roles
     public class RoleUseCase
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RoleUseCase(IRoleRepository roleRepository)
+        public RoleUseCase(IRoleRepository roleRepository, IUnitOfWork unitOfWork)
         {
             _roleRepository = roleRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ namespace Application.UseCases.Roles
             };
 
             var created = await _roleRepository.CreateAsync(role);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -82,6 +85,7 @@ namespace Application.UseCases.Roles
                 role.Description = request.Description;
 
             await _roleRepository.UpdateAsync(role);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ──────────────────────────────────────────────────────────────
@@ -95,6 +99,7 @@ namespace Application.UseCases.Roles
                 throw new InvalidOperationException("Cannot delete a system role.");
 
             await _roleRepository.DeleteAsync(role);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Permissions ─────────────────────────────────────────────────────────
@@ -105,6 +110,7 @@ namespace Application.UseCases.Roles
                 ?? throw new KeyNotFoundException($"Role {id} not found.");
 
             await _roleRepository.SetRolePermissionsAsync(id, request.PermissionIds);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<PermissionDto>> GetAllPermissionsAsync()

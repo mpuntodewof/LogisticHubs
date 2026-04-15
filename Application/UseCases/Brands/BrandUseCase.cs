@@ -9,10 +9,12 @@ namespace Application.UseCases.Brands
     public class BrandUseCase
     {
         private readonly IBrandRepository _brandRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public BrandUseCase(IBrandRepository brandRepository)
+        public BrandUseCase(IBrandRepository brandRepository, IUnitOfWork unitOfWork)
         {
             _brandRepository = brandRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ namespace Application.UseCases.Brands
             };
 
             var created = await _brandRepository.CreateAsync(brand);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -77,6 +80,7 @@ namespace Application.UseCases.Brands
             if (request.IsActive.HasValue) brand.IsActive = request.IsActive.Value;
 
             await _brandRepository.UpdateAsync(brand);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -87,6 +91,7 @@ namespace Application.UseCases.Brands
                 ?? throw new KeyNotFoundException($"Brand {id} not found.");
 
             await _brandRepository.DeleteAsync(brand);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

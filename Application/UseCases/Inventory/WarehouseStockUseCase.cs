@@ -8,10 +8,12 @@ namespace Application.UseCases.Inventory
     public class WarehouseStockUseCase
     {
         private readonly IWarehouseStockRepository _stockRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public WarehouseStockUseCase(IWarehouseStockRepository stockRepository)
+        public WarehouseStockUseCase(IWarehouseStockRepository stockRepository, IUnitOfWork unitOfWork)
         {
             _stockRepository = stockRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<WarehouseStockDto>> GetPagedAsync(
@@ -43,6 +45,7 @@ namespace Application.UseCases.Inventory
             if (request.MaxStock.HasValue) stock.MaxStock = request.MaxStock.Value;
 
             await _stockRepository.UpdateAsync(stock);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static WarehouseStockDto MapToDto(WarehouseStock s) => new()

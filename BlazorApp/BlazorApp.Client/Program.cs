@@ -6,9 +6,10 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 // HTTP client pointing at the API
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5164";
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:5164/")
+    BaseAddress = new Uri(apiBaseUrl.TrimEnd('/') + "/")
 });
 
 // Auth

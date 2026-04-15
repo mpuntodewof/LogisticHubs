@@ -7,6 +7,8 @@ namespace BlazorApp.Client.Services
 {
     public class ApiClient
     {
+        private const string V1 = "api/v1";
+
         private readonly HttpClient _http;
         private readonly ILocalStorageService _localStorage;
 
@@ -53,7 +55,7 @@ namespace BlazorApp.Client.Services
 
         public async Task<ApiResult<LoginResponse>> LoginAsync(LoginRequest request)
         {
-            var response = await _http.PostAsJsonAsync("api/auth/login", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/auth/login", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<LoginResponse>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
@@ -62,7 +64,7 @@ namespace BlazorApp.Client.Services
 
         public async Task<ApiResult> RegisterAsync(RegisterRequest request)
         {
-            var response = await _http.PostAsJsonAsync("api/auth/register", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/auth/register", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -71,12 +73,12 @@ namespace BlazorApp.Client.Services
         public async Task LogoutAsync(string refreshToken)
         {
             await AttachTokenAsync();
-            await _http.PostAsJsonAsync("api/auth/logout", new { refreshToken });
+            await _http.PostAsJsonAsync($"{V1}/auth/logout", new { refreshToken });
         }
 
         public async Task<ApiResult<LoginResponse>> RefreshTokenAsync(string refreshToken)
         {
-            var response = await _http.PostAsJsonAsync("api/auth/refresh", new { refreshToken });
+            var response = await _http.PostAsJsonAsync($"{V1}/auth/refresh", new { refreshToken });
             if (!response.IsSuccessStatusCode)
                 return ApiResult<LoginResponse>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
@@ -90,7 +92,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<ShipmentDto>>("api/shipments") ?? new();
+                var data = await _http.GetFromJsonAsync<List<ShipmentDto>>($"{V1}/shipments") ?? new();
                 return ApiResult<List<ShipmentDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -104,7 +106,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<ShipmentDto>($"api/shipments/{id}");
+                var data = await _http.GetFromJsonAsync<ShipmentDto>($"{V1}/shipments/{id}");
                 return ApiResult<ShipmentDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -117,7 +119,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync("api/shipments", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/shipments", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult<ShipmentDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -130,7 +132,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<TrackingEventDto>>($"api/shipments/{shipmentId}/tracking") ?? new();
+                var data = await _http.GetFromJsonAsync<List<TrackingEventDto>>($"{V1}/shipments/{shipmentId}/tracking") ?? new();
                 return ApiResult<List<TrackingEventDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -143,7 +145,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync($"api/shipments/{id}/assign", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/shipments/{id}/assign", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -154,7 +156,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync($"api/shipments/{shipmentId}/tracking", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/shipments/{shipmentId}/tracking", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult<TrackingEventDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -169,7 +171,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<DriverDto>>("api/drivers") ?? new();
+                var data = await _http.GetFromJsonAsync<List<DriverDto>>($"{V1}/drivers") ?? new();
                 return ApiResult<List<DriverDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -181,7 +183,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<DriverDto>> CreateDriverAsync(CreateDriverRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/drivers", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/drivers", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<DriverDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<DriverDto>();
@@ -191,7 +193,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateDriverAsync(Guid id, UpdateDriverRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/drivers/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/drivers/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -200,7 +202,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteDriverAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/drivers/{id}");
+            var response = await _http.DeleteAsync($"{V1}/drivers/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -213,7 +215,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<VehicleDto>>("api/vehicles") ?? new();
+                var data = await _http.GetFromJsonAsync<List<VehicleDto>>($"{V1}/vehicles") ?? new();
                 return ApiResult<List<VehicleDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -225,7 +227,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<VehicleDto>> CreateVehicleAsync(CreateVehicleRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/vehicles", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/vehicles", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<VehicleDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<VehicleDto>();
@@ -235,7 +237,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateVehicleAsync(Guid id, UpdateVehicleRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/vehicles/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/vehicles/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -244,7 +246,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteVehicleAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/vehicles/{id}");
+            var response = await _http.DeleteAsync($"{V1}/vehicles/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -257,7 +259,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var paged = await _http.GetFromJsonAsync<PagedResult<WarehouseDto>>("api/warehouses?page=1&pageSize=200");
+                var paged = await _http.GetFromJsonAsync<PagedResult<WarehouseDto>>($"{V1}/warehouses?page=1&pageSize=200");
                 var data = paged?.Items ?? new();
                 return ApiResult<List<WarehouseDto>>.Ok(data);
             }
@@ -270,7 +272,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<WarehouseDto>> CreateWarehouseAsync(CreateWarehouseRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/warehouses", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/warehouses", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<WarehouseDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<WarehouseDto>();
@@ -280,7 +282,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateWarehouseAsync(Guid id, UpdateWarehouseRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/warehouses/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/warehouses/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -289,7 +291,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteWarehouseAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/warehouses/{id}");
+            var response = await _http.DeleteAsync($"{V1}/warehouses/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -302,7 +304,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var paged = await _http.GetFromJsonAsync<PagedResult<UserDto>>("api/users?page=1&pageSize=200");
+                var paged = await _http.GetFromJsonAsync<PagedResult<UserDto>>($"{V1}/users?page=1&pageSize=200");
                 var data = paged?.Items ?? new();
                 return ApiResult<List<UserDto>>.Ok(data);
             }
@@ -317,7 +319,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<UserDto>($"api/users/{id}");
+                var data = await _http.GetFromJsonAsync<UserDto>($"{V1}/users/{id}");
                 return ApiResult<UserDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -329,7 +331,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> CreateUserAsync(CreateUserRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/auth/register", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/auth/register", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -338,7 +340,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateUserAsync(Guid id, UpdateUserRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/users/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/users/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -347,7 +349,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteUserAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/users/{id}");
+            var response = await _http.DeleteAsync($"{V1}/users/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -356,7 +358,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> AssignUserRoleAsync(Guid userId, AssignRoleRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync($"api/users/{userId}/roles", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/users/{userId}/roles", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -365,7 +367,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> RevokeUserRoleAsync(Guid userId, Guid roleId)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/users/{userId}/roles/{roleId}");
+            var response = await _http.DeleteAsync($"{V1}/users/{userId}/roles/{roleId}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -378,7 +380,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var paged = await _http.GetFromJsonAsync<PagedResult<RoleDto>>("api/roles?page=1&pageSize=200");
+                var paged = await _http.GetFromJsonAsync<PagedResult<RoleDto>>($"{V1}/roles?page=1&pageSize=200");
                 var data = paged?.Items ?? new();
                 return ApiResult<List<RoleDto>>.Ok(data);
             }
@@ -393,7 +395,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<RoleDto>($"api/roles/{id}");
+                var data = await _http.GetFromJsonAsync<RoleDto>($"{V1}/roles/{id}");
                 return ApiResult<RoleDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -405,7 +407,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<RoleDto>> CreateRoleAsync(CreateRoleRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/roles", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/roles", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<RoleDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<RoleDto>();
@@ -415,7 +417,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateRoleAsync(Guid id, UpdateRoleRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/roles/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/roles/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -424,7 +426,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteRoleAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/roles/{id}");
+            var response = await _http.DeleteAsync($"{V1}/roles/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -433,7 +435,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateRolePermissionsAsync(Guid roleId, UpdateRolePermissionsRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/roles/{roleId}/permissions", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/roles/{roleId}/permissions", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -446,7 +448,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<List<PermissionDto>>("api/permissions") ?? new();
+                var data = await _http.GetFromJsonAsync<List<PermissionDto>>($"{V1}/permissions") ?? new();
                 return ApiResult<List<PermissionDto>>.Ok(data);
             }
             catch (HttpRequestException ex)
@@ -464,7 +466,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<CategoryDto>>> GetCategoriesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/categories?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/categories?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -478,7 +480,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<CategoryDto>($"api/categories/{id}");
+                var data = await _http.GetFromJsonAsync<CategoryDto>($"{V1}/categories/{id}");
                 return ApiResult<CategoryDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -490,7 +492,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<CategoryDto>> CreateCategoryAsync(CreateCategoryRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/categories", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/categories", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<CategoryDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<CategoryDto>();
@@ -500,7 +502,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateCategoryAsync(Guid id, CreateCategoryRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/categories/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/categories/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -509,7 +511,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteCategoryAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/categories/{id}");
+            var response = await _http.DeleteAsync($"{V1}/categories/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -520,7 +522,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<BrandDto>>> GetBrandsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/brands?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/brands?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -534,7 +536,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<BrandDto>($"api/brands/{id}");
+                var data = await _http.GetFromJsonAsync<BrandDto>($"{V1}/brands/{id}");
                 return ApiResult<BrandDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -546,7 +548,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<BrandDto>> CreateBrandAsync(CreateBrandRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/brands", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/brands", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<BrandDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<BrandDto>();
@@ -556,7 +558,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateBrandAsync(Guid id, CreateBrandRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/brands/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/brands/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -565,7 +567,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteBrandAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/brands/{id}");
+            var response = await _http.DeleteAsync($"{V1}/brands/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -576,7 +578,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<ProductDto>>> GetProductsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/products?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/products?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -590,7 +592,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<ProductDto>($"api/products/{id}");
+                var data = await _http.GetFromJsonAsync<ProductDto>($"{V1}/products/{id}");
                 return ApiResult<ProductDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -602,7 +604,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<ProductDto>> CreateProductAsync(CreateProductRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/products", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/products", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<ProductDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<ProductDto>();
@@ -612,7 +614,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateProductAsync(Guid id, CreateProductRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/products/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/products/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -621,7 +623,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteProductAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/products/{id}");
+            var response = await _http.DeleteAsync($"{V1}/products/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -632,7 +634,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<UnitOfMeasureDto>>> GetUnitsOfMeasureAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/units-of-measure?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/units-of-measure?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -644,7 +646,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<UnitOfMeasureDto>> CreateUnitOfMeasureAsync(CreateUnitOfMeasureRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/units-of-measure", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/units-of-measure", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<UnitOfMeasureDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<UnitOfMeasureDto>();
@@ -654,7 +656,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateUnitOfMeasureAsync(Guid id, CreateUnitOfMeasureRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/units-of-measure/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/units-of-measure/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -663,7 +665,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteUnitOfMeasureAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/units-of-measure/{id}");
+            var response = await _http.DeleteAsync($"{V1}/units-of-measure/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -674,7 +676,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<object>>> GetWarehouseStockAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/warehouse-stock?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/warehouse-stock?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -688,7 +690,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<object>>> GetStockMovementsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/stock-movements?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/stock-movements?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -702,7 +704,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<SalesOrderDto>>> GetSalesOrdersAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/sales-orders?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/sales-orders?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -716,7 +718,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<SalesOrderDto>($"api/sales-orders/{id}");
+                var data = await _http.GetFromJsonAsync<SalesOrderDto>($"{V1}/sales-orders/{id}");
                 return ApiResult<SalesOrderDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -729,7 +731,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync("api/sales-orders", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/sales-orders", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult<SalesOrderDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -740,7 +742,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateSalesOrderAsync(Guid id, CreateSalesOrderRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/sales-orders/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/sales-orders/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -749,7 +751,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteSalesOrderAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/sales-orders/{id}");
+            var response = await _http.DeleteAsync($"{V1}/sales-orders/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -759,7 +761,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsync($"api/sales-orders/{id}/confirm", null);
+            var response = await _http.PostAsync($"{V1}/sales-orders/{id}/confirm", null);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -770,7 +772,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsync($"api/sales-orders/{id}/cancel", null);
+            var response = await _http.PostAsync($"{V1}/sales-orders/{id}/cancel", null);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -782,7 +784,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<CustomerDto>>> GetCustomersAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/customers?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/customers?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -796,7 +798,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<CustomerDto>($"api/customers/{id}");
+                var data = await _http.GetFromJsonAsync<CustomerDto>($"{V1}/customers/{id}");
                 return ApiResult<CustomerDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -808,7 +810,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<CustomerDto>> CreateCustomerAsync(CreateCustomerRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/customers", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/customers", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<CustomerDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<CustomerDto>();
@@ -818,7 +820,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateCustomerAsync(Guid id, CreateCustomerRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/customers/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/customers/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -827,7 +829,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteCustomerAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/customers/{id}");
+            var response = await _http.DeleteAsync($"{V1}/customers/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -838,7 +840,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<CustomerGroupDto>>> GetCustomerGroupsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/customer-groups?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/customer-groups?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -850,7 +852,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<CustomerGroupDto>> CreateCustomerGroupAsync(CreateCustomerGroupRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/customer-groups", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/customer-groups", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<CustomerGroupDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<CustomerGroupDto>();
@@ -860,7 +862,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateCustomerGroupAsync(Guid id, CreateCustomerGroupRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/customer-groups/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/customer-groups/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -869,7 +871,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteCustomerGroupAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/customer-groups/{id}");
+            var response = await _http.DeleteAsync($"{V1}/customer-groups/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -880,7 +882,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<PurchaseOrderDto>>> GetPurchaseOrdersAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/purchase-orders?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/purchase-orders?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -894,7 +896,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<PurchaseOrderDto>($"api/purchase-orders/{id}");
+                var data = await _http.GetFromJsonAsync<PurchaseOrderDto>($"{V1}/purchase-orders/{id}");
                 return ApiResult<PurchaseOrderDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -907,7 +909,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync("api/purchase-orders", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/purchase-orders", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult<PurchaseOrderDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -918,7 +920,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdatePurchaseOrderAsync(Guid id, object request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/purchase-orders/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/purchase-orders/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -927,7 +929,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeletePurchaseOrderAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/purchase-orders/{id}");
+            var response = await _http.DeleteAsync($"{V1}/purchase-orders/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -938,7 +940,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<SupplierDto>>> GetSuppliersAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/suppliers?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/suppliers?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -952,7 +954,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<SupplierDto>($"api/suppliers/{id}");
+                var data = await _http.GetFromJsonAsync<SupplierDto>($"{V1}/suppliers/{id}");
                 return ApiResult<SupplierDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -964,7 +966,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<SupplierDto>> CreateSupplierAsync(CreateSupplierRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/suppliers", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/suppliers", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<SupplierDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<SupplierDto>();
@@ -974,7 +976,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateSupplierAsync(Guid id, CreateSupplierRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/suppliers/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/suppliers/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -983,7 +985,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteSupplierAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/suppliers/{id}");
+            var response = await _http.DeleteAsync($"{V1}/suppliers/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -994,7 +996,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<GoodsReceiptDto>>> GetGoodsReceiptsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/goods-receipts?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/goods-receipts?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1008,7 +1010,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<GoodsReceiptDto>($"api/goods-receipts/{id}");
+                var data = await _http.GetFromJsonAsync<GoodsReceiptDto>($"{V1}/goods-receipts/{id}");
                 return ApiResult<GoodsReceiptDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1022,7 +1024,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<ChartOfAccountDto>>> GetChartOfAccountsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/chart-of-accounts?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/chart-of-accounts?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1036,7 +1038,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<ChartOfAccountDto>($"api/chart-of-accounts/{id}");
+                var data = await _http.GetFromJsonAsync<ChartOfAccountDto>($"{V1}/chart-of-accounts/{id}");
                 return ApiResult<ChartOfAccountDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1048,7 +1050,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<ChartOfAccountDto>> CreateChartOfAccountAsync(CreateChartOfAccountRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/chart-of-accounts", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/chart-of-accounts", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<ChartOfAccountDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<ChartOfAccountDto>();
@@ -1058,7 +1060,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateChartOfAccountAsync(Guid id, CreateChartOfAccountRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/chart-of-accounts/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/chart-of-accounts/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1067,7 +1069,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteChartOfAccountAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/chart-of-accounts/{id}");
+            var response = await _http.DeleteAsync($"{V1}/chart-of-accounts/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1078,7 +1080,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<JournalEntryDto>>> GetJournalEntriesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/journal-entries?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/journal-entries?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1092,7 +1094,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<JournalEntryDto>($"api/journal-entries/{id}");
+                var data = await _http.GetFromJsonAsync<JournalEntryDto>($"{V1}/journal-entries/{id}");
                 return ApiResult<JournalEntryDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1105,7 +1107,7 @@ namespace BlazorApp.Client.Services
         {
             await AttachTokenAsync();
             AttachIdempotencyKey();
-            var response = await _http.PostAsJsonAsync("api/journal-entries", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/journal-entries", request);
             ClearIdempotencyKey();
             if (!response.IsSuccessStatusCode)
                 return ApiResult<JournalEntryDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
@@ -1116,7 +1118,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteJournalEntryAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/journal-entries/{id}");
+            var response = await _http.DeleteAsync($"{V1}/journal-entries/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1127,7 +1129,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<InvoiceDto>>> GetInvoicesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/invoices?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/invoices?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1141,7 +1143,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<InvoiceDto>($"api/invoices/{id}");
+                var data = await _http.GetFromJsonAsync<InvoiceDto>($"{V1}/invoices/{id}");
                 return ApiResult<InvoiceDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1155,7 +1157,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<TaxRateDto>>> GetTaxRatesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/tax-rates?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/tax-rates?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1167,7 +1169,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<TaxRateDto>> CreateTaxRateAsync(CreateTaxRateRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/tax-rates", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/tax-rates", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<TaxRateDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<TaxRateDto>();
@@ -1177,7 +1179,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateTaxRateAsync(Guid id, CreateTaxRateRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/tax-rates/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/tax-rates/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1186,7 +1188,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteTaxRateAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/tax-rates/{id}");
+            var response = await _http.DeleteAsync($"{V1}/tax-rates/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1197,7 +1199,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<PaymentTermDto>>> GetPaymentTermsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/payment-terms?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/payment-terms?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1209,7 +1211,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PaymentTermDto>> CreatePaymentTermAsync(CreatePaymentTermRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/payment-terms", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/payment-terms", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<PaymentTermDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<PaymentTermDto>();
@@ -1219,7 +1221,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdatePaymentTermAsync(Guid id, CreatePaymentTermRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/payment-terms/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/payment-terms/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1228,7 +1230,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeletePaymentTermAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/payment-terms/{id}");
+            var response = await _http.DeleteAsync($"{V1}/payment-terms/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1239,7 +1241,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<PromotionDto>>> GetPromotionsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/promotions?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/promotions?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1253,7 +1255,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<PromotionDto>($"api/promotions/{id}");
+                var data = await _http.GetFromJsonAsync<PromotionDto>($"{V1}/promotions/{id}");
                 return ApiResult<PromotionDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1265,7 +1267,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PromotionDto>> CreatePromotionAsync(CreatePromotionRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/promotions", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/promotions", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<PromotionDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<PromotionDto>();
@@ -1275,7 +1277,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdatePromotionAsync(Guid id, CreatePromotionRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/promotions/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/promotions/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1284,7 +1286,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeletePromotionAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/promotions/{id}");
+            var response = await _http.DeleteAsync($"{V1}/promotions/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1295,7 +1297,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<CouponCodeDto>>> GetCouponsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/coupons?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/coupons?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1307,7 +1309,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<CouponCodeDto>> CreateCouponAsync(CreateCouponCodeRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/coupons", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/coupons", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<CouponCodeDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<CouponCodeDto>();
@@ -1317,7 +1319,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateCouponAsync(Guid id, CreateCouponCodeRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/coupons/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/coupons/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1326,7 +1328,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteCouponAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/coupons/{id}");
+            var response = await _http.DeleteAsync($"{V1}/coupons/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1337,7 +1339,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<LoyaltyProgramDto>>> GetLoyaltyProgramsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/loyalty-programs?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/loyalty-programs?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1351,7 +1353,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<LoyaltyProgramDto>($"api/loyalty-programs/{id}");
+                var data = await _http.GetFromJsonAsync<LoyaltyProgramDto>($"{V1}/loyalty-programs/{id}");
                 return ApiResult<LoyaltyProgramDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1365,7 +1367,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<LoyaltyMembershipDto>>> GetLoyaltyMembershipsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/loyalty-memberships?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/loyalty-memberships?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1379,7 +1381,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<DepartmentDto>>> GetDepartmentsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/departments?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/departments?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1393,7 +1395,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<DepartmentDto>($"api/departments/{id}");
+                var data = await _http.GetFromJsonAsync<DepartmentDto>($"{V1}/departments/{id}");
                 return ApiResult<DepartmentDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1405,7 +1407,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<DepartmentDto>> CreateDepartmentAsync(CreateDepartmentRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/departments", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/departments", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<DepartmentDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<DepartmentDto>();
@@ -1415,7 +1417,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateDepartmentAsync(Guid id, CreateDepartmentRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/departments/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/departments/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1424,7 +1426,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteDepartmentAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/departments/{id}");
+            var response = await _http.DeleteAsync($"{V1}/departments/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1435,7 +1437,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<EmployeeDto>>> GetEmployeesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/employees?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/employees?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1449,7 +1451,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<EmployeeDto>($"api/employees/{id}");
+                var data = await _http.GetFromJsonAsync<EmployeeDto>($"{V1}/employees/{id}");
                 return ApiResult<EmployeeDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1461,7 +1463,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<EmployeeDto>> CreateEmployeeAsync(CreateEmployeeRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/employees", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/employees", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<EmployeeDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<EmployeeDto>();
@@ -1471,7 +1473,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateEmployeeAsync(Guid id, CreateEmployeeRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/employees/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/employees/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1480,7 +1482,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteEmployeeAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/employees/{id}");
+            var response = await _http.DeleteAsync($"{V1}/employees/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1491,7 +1493,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<AttendanceDto>>> GetAttendanceAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/attendance?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/attendance?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1503,7 +1505,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> ClockInAsync()
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsync("api/attendance/clock-in", null);
+            var response = await _http.PostAsync($"{V1}/attendance/clock-in", null);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1512,7 +1514,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> ClockOutAsync()
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsync("api/attendance/clock-out", null);
+            var response = await _http.PostAsync($"{V1}/attendance/clock-out", null);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1523,7 +1525,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<LeaveRequestDto>>> GetLeaveRequestsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/leave-requests?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/leave-requests?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1535,7 +1537,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<LeaveRequestDto>> CreateLeaveRequestAsync(CreateLeaveRequestRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/leave-requests", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/leave-requests", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<LeaveRequestDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<LeaveRequestDto>();
@@ -1545,7 +1547,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> ApproveLeaveRequestAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsync($"api/leave-requests/{id}/approve", null);
+            var response = await _http.PostAsync($"{V1}/leave-requests/{id}/approve", null);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1554,7 +1556,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> RejectLeaveRequestAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsync($"api/leave-requests/{id}/reject", null);
+            var response = await _http.PostAsync($"{V1}/leave-requests/{id}/reject", null);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1565,7 +1567,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<BranchDto>>> GetBranchesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/branches?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/branches?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1579,7 +1581,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<BranchDto>($"api/branches/{id}");
+                var data = await _http.GetFromJsonAsync<BranchDto>($"{V1}/branches/{id}");
                 return ApiResult<BranchDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1591,7 +1593,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<BranchDto>> CreateBranchAsync(CreateBranchRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/branches", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/branches", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<BranchDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<BranchDto>();
@@ -1601,7 +1603,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateBranchAsync(Guid id, CreateBranchRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/branches/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/branches/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1610,7 +1612,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteBranchAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/branches/{id}");
+            var response = await _http.DeleteAsync($"{V1}/branches/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1621,7 +1623,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<DeliveryZoneDto>>> GetDeliveryZonesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/delivery-zones?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/delivery-zones?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1635,7 +1637,7 @@ namespace BlazorApp.Client.Services
             await AttachTokenAsync();
             try
             {
-                var data = await _http.GetFromJsonAsync<DeliveryZoneDto>($"api/delivery-zones/{id}");
+                var data = await _http.GetFromJsonAsync<DeliveryZoneDto>($"{V1}/delivery-zones/{id}");
                 return ApiResult<DeliveryZoneDto>.Ok(data!);
             }
             catch (HttpRequestException ex)
@@ -1647,7 +1649,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<DeliveryZoneDto>> CreateDeliveryZoneAsync(CreateDeliveryZoneRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/delivery-zones", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/delivery-zones", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<DeliveryZoneDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<DeliveryZoneDto>();
@@ -1657,7 +1659,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateDeliveryZoneAsync(Guid id, CreateDeliveryZoneRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/delivery-zones/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/delivery-zones/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1666,7 +1668,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteDeliveryZoneAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/delivery-zones/{id}");
+            var response = await _http.DeleteAsync($"{V1}/delivery-zones/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1677,7 +1679,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<NotificationDto>>> GetMyNotificationsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/notifications/my?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/notifications/my?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1689,7 +1691,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<int>> GetUnreadCountAsync()
         {
             await AttachTokenAsync();
-            var resp = await _http.GetAsync("api/notifications/unread-count");
+            var resp = await _http.GetAsync($"{V1}/notifications/unread-count");
             if (!resp.IsSuccessStatusCode)
                 return ApiResult<int>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
             var data = await resp.Content.ReadFromJsonAsync<int>();
@@ -1699,7 +1701,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> MarkNotificationReadAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsync($"api/notifications/{id}/read", null);
+            var response = await _http.PostAsync($"{V1}/notifications/{id}/read", null);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1710,7 +1712,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<TenantSettingDto>>> GetTenantSettingsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/tenant-settings?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/tenant-settings?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1722,7 +1724,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateTenantSettingAsync(Guid id, object request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/tenant-settings/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/tenant-settings/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1733,7 +1735,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<ReportDefinitionDto>>> GetReportsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/reports?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/reports?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1747,7 +1749,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<AuditLogDto>>> GetAuditLogsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/audit-logs?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/audit-logs?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1761,7 +1763,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<ApiKeyDto>>> GetApiKeysAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/api-keys?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/api-keys?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1775,7 +1777,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<WebhookSubscriptionDto>>> GetWebhooksAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/webhooks?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/webhooks?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1789,7 +1791,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<BannerDto>>> GetBannersAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/banners?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/banners?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1801,7 +1803,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<BannerDto>> CreateBannerAsync(CreateBannerRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/banners", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/banners", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<BannerDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<BannerDto>();
@@ -1811,7 +1813,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdateBannerAsync(Guid id, CreateBannerRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/banners/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/banners/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1820,7 +1822,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeleteBannerAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/banners/{id}");
+            var response = await _http.DeleteAsync($"{V1}/banners/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1831,7 +1833,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PagedResult<PageDto>>> GetPagesAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
-            var url = $"api/pages?page={page}&pageSize={pageSize}";
+            var url = $"{V1}/pages?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
@@ -1843,7 +1845,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<PageDto>> CreatePageAsync(CreatePageRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PostAsJsonAsync("api/pages", request);
+            var response = await _http.PostAsJsonAsync($"{V1}/pages", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult<PageDto>.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             var data = await response.Content.ReadFromJsonAsync<PageDto>();
@@ -1853,7 +1855,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> UpdatePageAsync(Guid id, CreatePageRequest request)
         {
             await AttachTokenAsync();
-            var response = await _http.PutAsJsonAsync($"api/pages/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{V1}/pages/{id}", request);
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1862,7 +1864,7 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult> DeletePageAsync(Guid id)
         {
             await AttachTokenAsync();
-            var response = await _http.DeleteAsync($"api/pages/{id}");
+            var response = await _http.DeleteAsync($"{V1}/pages/{id}");
             if (!response.IsSuccessStatusCode)
                 return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
             return ApiResult.Ok();
@@ -1873,11 +1875,135 @@ namespace BlazorApp.Client.Services
         public async Task<ApiResult<StorefrontConfigDto>> GetStorefrontConfigAsync()
         {
             await AttachTokenAsync();
-            var resp = await _http.GetAsync("api/storefront-config");
+            var resp = await _http.GetAsync($"{V1}/storefront-config");
             if (!resp.IsSuccessStatusCode)
                 return ApiResult<StorefrontConfigDto>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
             var data = await resp.Content.ReadFromJsonAsync<StorefrontConfigDto>();
             return ApiResult<StorefrontConfigDto>.Ok(data!);
+        }
+
+        // ── Import ───────────────────────────────────────────────────────────────
+
+        public async Task<ApiResult<PagedResult<SalesChannelDto>>> GetSalesChannelsAsync(int page = 1, int pageSize = 20)
+        {
+            await AttachTokenAsync();
+            var resp = await _http.GetAsync($"{V1}/import/channels?page={page}&pageSize={pageSize}");
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<PagedResult<SalesChannelDto>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<PagedResult<SalesChannelDto>>();
+            return ApiResult<PagedResult<SalesChannelDto>>.Ok(data!);
+        }
+
+        public async Task<ApiResult<SalesChannelDto>> CreateSalesChannelAsync(CreateSalesChannelRequest request)
+        {
+            await AttachTokenAsync();
+            AttachIdempotencyKey();
+            var resp = await _http.PostAsJsonAsync($"{V1}/import/channels", request);
+            ClearIdempotencyKey();
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<SalesChannelDto>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<SalesChannelDto>();
+            return ApiResult<SalesChannelDto>.Ok(data!);
+        }
+
+        public async Task<ApiResult<List<string>>> PreviewCsvHeadersAsync(Stream fileStream, string fileName)
+        {
+            await AttachTokenAsync();
+            using var content = new MultipartFormDataContent();
+            content.Add(new StreamContent(fileStream), "file", fileName);
+            var resp = await _http.PostAsync($"{V1}/import/csv/preview", content);
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<List<string>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<List<string>>();
+            return ApiResult<List<string>>.Ok(data!);
+        }
+
+        public async Task<ApiResult<ImportSummaryDto>> ProcessCsvImportAsync(
+            Stream fileStream, string fileName, Guid salesChannelId, Guid warehouseId,
+            string orderNumberCol, string skuCol, string quantityCol, string unitPriceCol,
+            string? totalPriceCol = null, string? productNameCol = null, string? orderDateCol = null, string? platformFeeCol = null)
+        {
+            await AttachTokenAsync();
+            AttachIdempotencyKey();
+            using var content = new MultipartFormDataContent();
+            content.Add(new StreamContent(fileStream), "file", fileName);
+            content.Add(new StringContent(salesChannelId.ToString()), "salesChannelId");
+            content.Add(new StringContent(warehouseId.ToString()), "warehouseId");
+            content.Add(new StringContent(orderNumberCol), "orderNumberColumn");
+            content.Add(new StringContent(skuCol), "skuColumn");
+            content.Add(new StringContent(quantityCol), "quantityColumn");
+            content.Add(new StringContent(unitPriceCol), "unitPriceColumn");
+            if (totalPriceCol != null) content.Add(new StringContent(totalPriceCol), "totalPriceColumn");
+            if (productNameCol != null) content.Add(new StringContent(productNameCol), "productNameColumn");
+            if (orderDateCol != null) content.Add(new StringContent(orderDateCol), "orderDateColumn");
+            if (platformFeeCol != null) content.Add(new StringContent(platformFeeCol), "platformFeeColumn");
+            var resp = await _http.PostAsync($"{V1}/import/csv/process", content);
+            ClearIdempotencyKey();
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<ImportSummaryDto>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<ImportSummaryDto>();
+            return ApiResult<ImportSummaryDto>.Ok(data!);
+        }
+
+        public async Task<ApiResult<PagedResult<ImportBatchDto>>> GetImportBatchesAsync(int page = 1, int pageSize = 20)
+        {
+            await AttachTokenAsync();
+            var resp = await _http.GetAsync($"{V1}/import/batches?page={page}&pageSize={pageSize}");
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<PagedResult<ImportBatchDto>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<PagedResult<ImportBatchDto>>();
+            return ApiResult<PagedResult<ImportBatchDto>>.Ok(data!);
+        }
+
+        // ── Reports & Dashboard ──────────────────────────────────────────────────
+
+        public async Task<ApiResult<DashboardSummary>> GetDashboardSummaryAsync()
+        {
+            await AttachTokenAsync();
+            var resp = await _http.GetAsync($"{V1}/reports/dashboard");
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<DashboardSummary>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<DashboardSummary>();
+            return ApiResult<DashboardSummary>.Ok(data!);
+        }
+
+        public async Task<ApiResult<ProfitAndLossReport>> GetProfitAndLossAsync(DateTime? from = null, DateTime? to = null)
+        {
+            await AttachTokenAsync();
+            var url = $"{V1}/reports/profit-and-loss";
+            var queryParams = new List<string>();
+            if (from.HasValue) queryParams.Add($"from={from.Value:yyyy-MM-dd}");
+            if (to.HasValue) queryParams.Add($"to={to.Value:yyyy-MM-dd}");
+            if (queryParams.Count > 0) url += "?" + string.Join("&", queryParams);
+            var resp = await _http.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<ProfitAndLossReport>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<ProfitAndLossReport>();
+            return ApiResult<ProfitAndLossReport>.Ok(data!);
+        }
+
+        public async Task<ApiResult<NotificationSummary>> GetNotificationsAsync()
+        {
+            await AttachTokenAsync();
+            var resp = await _http.GetAsync($"{V1}/notifications");
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<NotificationSummary>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<NotificationSummary>();
+            return ApiResult<NotificationSummary>.Ok(data!);
+        }
+
+        // ── Export ───────────────────────────────────────────────────────────────
+
+        public async Task<ApiResult<byte[]>> ExportAsync(string entityType, string? status = null)
+        {
+            await AttachTokenAsync();
+            var url = $"{V1}/export/{entityType}";
+            if (!string.IsNullOrEmpty(status)) url += $"?status={Uri.EscapeDataString(status)}";
+            var resp = await _http.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<byte[]>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            return ApiResult<byte[]>.Ok(bytes);
         }
     }
 }

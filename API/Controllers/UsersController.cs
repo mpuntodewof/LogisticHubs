@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.Users;
@@ -9,7 +10,8 @@ using System.Security.Claims;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/users")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/users")]
     [Authorize]
     public class UsersController : ControllerBase
     {

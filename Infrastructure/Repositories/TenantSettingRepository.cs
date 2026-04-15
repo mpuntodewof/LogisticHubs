@@ -36,14 +36,12 @@ namespace Infrastructure.Repositories
         public async Task<TenantSetting> CreateAsync(TenantSetting setting)
         {
             _context.TenantSettings.Add(setting);
-            await _context.SaveChangesAsync();
             return setting;
         }
 
         public async Task UpdateAsync(TenantSetting setting)
         {
             _context.TenantSettings.Update(setting);
-            await _context.SaveChangesAsync();
         }
     }
 }

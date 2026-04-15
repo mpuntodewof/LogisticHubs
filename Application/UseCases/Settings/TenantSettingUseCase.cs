@@ -7,10 +7,12 @@ namespace Application.UseCases.Settings
     public class TenantSettingUseCase
     {
         private readonly ITenantSettingRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TenantSettingUseCase(ITenantSettingRepository repository)
+        public TenantSettingUseCase(ITenantSettingRepository repository, IUnitOfWork unitOfWork)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<List<TenantSettingDto>> GetAllAsync(string? group = null)
@@ -36,6 +38,7 @@ namespace Application.UseCases.Settings
             setting.Value = request.Value;
 
             await _repository.UpdateAsync(setting);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task BulkUpdateAsync(BulkUpdateTenantSettingsRequest request)
@@ -49,6 +52,8 @@ namespace Application.UseCases.Settings
                 setting.Value = kvp.Value;
                 await _repository.UpdateAsync(setting);
             }
+
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static TenantSettingDto MapToDto(TenantSetting s) => new()

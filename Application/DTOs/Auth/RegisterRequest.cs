@@ -16,6 +16,9 @@ namespace Application.DTOs.Auth
         [Required]
         [MinLength(8)]
         [MaxLength(100)]
+        [RegularExpression(
+            @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$",
+            ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.")]
         public string Password { get; set; } = string.Empty;
 
         public Guid? TenantId { get; set; }

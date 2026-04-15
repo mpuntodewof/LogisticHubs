@@ -57,7 +57,6 @@ namespace Infrastructure.Repositories
         public async Task<AuditLog> CreateAsync(AuditLog entity)
         {
             _context.AuditLogs.Add(entity);
-            await _context.SaveChangesAsync();
             return entity;
         }
     }

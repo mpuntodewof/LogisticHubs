@@ -73,6 +73,12 @@ else
                         <span class="nav-icon">&#128260;</span> Movements
                     </NavLink>
                 }
+                @if (Has("inventory.create"))
+                {
+                    <NavLink class="nav-item-link" href="/import" Match="NavLinkMatch.All">
+                        <span class="nav-icon">&#128229;</span><span class="sidebar-text">Import Sales</span>
+                    </NavLink>
+                }
             }
 
             @if (Has("chart-of-accounts.read") || Has("invoices.read"))
@@ -108,6 +114,9 @@ else
                         <span class="nav-icon">&#128197;</span> Payment Terms
                     </NavLink>
                 }
+                <NavLink class="nav-item-link" href="/reports" Match="NavLinkMatch.All">
+                    <span class="nav-icon">&#128200;</span><span class="sidebar-text">Reports</span>
+                </NavLink>
             }
 
             @if (Has("audit-logs.read"))

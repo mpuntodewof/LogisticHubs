@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.Tax;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/invoices")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/invoices")]
     [Authorize]
     public class InvoicesController : ControllerBase
     {

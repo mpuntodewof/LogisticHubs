@@ -57,13 +57,11 @@ namespace Infrastructure.Repositories
         public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(User user)
         {
             _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
         }
 
         public async Task AssignRoleAsync(Guid userId, Guid roleId, Guid? assignedBy)
@@ -76,7 +74,6 @@ namespace Infrastructure.Repositories
                 AssignedBy = assignedBy
             };
             _context.UserRoleAssignments.Add(assignment);
-            await _context.SaveChangesAsync();
         }
 
         public async Task RevokeRoleAsync(Guid userId, Guid roleId)
@@ -87,7 +84,6 @@ namespace Infrastructure.Repositories
             if (assignment != null)
             {
                 _context.UserRoleAssignments.Remove(assignment);
-                await _context.SaveChangesAsync();
             }
         }
 

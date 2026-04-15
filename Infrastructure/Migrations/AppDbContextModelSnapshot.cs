@@ -470,6 +470,159 @@ namespace Infrastructure.Migrations
                     b.ToTable("ChartOfAccounts");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CsvImportBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ErrorSummary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<int>("FailedRows")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<Guid>("SalesChannelId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("SkippedRows")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("SuccessRows")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesChannelId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("CsvImportBatches");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CsvImportRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CsvImportBatchId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid?>("MatchedProductVariantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("OrderDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OrderNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("PlatformFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProductName")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RawRowJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("text");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sku")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<Guid?>("StockMovementId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchedProductVariantId");
+
+                    b.HasIndex("StockMovementId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("CsvImportBatchId", "RowNumber");
+
+                    b.ToTable("CsvImportRows");
+                });
+
             modelBuilder.Entity("Domain.Entities.IdempotencyRecord", b =>
                 {
                     b.Property<string>("IdempotencyKey")
@@ -941,7 +1094,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0001-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3641),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3839),
                             Name = "users.create",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -950,7 +1103,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0002-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3654),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3853),
                             Name = "users.read",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -959,7 +1112,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0003-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3659),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3857),
                             Name = "users.update",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -968,7 +1121,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0004-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3669),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3915),
                             Name = "users.delete",
                             Resource = "users",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -977,7 +1130,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0005-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3673),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3920),
                             Name = "roles.assign",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -986,7 +1139,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0006-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3678),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3924),
                             Name = "roles.create",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -995,7 +1148,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0007-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3682),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3928),
                             Name = "roles.read",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1004,7 +1157,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0008-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3691),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4049),
                             Name = "roles.update",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1013,7 +1166,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0009-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3695),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4054),
                             Name = "roles.delete",
                             Resource = "roles",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1022,7 +1175,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0010-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3700),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4059),
                             Name = "categories.create",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1031,7 +1184,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0011-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3705),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4063),
                             Name = "categories.read",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1040,7 +1193,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0012-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3709),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4066),
                             Name = "categories.update",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1049,7 +1202,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0013-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3713),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4070),
                             Name = "categories.delete",
                             Resource = "categories",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1058,7 +1211,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0014-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3717),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4073),
                             Name = "brands.create",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1067,7 +1220,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0015-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3721),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4077),
                             Name = "brands.read",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1076,7 +1229,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0016-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3725),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4081),
                             Name = "brands.update",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1085,7 +1238,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0017-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3769),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4084),
                             Name = "brands.delete",
                             Resource = "brands",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1094,7 +1247,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0018-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3787),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4102),
                             Name = "units.create",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1103,7 +1256,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0019-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3792),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4107),
                             Name = "units.read",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1112,7 +1265,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0020-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3796),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4110),
                             Name = "units.update",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1121,7 +1274,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0021-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3799),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4114),
                             Name = "units.delete",
                             Resource = "units",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1130,7 +1283,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0022-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3803),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4117),
                             Name = "products.create",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1139,7 +1292,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0023-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3807),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4120),
                             Name = "products.read",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1148,7 +1301,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0024-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3815),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4129),
                             Name = "products.update",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1157,7 +1310,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0025-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3828),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4144),
                             Name = "products.delete",
                             Resource = "products",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1166,7 +1319,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0026-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3832),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4149),
                             Name = "inventory.read",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1175,7 +1328,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0027-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3836),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4152),
                             Name = "inventory.create",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1184,7 +1337,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0028-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4155),
                             Name = "inventory.update",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1193,7 +1346,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0029-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "transfer",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3844),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4265),
                             Name = "inventory.transfer",
                             Resource = "inventory",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1202,7 +1355,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0030-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "manage",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3887),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4302),
                             Name = "warehouses.manage",
                             Resource = "warehouses",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1211,7 +1364,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0031-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3891),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4306),
                             Name = "chart-of-accounts.create",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1220,7 +1373,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0032-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3895),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4309),
                             Name = "chart-of-accounts.read",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1229,7 +1382,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0033-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3899),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4313),
                             Name = "chart-of-accounts.update",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1238,7 +1391,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0034-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3905),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4317),
                             Name = "chart-of-accounts.delete",
                             Resource = "chart-of-accounts",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1247,7 +1400,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0035-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3909),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4321),
                             Name = "journal-entries.create",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1256,7 +1409,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0036-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3912),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4324),
                             Name = "journal-entries.read",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1265,7 +1418,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0037-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "post",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3916),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4328),
                             Name = "journal-entries.post",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1274,7 +1427,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0038-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "void",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3968),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4341),
                             Name = "journal-entries.void",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1283,7 +1436,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0039-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3972),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4344),
                             Name = "journal-entries.delete",
                             Resource = "journal-entries",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1292,7 +1445,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0040-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3976),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4348),
                             Name = "payment-terms.create",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1301,7 +1454,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0041-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3980),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4351),
                             Name = "payment-terms.read",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1310,7 +1463,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0042-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3984),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4354),
                             Name = "payment-terms.update",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1319,7 +1472,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0043-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3988),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4357),
                             Name = "payment-terms.delete",
                             Resource = "payment-terms",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1328,7 +1481,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0044-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3991),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4360),
                             Name = "tax-rates.create",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1337,7 +1490,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0045-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3995),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4401),
                             Name = "tax-rates.read",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1346,7 +1499,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0046-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3999),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4405),
                             Name = "tax-rates.update",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1355,7 +1508,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0047-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4003),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4408),
                             Name = "tax-rates.delete",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1364,7 +1517,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0048-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4007),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4412),
                             Name = "tax-rates.assign",
                             Resource = "tax-rates",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1373,7 +1526,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0049-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "create",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4010),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4415),
                             Name = "invoices.create",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1382,7 +1535,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0050-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4014),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4418),
                             Name = "invoices.read",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1391,7 +1544,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0051-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "issue",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4018),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4422),
                             Name = "invoices.issue",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1400,7 +1553,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0052-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "assign-tax-number",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4022),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4426),
                             Name = "invoices.assign-tax-number",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1409,7 +1562,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0053-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "pay",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4026),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4429),
                             Name = "invoices.pay",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1418,7 +1571,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0054-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "cancel",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4030),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4433),
                             Name = "invoices.cancel",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1427,7 +1580,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0055-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "delete",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4058),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4436),
                             Name = "invoices.delete",
                             Resource = "invoices",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1436,7 +1589,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0056-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4063),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4440),
                             Name = "audit-logs.read",
                             Resource = "audit-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1445,7 +1598,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0057-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "export",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4068),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4443),
                             Name = "audit-logs.export",
                             Resource = "audit-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1454,7 +1607,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0058-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4071),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4446),
                             Name = "system-logs.read",
                             Resource = "system-logs",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1463,7 +1616,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0059-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4075),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4450),
                             Name = "tenant-settings.read",
                             Resource = "tenant-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1472,7 +1625,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0060-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4079),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4453),
                             Name = "tenant-settings.update",
                             Resource = "tenant-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1481,7 +1634,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0061-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "read",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4083),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4456),
                             Name = "system-settings.read",
                             Resource = "system-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -1490,7 +1643,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("aaaaaaaa-0062-aaaa-aaaa-aaaaaaaaaaaa"),
                             Action = "update",
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(4087),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(4460),
                             Name = "system-settings.update",
                             Resource = "system-settings",
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -2475,7 +2628,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3455),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3698),
                             Description = "Full system access",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2485,7 +2638,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3459),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3703),
                             Description = "Full operational access across all modules",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2495,7 +2648,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3461),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3705),
                             Description = "Read-only access across all modules",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2505,7 +2658,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3463),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3707),
                             Description = "Inventory management, stock movements, receiving",
                             IsDeleted = false,
                             IsSystem = true,
@@ -2515,7 +2668,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("77777777-7777-7777-7777-777777777777"),
-                            CreatedAt = new DateTime(2026, 4, 12, 7, 31, 38, 29, DateTimeKind.Utc).AddTicks(3465),
+                            CreatedAt = new DateTime(2026, 4, 14, 7, 55, 33, 434, DateTimeKind.Utc).AddTicks(3709),
                             Description = "Finance, tax, invoicing, and payment management",
                             IsDeleted = false,
                             IsSystem = true,
@@ -3428,6 +3581,55 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.SalesChannel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("PlatformFeePercent")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("SalesChannels");
+                });
+
             modelBuilder.Entity("Domain.Entities.StockMovement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3778,7 +3980,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            CompanyName = "NiagaOne Default",
+                            CompanyName = "StockLedger Default",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Slug = "default"
@@ -4079,7 +4281,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin@niagaone.com",
+                            Email = "admin@stockledger.io",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Alice Admin",
@@ -4090,7 +4292,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000002"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "manager@niagaone.com",
+                            Email = "manager@stockledger.io",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Marcus Manager",
@@ -4101,7 +4303,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000004"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "viewer@niagaone.com",
+                            Email = "viewer@stockledger.io",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Victor Viewer",
@@ -4112,7 +4314,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000006"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "warehouse@niagaone.com",
+                            Email = "warehouse@stockledger.io",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Wira Warehouse",
@@ -4123,7 +4325,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000007"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "accountant@niagaone.com",
+                            Email = "accountant@stockledger.io",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Andi Accountant",
@@ -4362,6 +4564,66 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("ParentAccount");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CsvImportBatch", b =>
+                {
+                    b.HasOne("Domain.Entities.SalesChannel", "SalesChannel")
+                        .WithMany("ImportBatches")
+                        .HasForeignKey("SalesChannelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SalesChannel");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CsvImportRow", b =>
+                {
+                    b.HasOne("Domain.Entities.CsvImportBatch", "Batch")
+                        .WithMany("Rows")
+                        .HasForeignKey("CsvImportBatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.ProductVariant", "MatchedProductVariant")
+                        .WithMany()
+                        .HasForeignKey("MatchedProductVariantId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.StockMovement", "StockMovement")
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("MatchedProductVariant");
+
+                    b.Navigation("StockMovement");
 
                     b.Navigation("Tenant");
                 });
@@ -4616,6 +4878,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SalesChannel", b =>
+                {
+                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Domain.Entities.StockMovement", b =>
                 {
                     b.HasOne("Domain.Entities.Warehouse", "DestinationWarehouse")
@@ -4796,6 +5069,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("JournalEntryLines");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CsvImportBatch", b =>
+                {
+                    b.Navigation("Rows");
+                });
+
             modelBuilder.Entity("Domain.Entities.Invoice", b =>
                 {
                     b.Navigation("Items");
@@ -4832,6 +5110,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("RolePermissions");
 
                     b.Navigation("UserRoleAssignments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SalesChannel", b =>
+                {
+                    b.Navigation("ImportBatches");
                 });
 
             modelBuilder.Entity("Domain.Entities.TaxRate", b =>

@@ -13,16 +13,7 @@ namespace BlazorApp.Client.Models
         public bool IsReadOnly { get; set; }
     }
 
-    // ── Notifications ────────────────────────────────────────────────────────
-
-    public class NotificationDto
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string? Message { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-    }
+    // NotificationDto is defined in ReportModels.cs
 
     // ── Reports ──────────────────────────────────────────────────────────────
 

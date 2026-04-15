@@ -36,14 +36,12 @@ namespace Infrastructure.Repositories
         public async Task<SystemSetting> CreateAsync(SystemSetting setting)
         {
             _context.SystemSettings.Add(setting);
-            await _context.SaveChangesAsync();
             return setting;
         }
 
         public async Task UpdateAsync(SystemSetting setting)
         {
             _context.SystemSettings.Update(setting);
-            await _context.SaveChangesAsync();
         }
     }
 }

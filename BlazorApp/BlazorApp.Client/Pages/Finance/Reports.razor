@@ -1,0 +1,273 @@
+@page "/reports"
+@layout AppLayout
+@inject BlazorApp.Client.Services.ApiClient Api
+
+<div class="page-header">
+    <div>
+        <h1>Profit & Loss Report</h1>
+        <p class="page-desc">Revenue, expenses, and margin analysis by channel</p>
+    </div>
+</div>
+
+<div class="report-filters">
+    <div class="form-group">
+        <label>From</label>
+        <input type="date" class="form-control-custom" style="min-width:160px" @bind="_fromDate" />
+    </div>
+    <div class="form-group">
+        <label>To</label>
+        <input type="date" class="form-control-custom" style="min-width:160px" @bind="_toDate" />
+    </div>
+    <button class="btn-primary" @onclick="LoadReport" disabled="@_loading" style="height:38px;margin-bottom:0">
+        @if (_loading) { <span>Generating...</span> } else { <span>Generate Report</span> }
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert-custom alert-error" style="margin-bottom:1.25rem">@_error</div>
+}
+
+@if (_report != null)
+{
+    @* ── KPI Cards ────────────────────────────────────────────────── *@
+    <div class="dash-grid-4 mb-lg">
+        <div class="glow-card glow-cyan anim-enter anim-d1">
+            <span class="glow-stat-icon">&#128176;</span>
+            <div class="glow-stat-label">Total Revenue</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalRevenue.ToString("N0")</div>
+            <div class="sparkline" style="margin-top:.75rem">
+                @for (var i = 0; i < _sparkRev.Length; i++)
+                {
+                    var h = _sparkRev[i];
+                    var delay = (i * 0.04).ToString("F2");
+                    <div class="spark-bar" style="@($"height:{h}px;animation-delay:{delay}s;background:linear-gradient(180deg,#22D3EE,rgba(6,182,212,.3))")"></div>
+                }
+            </div>
+        </div>
+        <div class="glow-card glow-emerald anim-enter anim-d2">
+            <span class="glow-stat-icon">&#128200;</span>
+            <div class="glow-stat-label">Gross Profit</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.GrossProfit.ToString("N0")</div>
+            <div class="glow-stat-trend trend-up" style="margin-top:.5rem">@_report.GrossProfitMargin% margin</div>
+        </div>
+        <div class="glow-card glow-amber anim-enter anim-d3">
+            <span class="glow-stat-icon">&#128184;</span>
+            <div class="glow-stat-label">Total Expenses</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalExpenses.ToString("N0")</div>
+            <div class="sparkline" style="margin-top:.75rem">
+                @for (var i = 0; i < _sparkExp.Length; i++)
+                {
+                    var h = _sparkExp[i];
+                    var delay = (i * 0.04).ToString("F2");
+                    <div class="spark-bar" style="@($"height:{h}px;animation-delay:{delay}s;background:linear-gradient(180deg,#FBBF24,rgba(245,158,11,.3))")"></div>
+                }
+            </div>
+        </div>
+        <div class="glow-card @(_report.NetProfit >= 0 ? "glow-emerald" : "glow-rose") anim-enter anim-d4">
+            <span class="glow-stat-icon">&#127919;</span>
+            <div class="glow-stat-label">Net Profit</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.NetProfit.ToString("N0")</div>
+            <div class="glow-stat-trend @(_report.NetProfit >= 0 ? "trend-up" : "trend-down")" style="margin-top:.5rem">
+                @_report.NetProfitMargin% margin
+            </div>
+        </div>
+    </div>
+
+    @* ── Revenue by Channel ───────────────────────────────────────── *@
+    @if (_report.ChannelBreakdown.Count > 0)
+    {
+        <div class="dash-grid-23 mb-lg">
+            <div class="glow-card glow-indigo anim-enter anim-d5">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+                    <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Revenue by Channel</h3>
+                    <span style="font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Breakdown</span>
+                </div>
+                <table class="lh-table">
+                    <thead>
+                        <tr>
+                            <th>Channel</th>
+                            <th style="text-align:right">Revenue</th>
+                            <th style="text-align:right">Fees</th>
+                            <th style="text-align:right">Net</th>
+                            <th style="text-align:right">Orders</th>
+                            <th style="text-align:right">Units</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ch in _report.ChannelBreakdown)
+                        {
+                            <tr>
+                                <td style="font-weight:600;color:var(--text-primary)">@ch.ChannelName</td>
+                                <td style="text-align:right;color:#818CF8">Rp @ch.Revenue.ToString("N0")</td>
+                                <td style="text-align:right;color:#FB7185">Rp @ch.PlatformFees.ToString("N0")</td>
+                                <td style="text-align:right;color:#34D399;font-weight:600">Rp @ch.NetRevenue.ToString("N0")</td>
+                                <td style="text-align:right">@ch.OrderCount</td>
+                                <td style="text-align:right">@ch.UnitsSold</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="glow-card glow-violet anim-enter anim-d6">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0 0 1.25rem;color:var(--text-primary)">Channel Mix</h3>
+                @{ var channelList = BuildChannelBars(); }
+                @foreach (var item in channelList)
+                {
+                    <div class="channel-row">
+                        <div class="channel-name" style="width:80px">@item.Name</div>
+                        <div class="channel-bar-wrap">
+                            <div class="progress-track">
+                                <div class="progress-fill @item.FillClass" style="@($"width:{item.Pct}%")"></div>
+                            </div>
+                        </div>
+                        <div class="channel-value" style="@($"color:{item.Color};width:50px")">@item.Pct%</div>
+                    </div>
+                }
+                <div class="chart-legend" style="margin-top:1rem">
+                    @foreach (var item in channelList)
+                    {
+                        <div class="legend-item"><div class="legend-dot" style="@($"background:{item.Color}")"></div> @item.Name</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Revenue + Expense Accounts ───────────────────────────────── *@
+    <div class="dash-grid-2">
+        <div class="glow-card glow-emerald anim-enter anim-d7">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Revenue Accounts</h3>
+                @if (_report.RevenueAccounts.Count > 0)
+                {
+                    <span style="background:rgba(16,185,129,.12);color:#34D399;font-size:.6rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">
+                        @_report.RevenueAccounts.Count ACCOUNTS
+                    </span>
+                }
+            </div>
+            @if (_report.RevenueAccounts.Count == 0)
+            {
+                <div class="empty-state" style="padding:2rem 1rem"><div class="empty-state-text">No revenue entries in period</div></div>
+            }
+            else
+            {
+                var revAccounts = BuildAccountBars(_report.RevenueAccounts, "#34D399", "fill-emerald");
+                foreach (var item in revAccounts)
+                {
+                    <div class="channel-row">
+                        <div class="channel-name" style="width:140px">
+                            <div style="font-weight:600;font-size:.75rem;color:var(--text-primary)">@item.Code</div>
+                            <div style="font-size:.65rem;color:var(--text-muted)">@item.Name</div>
+                        </div>
+                        <div class="channel-bar-wrap">
+                            <div class="progress-track">
+                                <div class="progress-fill @item.FillClass" style="@($"width:{item.Pct}%")"></div>
+                            </div>
+                        </div>
+                        <div class="channel-value" style="@($"color:{item.Color}")">Rp @item.AmountStr</div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="glow-card glow-rose anim-enter anim-d8">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Expense Accounts</h3>
+                @if (_report.ExpenseAccounts.Count > 0)
+                {
+                    <span style="background:rgba(251,113,133,.12);color:#FB7185;font-size:.6rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">
+                        @_report.ExpenseAccounts.Count ACCOUNTS
+                    </span>
+                }
+            </div>
+            @if (_report.ExpenseAccounts.Count == 0)
+            {
+                <div class="empty-state" style="padding:2rem 1rem"><div class="empty-state-text">No expense entries in period</div></div>
+            }
+            else
+            {
+                var expAccounts = BuildAccountBars(_report.ExpenseAccounts, "#FB7185", "fill-rose");
+                foreach (var item in expAccounts)
+                {
+                    <div class="channel-row">
+                        <div class="channel-name" style="width:140px">
+                            <div style="font-weight:600;font-size:.75rem;color:var(--text-primary)">@item.Code</div>
+                            <div style="font-size:.65rem;color:var(--text-muted)">@item.Name</div>
+                        </div>
+                        <div class="channel-bar-wrap">
+                            <div class="progress-track">
+                                <div class="progress-fill @item.FillClass" style="@($"width:{item.Pct}%")"></div>
+                            </div>
+                        </div>
+                        <div class="channel-value" style="@($"color:{item.Color}")">Rp @item.AmountStr</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading;
+    private string _error = string.Empty;
+    private DateTime _fromDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+    private DateTime _toDate = DateTime.UtcNow.Date;
+    private BlazorApp.Client.Models.ProfitAndLossReport? _report;
+
+    private readonly int[] _sparkRev = { 14, 22, 10, 26, 18, 8, 24, 12, 20, 16 };
+    private readonly int[] _sparkExp = { 10, 16, 22, 8, 18, 14, 24, 12, 20, 6 };
+
+    private static readonly string[] _channelColors = { "#818CF8", "#22D3EE", "#34D399", "#FBBF24", "#FB7185", "#A78BFA" };
+    private static readonly string[] _fillClasses = { "fill-indigo", "fill-cyan", "fill-emerald", "fill-amber", "fill-rose", "fill-indigo" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        _loading = true;
+        _error = string.Empty;
+        try
+        {
+            var result = await Api.GetProfitAndLossAsync(_fromDate, _toDate);
+            if (result.Success && result.Data != null)
+                _report = result.Data;
+            else
+                _error = result.ErrorMessage ?? "Failed to load report.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        _loading = false;
+    }
+
+    private record ChannelBarItem(string Name, string Pct, string Color, string FillClass);
+
+    private List<ChannelBarItem> BuildChannelBars()
+    {
+        if (_report == null) return new();
+        var totalRev = _report.ChannelBreakdown.Sum(c => c.Revenue);
+        var result = new List<ChannelBarItem>();
+        for (var i = 0; i < _report.ChannelBreakdown.Count; i++)
+        {
+            var ch = _report.ChannelBreakdown[i];
+            var pct = totalRev > 0 ? ((double)ch.Revenue / (double)totalRev * 100.0).ToString("F0") : "0";
+            result.Add(new ChannelBarItem(ch.ChannelName, pct, _channelColors[i % _channelColors.Length], _fillClasses[i % _fillClasses.Length]));
+        }
+        return result;
+    }
+
+    private record AccountBarItem(string Code, string Name, string Pct, string Color, string FillClass, string AmountStr);
+
+    private List<AccountBarItem> BuildAccountBars(List<BlazorApp.Client.Models.AccountSummaryLine> accounts, string color, string fillClass)
+    {
+        var max = accounts.Max(a => a.Amount);
+        return accounts.Select(a =>
+        {
+            var pct = max > 0 ? ((double)a.Amount / (double)max * 100.0).ToString("F0") : "0";
+            return new AccountBarItem(a.AccountCode, a.AccountName, pct, color, fillClass, a.Amount.ToString("N0"));
+        }).ToList();
+    }
+}

@@ -70,6 +70,11 @@ namespace Infrastructure.Persistence
         // Idempotency
         public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
+        // Import
+        public DbSet<SalesChannel> SalesChannels => Set<SalesChannel>();
+        public DbSet<CsvImportBatch> CsvImportBatches => Set<CsvImportBatch>();
+        public DbSet<CsvImportRow> CsvImportRows => Set<CsvImportRow>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -412,6 +417,33 @@ namespace Infrastructure.Persistence
             {
                 entity.HasKey(e => e.IdempotencyKey);
                 entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // ── Import ─────────────────────────────────────────────────────────
+            modelBuilder.Entity<SalesChannel>(entity =>
+            {
+                entity.HasQueryFilter(e => _tenantContext == null || _tenantContext.TenantId == null || e.TenantId == _tenantContext.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.Slug }).IsUnique();
+                entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<CsvImportBatch>(entity =>
+            {
+                entity.HasQueryFilter(e => _tenantContext == null || _tenantContext.TenantId == null || e.TenantId == _tenantContext.TenantId);
+                entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.SalesChannel).WithMany(c => c.ImportBatches).HasForeignKey(e => e.SalesChannelId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Warehouse).WithMany().HasForeignKey(e => e.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<CsvImportRow>(entity =>
+            {
+                entity.HasQueryFilter(e => _tenantContext == null || _tenantContext.TenantId == null || e.TenantId == _tenantContext.TenantId);
+                entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Batch).WithMany(b => b.Rows).HasForeignKey(e => e.CsvImportBatchId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.MatchedProductVariant).WithMany().HasForeignKey(e => e.MatchedProductVariantId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(e => e.StockMovement).WithMany().HasForeignKey(e => e.StockMovementId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(e => new { e.CsvImportBatchId, e.RowNumber });
+                entity.Property(e => e.RawRowJson).HasColumnType("text");
             });
 
             // ── Seed Data ───────────────────────────────────────────────────────

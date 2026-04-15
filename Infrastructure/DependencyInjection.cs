@@ -31,8 +31,9 @@ namespace Infrastructure
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-            // Transaction management
+            // Transaction management & Unit of Work
             services.AddScoped<ITransactionManager, TransactionManager>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Repositories — Auth & RBAC
             services.AddScoped<IAuthRepository, AuthRepository>();
@@ -64,6 +65,13 @@ namespace Infrastructure
             services.AddScoped<ITenantSettingRepository, TenantSettingRepository>();
             services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 
+            // Repositories — Import
+            services.AddScoped<ISalesChannelRepository, SalesChannelRepository>();
+            services.AddScoped<ICsvImportRepository, CsvImportRepository>();
+
+            // Repositories — Reports
+            services.AddScoped<IReportRepository, ReportRepository>();
+
             // Repositories — Audit
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<ISystemLogRepository, SystemLogRepository>();
@@ -85,10 +93,12 @@ namespace Infrastructure
             services.AddScoped<Application.UseCases.Warehouses.WarehouseUseCase>();
             services.AddScoped<Application.UseCases.Inventory.WarehouseStockUseCase>();
             services.AddScoped<Application.UseCases.Inventory.StockMovementUseCase>();
+            services.AddScoped<Application.UseCases.Inventory.StockReconciliationUseCase>();
 
             // Use Cases — Finance & Tax
             services.AddScoped<Application.UseCases.Finance.ChartOfAccountUseCase>();
             services.AddScoped<Application.UseCases.Finance.JournalEntryUseCase>();
+            services.AddScoped<Application.UseCases.Finance.AutoJournalEntryUseCase>();
             services.AddScoped<Application.UseCases.Finance.PaymentTermUseCase>();
             services.AddScoped<Application.UseCases.Tax.TaxRateUseCase>();
             services.AddScoped<Application.UseCases.Tax.InvoiceUseCase>();
@@ -96,6 +106,21 @@ namespace Infrastructure
             // Use Cases — Settings
             services.AddScoped<Application.UseCases.Settings.TenantSettingUseCase>();
             services.AddScoped<Application.UseCases.Settings.SystemSettingUseCase>();
+
+            // Use Cases — Import
+            services.AddScoped<Application.UseCases.Import.CsvImportUseCase>();
+
+            // Services
+            services.AddScoped<Application.Interfaces.ICsvParserService, CsvParserService>();
+
+            // Use Cases — Reports
+            services.AddScoped<Application.UseCases.Reports.ReportUseCase>();
+
+            // Use Cases — Export
+            services.AddScoped<Application.UseCases.Export.ExportUseCase>();
+
+            // Use Cases — Notifications
+            services.AddScoped<Application.UseCases.Notifications.NotificationUseCase>();
 
             // Use Cases — Audit
             services.AddScoped<Application.UseCases.Audit.AuditLogUseCase>();

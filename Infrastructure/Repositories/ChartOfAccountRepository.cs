@@ -58,20 +58,17 @@ namespace Infrastructure.Repositories
         public async Task<ChartOfAccount> CreateAsync(ChartOfAccount account)
         {
             _context.ChartOfAccounts.Add(account);
-            await _context.SaveChangesAsync();
             return account;
         }
 
         public async Task UpdateAsync(ChartOfAccount account)
         {
             _context.ChartOfAccounts.Update(account);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(ChartOfAccount account)
         {
             _context.ChartOfAccounts.Remove(account);
-            await _context.SaveChangesAsync();
         }
     }
 }

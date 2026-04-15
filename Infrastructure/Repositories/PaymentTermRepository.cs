@@ -46,20 +46,17 @@ namespace Infrastructure.Repositories
         public async Task<PaymentTerm> CreateAsync(PaymentTerm paymentTerm)
         {
             _context.PaymentTerms.Add(paymentTerm);
-            await _context.SaveChangesAsync();
             return paymentTerm;
         }
 
         public async Task UpdateAsync(PaymentTerm paymentTerm)
         {
             _context.PaymentTerms.Update(paymentTerm);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(PaymentTerm paymentTerm)
         {
             _context.PaymentTerms.Remove(paymentTerm);
-            await _context.SaveChangesAsync();
         }
     }
 }

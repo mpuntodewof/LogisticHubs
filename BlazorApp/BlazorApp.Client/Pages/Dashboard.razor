@@ -1,219 +1,314 @@
 @page "/dashboard"
 @layout AppLayout
+@inject BlazorApp.Client.Services.ApiClient Api
 
-@inject ApiClient Api
-@inject NavigationManager Nav
-@inject AuthService AuthSvc
-
-<PageTitle>Dashboard — NiagaOne</PageTitle>
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="page-desc">Real-time business intelligence overview</p>
+    </div>
+    @if (_data != null)
+    {
+        <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="pulse-dot"></span>
+            <span style="font-size:.7rem;color:var(--text-muted);font-weight:500">LIVE</span>
+        </div>
+    }
+</div>
 
 @if (_loading)
 {
-    <div class="loading-spinner"><div class="spinner"></div> Loading dashboard...</div>
+    <div class="loading-spinner"><div class="spinner"></div> Initializing dashboard...</div>
 }
-else
+else if (_data != null)
 {
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">Dashboard</h1>
-            <div class="page-sub">Welcome back, @_userName</div>
+    @* ── Stock Health KPIs ─────────────────────────────────────────── *@
+    <div class="dash-section-title">Stock Health</div>
+    <div class="dash-grid-4 mb-lg">
+        <div class="glow-card glow-indigo anim-enter anim-d1">
+            <span class="glow-stat-icon">&#128230;</span>
+            <div class="glow-stat-label">Total SKUs</div>
+            <div class="glow-stat-value">@_data.StockHealth.TotalSkus.ToString("N0")</div>
+            <div class="sparkline" style="margin-top:.75rem">
+                @for (var i = 0; i < 12; i++)
+                {
+                    var h = _sparkHeights1[i];
+                    var delay = (i * 0.05).ToString("F2");
+                    <div class="spark-bar" style="@($"height:{h}px;animation-delay:{delay}s")"></div>
+                }
+            </div>
+        </div>
+        <div class="glow-card glow-cyan anim-enter anim-d2">
+            <span class="glow-stat-icon">&#128230;</span>
+            <div class="glow-stat-label">Units in Stock</div>
+            <div class="glow-stat-value">@_data.StockHealth.TotalUnitsInStock.ToString("N0")</div>
+            <div class="sparkline" style="margin-top:.75rem">
+                @for (var i = 0; i < 12; i++)
+                {
+                    var h = _sparkHeights2[i];
+                    var delay = (i * 0.05).ToString("F2");
+                    <div class="spark-bar" style="@($"height:{h}px;animation-delay:{delay}s;background:linear-gradient(180deg,var(--accent),rgba(6,182,212,.3))")"></div>
+                }
+            </div>
+        </div>
+        <div class="glow-card glow-amber anim-enter anim-d3">
+            <span class="glow-stat-icon">&#9888;</span>
+            <div class="glow-stat-label">Low Stock</div>
+            <div class="glow-stat-value">@_data.StockHealth.LowStockCount</div>
+            @if (_data.StockHealth.LowStockCount > 0)
+            {
+                <div class="glow-stat-trend trend-down">Needs attention</div>
+            }
+            else
+            {
+                <div class="glow-stat-trend trend-up">All healthy</div>
+            }
+        </div>
+        <div class="glow-card glow-rose anim-enter anim-d4">
+            <span class="glow-stat-icon">&#10060;</span>
+            <div class="glow-stat-label">Out of Stock</div>
+            <div class="glow-stat-value">@_data.StockHealth.OutOfStockCount</div>
+            @if (_data.StockHealth.OutOfStockCount > 0)
+            {
+                <div class="glow-stat-trend trend-down">Critical</div>
+            }
+            else
+            {
+                <div class="glow-stat-trend trend-up">Fully stocked</div>
+            }
         </div>
     </div>
 
-    @* ── Overview Stats ── *@
-    <div class="stat-grid">
-        <div class="stat-card">
-            <div class="stat-icon blue">&#128176;</div>
-            <div>
-                <div class="stat-value">@_totalOrders</div>
-                <div class="stat-label">Sales Orders</div>
+    @* ── Sales + Finance side by side ─────────────────────────────── *@
+    <div class="dash-grid-2 mb-lg">
+        <div class="glow-card glow-indigo anim-enter anim-d5">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Sales This Month</h3>
+                <span style="font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Performance</span>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon green">&#128722;</div>
-            <div>
-                <div class="stat-value">@_totalProducts</div>
-                <div class="stat-label">Products</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon cyan">&#128101;</div>
-            <div>
-                <div class="stat-value">@_totalCustomers</div>
-                <div class="stat-label">Customers</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon yellow">&#128666;</div>
-            <div>
-                <div class="stat-value">@_totalShipments</div>
-                <div class="stat-label">Shipments</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon blue">&#128203;</div>
-            <div>
-                <div class="stat-value">@_totalPurchaseOrders</div>
-                <div class="stat-label">Purchase Orders</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon green">&#128196;</div>
-            <div>
-                <div class="stat-value">@_totalInvoices</div>
-                <div class="stat-label">Invoices</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon cyan">&#128119;</div>
-            <div>
-                <div class="stat-value">@_totalEmployees</div>
-                <div class="stat-label">Employees</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon yellow">&#127873;</div>
-            <div>
-                <div class="stat-value">@_totalPromotions</div>
-                <div class="stat-label">Active Promotions</div>
-            </div>
-        </div>
-    </div>
-
-    @* ── Quick Links ── *@
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
-        @* Recent Orders *@
-        <div class="card">
-            <div class="card-header-custom">
-                <span class="card-title-custom">Recent Sales Orders</span>
-                <a href="/sales-orders" class="btn-outline">View all</a>
-            </div>
-            <div class="table-wrapper">
-                <table class="lh-table">
-                    <thead>
-                        <tr><th>Order #</th><th>Customer</th><th>Status</th><th>Total</th></tr>
-                    </thead>
-                    <tbody>
-                        @if (!_recentOrders.Any())
-                        {
-                            <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128176;</div><div class="empty-state-text">No orders yet</div></div></td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var o in _recentOrders)
-                            {
-                                <tr>
-                                    <td><strong>@o.OrderNumber</strong></td>
-                                    <td>@(o.CustomerName ?? "Walk-in")</td>
-                                    <td><span class="badge-status @GetStatusClass(o.Status)">@o.Status</span></td>
-                                    <td>@($"Rp {o.GrandTotal:N0}")</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        @* Recent Shipments *@
-        <div class="card">
-            <div class="card-header-custom">
-                <span class="card-title-custom">Recent Shipments</span>
-                <a href="/shipments" class="btn-outline">View all</a>
-            </div>
-            <div class="table-wrapper">
-                <table class="lh-table">
-                    <thead>
-                        <tr><th>Tracking No.</th><th>Destination</th><th>Status</th><th>Created</th></tr>
-                    </thead>
-                    <tbody>
-                        @if (!_recentShipments.Any())
-                        {
-                            <tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">&#128666;</div><div class="empty-state-text">No shipments yet</div></div></td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var s in _recentShipments)
-                            {
-                                <tr style="cursor:pointer" @onclick="@(() => Nav.NavigateTo($"/shipments/{s.Id}"))">
-                                    <td><strong>@s.TrackingNumber</strong></td>
-                                    <td>@s.DestinationAddress</td>
-                                    <td><span class="badge-status @GetStatusClass(s.Status)">@s.Status</span></td>
-                                    <td>@s.CreatedAt.ToString("MMM d, yyyy")</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    @* ── Notifications ── *@
-    @if (_unreadNotifications > 0)
-    {
-        <div class="card" style="border-left:4px solid #3B82F6">
-            <div class="card-body-custom" style="display:flex;align-items:center;gap:1rem">
-                <span style="font-size:1.5rem">&#128276;</span>
+            <div class="dash-grid-2" style="gap:.75rem;margin-bottom:1.25rem">
                 <div>
-                    <strong>You have @_unreadNotifications unread notification@(_unreadNotifications > 1 ? "s" : "")</strong>
-                    <div style="color:#64748B;font-size:.875rem">Check your notifications to stay up to date</div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Units Sold</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#818CF8">@_data.SalesPerformance.ThisMonthUnitsSold.ToString("N0")</div>
                 </div>
-                <a href="/notifications" class="btn-primary-custom" style="margin-left:auto">View</a>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Revenue</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#22D3EE">Rp @_data.SalesPerformance.ThisMonthRevenue.ToString("N0")</div>
+                </div>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Sold Today</div>
+                    <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">@_data.SalesPerformance.TodayUnitsSold</div>
+                </div>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Orders</div>
+                    <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">@_data.SalesPerformance.ThisMonthOrderCount</div>
+                </div>
             </div>
+            <div class="bar-chart" style="height:80px">
+                @for (var i = 0; i < _salesBars.Length; i++)
+                {
+                    var barHeight = _salesBars[i];
+                    var delay = (i * 0.08).ToString("F2");
+                    var label = _dayLabels[i];
+                    <div class="bar-col">
+                        <div class="bar bar-primary" style="@($"height:{barHeight}%;animation-delay:{delay}s")"></div>
+                        <div class="bar-label">@label</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="glow-card glow-emerald anim-enter anim-d6">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Finance Overview</h3>
+                <span style="font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">This Month</span>
+            </div>
+            <div class="dash-grid-2" style="gap:.75rem;margin-bottom:1.25rem">
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Revenue</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#34D399">Rp @_data.Finance.MonthlyRevenue.ToString("N0")</div>
+                </div>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Expenses</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#FB7185">Rp @_data.Finance.MonthlyExpenses.ToString("N0")</div>
+                </div>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Outstanding</div>
+                    <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">@_data.Finance.OutstandingInvoices</div>
+                </div>
+                <div>
+                    <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem">Overdue</div>
+                    <div style="font-size:1.25rem;font-weight:700;color:@(_data.Finance.OverdueInvoices > 0 ? "#FB7185" : "var(--text-primary)")">@_data.Finance.OverdueInvoices</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1.5rem">
+                <div class="donut-chart" style="width:100px;height:100px">
+                    @{
+                        var total = _data.Finance.MonthlyRevenue + _data.Finance.MonthlyExpenses;
+                        var revPct = total > 0 ? (double)_data.Finance.MonthlyRevenue / (double)total * 100.0 : 50.0;
+                        var circ = 339.292;
+                        var revDash = circ.ToString("F3");
+                        var revOff = (circ - (circ * revPct / 100.0)).ToString("F3");
+                        var expOff = (circ - (circ * (100.0 - revPct) / 100.0)).ToString("F3");
+                        var rotDeg = (revPct * 3.6).ToString("F1");
+                        var revPctDisplay = revPct.ToString("F0");
+                    }
+                    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(148,163,184,0.08)" stroke-width="8"></circle>
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="#34D399" stroke-width="8"
+                                stroke-dasharray="@revDash" stroke-dashoffset="@revOff"
+                                stroke-linecap="round"
+                                style="@($"transform:rotate(-90deg);transform-origin:60px 60px")"></circle>
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="#FB7185" stroke-width="8"
+                                stroke-dasharray="@revDash" stroke-dashoffset="@expOff"
+                                stroke-linecap="round"
+                                style="@($"transform:rotate({rotDeg}deg);transform-origin:60px 60px")"></circle>
+                    </svg>
+                    <div class="donut-center">
+                        <div class="donut-center-value" style="font-size:1rem">@(revPctDisplay)%</div>
+                        <div class="donut-center-label">Rev</div>
+                    </div>
+                </div>
+                <div class="chart-legend" style="flex-direction:column;margin-top:0">
+                    <div class="legend-item"><div class="legend-dot" style="background:#34D399"></div> Revenue</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#FB7185"></div> Expenses</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Top Products + Low Stock ─────────────────────────────────── *@
+    <div class="dash-grid-2 mb-lg">
+        <div class="glow-card glow-violet anim-enter anim-d7">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Top Products</h3>
+                <span style="font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">This Month</span>
+            </div>
+            @if (_data.TopProducts.Count == 0)
+            {
+                <div class="empty-state" style="padding:2rem 1rem"><div class="empty-state-text">No sales data yet</div></div>
+            }
+            else
+            {
+                var topItems = _data.TopProducts.Take(5).ToList();
+                var maxRev = topItems.Max(p => p.Revenue);
+                foreach (var p in topItems)
+                {
+                    var pct = maxRev > 0 ? ((double)p.Revenue / (double)maxRev * 100.0).ToString("F0") : "0";
+                    <div class="channel-row">
+                        <div class="channel-name">
+                            <div style="font-weight:600;font-size:.8rem;color:var(--text-primary)">@p.Sku</div>
+                            <div style="font-size:.65rem;color:var(--text-muted)">@p.ProductName</div>
+                        </div>
+                        <div class="channel-bar-wrap">
+                            <div class="progress-track">
+                                <div class="progress-fill fill-indigo" style="@($"width:{pct}%")"></div>
+                            </div>
+                        </div>
+                        <div class="channel-value" style="color:#A78BFA">Rp @p.Revenue.ToString("N0")</div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="glow-card glow-amber anim-enter anim-d8">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Low Stock Alerts</h3>
+                @if (_data.LowStockAlerts.Count > 0)
+                {
+                    <span style="background:rgba(245,158,11,.15);color:#FBBF24;font-size:.6rem;font-weight:700;padding:.2rem .6rem;border-radius:999px">@_data.LowStockAlerts.Count ITEMS</span>
+                }
+            </div>
+            @if (_data.LowStockAlerts.Count == 0)
+            {
+                <div class="empty-state" style="padding:2rem 1rem">
+                    <div class="empty-state-text">All stock levels healthy</div>
+                </div>
+            }
+            else
+            {
+                <table class="lh-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Warehouse</th>
+                            <th style="text-align:right">On Hand</th>
+                            <th style="text-align:right">Reorder</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in _data.LowStockAlerts.Take(6))
+                        {
+                            var alertColor = a.QuantityOnHand == 0 ? "#FB7185" : "#FBBF24";
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;color:var(--text-primary)">@a.Sku</div>
+                                    <div style="font-size:.65rem;color:var(--text-muted)">@a.ProductName</div>
+                                </td>
+                                <td style="font-size:.8rem">@a.WarehouseName</td>
+                                <td style="text-align:right;font-weight:700;color:@alertColor">@a.QuantityOnHand</td>
+                                <td style="text-align:right;color:var(--text-muted)">@(a.ReorderPoint ?? 0)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    @* ── Recent Imports ───────────────────────────────────────────── *@
+    @if (_data.RecentImports.Count > 0)
+    {
+        <div class="glow-card glow-cyan anim-enter anim-d8">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <h3 style="font-size:.9rem;font-weight:700;margin:0;color:var(--text-primary)">Recent Imports</h3>
+                <span style="font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Activity Log</span>
+            </div>
+            <table class="lh-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Channel</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Rows</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var imp in _data.RecentImports)
+                    {
+                        <tr>
+                            <td style="font-weight:500;color:var(--text-primary)">@imp.FileName</td>
+                            <td>@imp.ChannelName</td>
+                            <td><span class="badge-status @(imp.Status == "Completed" ? "badge-success" : "badge-warning")">@imp.Status</span></td>
+                            <td style="text-align:right;font-weight:500">@imp.SuccessRows / @imp.TotalRows</td>
+                            <td style="color:var(--text-muted)">@imp.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
 }
 
 @code {
     private bool _loading = true;
-    private string _userName = "User";
-    private int _totalOrders, _totalProducts, _totalCustomers, _totalShipments;
-    private int _totalPurchaseOrders, _totalInvoices, _totalEmployees, _totalPromotions;
-    private int _unreadNotifications;
-    private List<SalesOrderDto> _recentOrders = new();
-    private List<ShipmentDto> _recentShipments = new();
+    private BlazorApp.Client.Models.DashboardSummary? _data;
+
+    private readonly int[] _sparkHeights1 = { 18, 12, 24, 8, 20, 14, 26, 10, 22, 16, 28, 6 };
+    private readonly int[] _sparkHeights2 = { 10, 22, 14, 28, 8, 20, 16, 24, 12, 26, 18, 6 };
+    private readonly int[] _salesBars = { 45, 62, 78, 55, 88, 72, 95 };
+    private readonly string[] _dayLabels = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
     protected override async Task OnInitializedAsync()
     {
-        var user = await AuthSvc.GetCurrentUserAsync();
-        _userName = user?.Name ?? "User";
-
-        // Load all stats in parallel, catching permission errors gracefully
-        var tasks = new List<Task>();
-
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetSalesOrdersAsync(1, 5); if (r.Success && r.Data != null) { _totalOrders = r.Data.TotalCount; _recentOrders = r.Data.Items; } } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetProductsAsync(1, 1); if (r.Success && r.Data != null) _totalProducts = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetCustomersAsync(1, 1); if (r.Success && r.Data != null) _totalCustomers = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetShipmentsAsync(); if (r.Success && r.Data != null) { _totalShipments = r.Data.Count; _recentShipments = r.Data.Take(5).ToList(); } } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetPurchaseOrdersAsync(1, 1); if (r.Success && r.Data != null) _totalPurchaseOrders = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetInvoicesAsync(1, 1); if (r.Success && r.Data != null) _totalInvoices = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetEmployeesAsync(1, 1); if (r.Success && r.Data != null) _totalEmployees = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetPromotionsAsync(1, 1); if (r.Success && r.Data != null) _totalPromotions = r.Data.TotalCount; } catch { }
-        }));
-        tasks.Add(Task.Run(async () => {
-            try { var r = await Api.GetUnreadCountAsync(); if (r.Success) _unreadNotifications = r.Data; } catch { }
-        }));
-
-        await Task.WhenAll(tasks);
+        try
+        {
+            var result = await Api.GetDashboardSummaryAsync();
+            if (result.Success && result.Data != null)
+                _data = result.Data;
+        }
+        catch { }
         _loading = false;
     }
-
-    private static string GetStatusClass(string status) =>
-        "status-" + status.ToLower().Replace(" ", "");
 }

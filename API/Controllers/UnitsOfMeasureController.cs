@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.UnitsOfMeasure;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/units-of-measure")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/units-of-measure")]
     [Authorize]
     public class UnitsOfMeasureController : ControllerBase
     {

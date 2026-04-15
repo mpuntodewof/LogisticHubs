@@ -9,10 +9,12 @@ namespace Application.UseCases.Finance
     public class ChartOfAccountUseCase
     {
         private readonly IChartOfAccountRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ChartOfAccountUseCase(IChartOfAccountRepository repository)
+        public ChartOfAccountUseCase(IChartOfAccountRepository repository, IUnitOfWork unitOfWork)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -75,6 +77,7 @@ namespace Application.UseCases.Finance
             };
 
             var created = await _repository.CreateAsync(account);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -92,6 +95,7 @@ namespace Application.UseCases.Finance
             if (request.IsActive.HasValue) account.IsActive = request.IsActive.Value;
 
             await _repository.UpdateAsync(account);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -108,6 +112,7 @@ namespace Application.UseCases.Finance
                 throw new InvalidOperationException("Cannot delete an account that has posted journal entries.");
 
             await _repository.DeleteAsync(account);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

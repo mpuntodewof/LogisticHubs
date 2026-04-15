@@ -1,0 +1,15 @@
+**/.vs
+**/bin
+**/obj
+**/node_modules
+**/.git
+**/.idea
+**/Thumbs.db
+**/.DS_Store
+*.md
+docs/
+Tests/
+BlazorApp/
+*.env
+appsettings.Development.json
+appsettings.Local.json

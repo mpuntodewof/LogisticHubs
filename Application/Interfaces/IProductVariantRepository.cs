@@ -8,6 +8,7 @@ namespace Application.Interfaces
         Task<PagedResult<ProductVariant>> GetPagedAsync(PagedRequest request, Guid? productId = null);
         Task<IEnumerable<ProductVariant>> GetByProductIdAsync(Guid productId);
         Task<ProductVariant?> GetByIdAsync(Guid id);
+        Task<ProductVariant?> GetBySkuAsync(string sku);
         Task<bool> SkuExistsAsync(string sku);
         Task<bool> BarcodeExistsAsync(string barcode);
         Task<ProductVariant> CreateAsync(ProductVariant variant);

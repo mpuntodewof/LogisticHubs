@@ -8,10 +8,12 @@ namespace Application.UseCases.Finance
     public class PaymentTermUseCase
     {
         private readonly IPaymentTermRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PaymentTermUseCase(IPaymentTermRepository repository)
+        public PaymentTermUseCase(IPaymentTermRepository repository, IUnitOfWork unitOfWork)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -53,6 +55,7 @@ namespace Application.UseCases.Finance
             };
 
             var created = await _repository.CreateAsync(term);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -69,6 +72,7 @@ namespace Application.UseCases.Finance
             if (request.IsActive.HasValue) term.IsActive = request.IsActive.Value;
 
             await _repository.UpdateAsync(term);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -79,6 +83,7 @@ namespace Application.UseCases.Finance
                 ?? throw new KeyNotFoundException($"Payment term {id} not found.");
 
             await _repository.DeleteAsync(term);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

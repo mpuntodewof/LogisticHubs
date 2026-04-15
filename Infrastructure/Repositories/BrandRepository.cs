@@ -47,20 +47,17 @@ namespace Infrastructure.Repositories
         public async Task<Brand> CreateAsync(Brand brand)
         {
             _context.Brands.Add(brand);
-            await _context.SaveChangesAsync();
             return brand;
         }
 
         public async Task UpdateAsync(Brand brand)
         {
             _context.Brands.Update(brand);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Brand brand)
         {
             _context.Brands.Remove(brand);
-            await _context.SaveChangesAsync();
         }
     }
 }

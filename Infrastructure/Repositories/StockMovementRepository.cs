@@ -54,7 +54,6 @@ namespace Infrastructure.Repositories
         public async Task<StockMovement> CreateAsync(StockMovement movement)
         {
             _context.Set<StockMovement>().Add(movement);
-            await _context.SaveChangesAsync();
             return movement;
         }
     }

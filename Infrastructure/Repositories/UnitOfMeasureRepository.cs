@@ -51,20 +51,17 @@ namespace Infrastructure.Repositories
         public async Task<UnitOfMeasure> CreateAsync(UnitOfMeasure unit)
         {
             _context.UnitsOfMeasure.Add(unit);
-            await _context.SaveChangesAsync();
             return unit;
         }
 
         public async Task UpdateAsync(UnitOfMeasure unit)
         {
             _context.UnitsOfMeasure.Update(unit);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(UnitOfMeasure unit)
         {
             _context.UnitsOfMeasure.Remove(unit);
-            await _context.SaveChangesAsync();
         }
     }
 }

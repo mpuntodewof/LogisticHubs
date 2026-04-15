@@ -26,14 +26,12 @@ namespace Infrastructure.Repositories
         public async Task<ProductImage> CreateAsync(ProductImage image)
         {
             _context.ProductImages.Add(image);
-            await _context.SaveChangesAsync();
             return image;
         }
 
         public async Task DeleteAsync(ProductImage image)
         {
             _context.ProductImages.Remove(image);
-            await _context.SaveChangesAsync();
         }
     }
 }

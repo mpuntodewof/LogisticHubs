@@ -66,20 +66,17 @@ namespace Infrastructure.Repositories
         public async Task<Invoice> CreateAsync(Invoice invoice)
         {
             _context.Invoices.Add(invoice);
-            await _context.SaveChangesAsync();
             return invoice;
         }
 
         public async Task UpdateAsync(Invoice invoice)
         {
             _context.Invoices.Update(invoice);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Invoice invoice)
         {
             _context.Invoices.Remove(invoice);
-            await _context.SaveChangesAsync();
         }
     }
 }

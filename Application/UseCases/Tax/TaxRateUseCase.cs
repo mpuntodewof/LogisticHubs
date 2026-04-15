@@ -8,10 +8,12 @@ namespace Application.UseCases.Tax
     public class TaxRateUseCase
     {
         private readonly ITaxRateRepository _taxRateRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TaxRateUseCase(ITaxRateRepository taxRateRepository)
+        public TaxRateUseCase(ITaxRateRepository taxRateRepository, IUnitOfWork unitOfWork)
         {
             _taxRateRepository = taxRateRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<TaxRateDto>> GetPagedAsync(PagedRequest request)
@@ -53,6 +55,7 @@ namespace Application.UseCases.Tax
             };
 
             var created = await _taxRateRepository.CreateAsync(taxRate);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -70,6 +73,7 @@ namespace Application.UseCases.Tax
             taxRate.UpdatedAt = DateTime.UtcNow;
 
             await _taxRateRepository.UpdateAsync(taxRate);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -78,6 +82,7 @@ namespace Application.UseCases.Tax
                 ?? throw new InvalidOperationException("Tax rate not found.");
 
             await _taxRateRepository.DeleteAsync(taxRate);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task AssignToProductAsync(Guid taxRateId, Guid productId)
@@ -86,6 +91,7 @@ namespace Application.UseCases.Tax
                 ?? throw new InvalidOperationException("Tax rate not found.");
 
             await _taxRateRepository.AssignToProductAsync(productId, taxRateId, taxRate.TenantId);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task RemoveFromProductAsync(Guid taxRateId, Guid productId)
@@ -94,6 +100,7 @@ namespace Application.UseCases.Tax
                 ?? throw new InvalidOperationException("Tax rate not found.");
 
             await _taxRateRepository.RemoveFromProductAsync(productId, taxRateId);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<TaxRateDto>> GetByProductIdAsync(Guid productId)

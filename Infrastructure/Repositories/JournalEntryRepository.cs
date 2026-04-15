@@ -58,20 +58,17 @@ namespace Infrastructure.Repositories
         public async Task<JournalEntry> CreateAsync(JournalEntry entry)
         {
             _context.JournalEntries.Add(entry);
-            await _context.SaveChangesAsync();
             return entry;
         }
 
         public async Task UpdateAsync(JournalEntry entry)
         {
             _context.JournalEntries.Update(entry);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(JournalEntry entry)
         {
             _context.JournalEntries.Remove(entry);
-            await _context.SaveChangesAsync();
         }
     }
 }

@@ -8,11 +8,13 @@ namespace Application.UseCases.Users
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuthRepository _authRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserUseCase(IUserRepository userRepository, IAuthRepository authRepository)
+        public UserUseCase(IUserRepository userRepository, IAuthRepository authRepository, IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _authRepository = authRepository;
+            _unitOfWork = unitOfWork;
         }
 
         // ── Get ──────────────────────────────────────────────────────────────────
@@ -95,6 +97,7 @@ namespace Application.UseCases.Users
             if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
 
             await _userRepository.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Delete ───────────────────────────────────────────────────────────────
@@ -105,6 +108,7 @@ namespace Application.UseCases.Users
                 ?? throw new KeyNotFoundException($"User {id} not found.");
 
             await _userRepository.DeleteAsync(user);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         // ── Roles ────────────────────────────────────────────────────────────────
@@ -121,6 +125,7 @@ namespace Application.UseCases.Users
                 throw new InvalidOperationException($"User already has role '{role.Name}'.");
 
             await _userRepository.AssignRoleAsync(userId, roleId, assignedBy);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task RevokeRoleAsync(Guid userId, Guid roleId)
@@ -132,6 +137,7 @@ namespace Application.UseCases.Users
                 throw new InvalidOperationException("User does not have this role.");
 
             await _userRepository.RevokeRoleAsync(userId, roleId);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

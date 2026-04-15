@@ -49,6 +49,11 @@ namespace Infrastructure.Repositories
                 .OrderBy(v => v.Name)
                 .ToListAsync();
 
+        public async Task<ProductVariant?> GetBySkuAsync(string sku)
+            => await _context.Set<ProductVariant>()
+                .Include(v => v.Product)
+                .FirstOrDefaultAsync(v => v.Sku == sku);
+
         public async Task<ProductVariant?> GetByIdAsync(Guid id)
             => await _context.Set<ProductVariant>()
                 .Include(v => v.Product)
@@ -63,20 +68,17 @@ namespace Infrastructure.Repositories
         public async Task<ProductVariant> CreateAsync(ProductVariant variant)
         {
             _context.Set<ProductVariant>().Add(variant);
-            await _context.SaveChangesAsync();
             return variant;
         }
 
         public async Task UpdateAsync(ProductVariant variant)
         {
             _context.Set<ProductVariant>().Update(variant);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(ProductVariant variant)
         {
             _context.Set<ProductVariant>().Remove(variant);
-            await _context.SaveChangesAsync();
         }
     }
 }

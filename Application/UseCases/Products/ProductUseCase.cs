@@ -9,10 +9,12 @@ namespace Application.UseCases.Products
     public class ProductUseCase
     {
         private readonly IProductRepository _productRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ProductUseCase(IProductRepository productRepository)
+        public ProductUseCase(IProductRepository productRepository, IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<ProductDto>> GetPagedAsync(PagedRequest request)
@@ -56,6 +58,7 @@ namespace Application.UseCases.Products
             };
 
             var created = await _productRepository.CreateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
             return MapToDto(created);
         }
 
@@ -80,6 +83,7 @@ namespace Application.UseCases.Products
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -88,6 +92,7 @@ namespace Application.UseCases.Products
                 ?? throw new InvalidOperationException("Product not found.");
 
             await _productRepository.DeleteAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static ProductDto MapToDto(Product p) => new()

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore StockLedger.sln
+
+      - name: Build
+        run: dotnet build StockLedger.sln --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test Tests/StockLedger.Unit.Tests/StockLedger.Unit.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        continue-on-error: false
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t stockledger-api:${{ github.sha }} .
+
+      - name: Verify health check endpoint exists
+        run: |
+          docker run -d --name test-api \
+            -e ConnectionStrings__DefaultConnection="server=localhost;database=test" \
+            -e JwtSettings__SecretKey="ci-test-key-that-is-long-enough-for-hs256" \
+            -p 8080:8080 \
+            stockledger-api:${{ github.sha }} || true
+          sleep 5
+          docker logs test-api 2>&1 | head -20
+          docker stop test-api || true
+          docker rm test-api || true

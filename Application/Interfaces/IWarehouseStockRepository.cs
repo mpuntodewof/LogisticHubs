@@ -11,5 +11,6 @@ namespace Application.Interfaces
         Task<IEnumerable<WarehouseStock>> GetLowStockAsync(Guid? warehouseId = null);
         Task<WarehouseStock> CreateAsync(WarehouseStock stock);
         Task UpdateAsync(WarehouseStock stock);
+        Task ReloadAsync(WarehouseStock stock);
     }
 }

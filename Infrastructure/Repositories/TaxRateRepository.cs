@@ -60,20 +60,17 @@ namespace Infrastructure.Repositories
         public async Task<TaxRate> CreateAsync(TaxRate taxRate)
         {
             _context.TaxRates.Add(taxRate);
-            await _context.SaveChangesAsync();
             return taxRate;
         }
 
         public async Task UpdateAsync(TaxRate taxRate)
         {
             _context.TaxRates.Update(taxRate);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(TaxRate taxRate)
         {
             _context.TaxRates.Remove(taxRate);
-            await _context.SaveChangesAsync();
         }
 
         public async Task AssignToProductAsync(Guid productId, Guid taxRateId, Guid tenantId)
@@ -86,7 +83,6 @@ namespace Infrastructure.Repositories
             };
 
             _context.ProductTaxRates.Add(productTaxRate);
-            await _context.SaveChangesAsync();
         }
 
         public async Task RemoveFromProductAsync(Guid productId, Guid taxRateId)
@@ -97,7 +93,6 @@ namespace Infrastructure.Repositories
             if (productTaxRate != null)
             {
                 _context.ProductTaxRates.Remove(productTaxRate);
-                await _context.SaveChangesAsync();
             }
         }
 

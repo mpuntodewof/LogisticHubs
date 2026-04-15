@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Common;
 using Application.DTOs.Inventory;
@@ -8,15 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/warehouse-stock")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/warehouse-stock")]
     [Authorize]
     public class WarehouseStockController : ControllerBase
     {
         private readonly WarehouseStockUseCase _warehouseStockUseCase;
+        private readonly StockReconciliationUseCase _reconciliationUseCase;
 
-        public WarehouseStockController(WarehouseStockUseCase warehouseStockUseCase)
+        public WarehouseStockController(
+            WarehouseStockUseCase warehouseStockUseCase,
+            StockReconciliationUseCase reconciliationUseCase)
         {
             _warehouseStockUseCase = warehouseStockUseCase;
+            _reconciliationUseCase = reconciliationUseCase;
         }
 
         /// <summary>Get all warehouse stock (paginated, optionally filtered).</summary>
@@ -55,6 +61,15 @@ namespace API.Controllers
             {
                 return Conflict(new { error = ex.Message });
             }
+        }
+
+        /// <summary>Reconcile stock with physical counts.</summary>
+        [HttpPost("reconcile")]
+        [RequirePermission("inventory.update")]
+        public async Task<ActionResult<StockReconciliationResult>> Reconcile([FromBody] StockReconciliationRequest request)
+        {
+            var result = await _reconciliationUseCase.ReconcileAsync(request);
+            return Ok(result);
         }
     }
 }

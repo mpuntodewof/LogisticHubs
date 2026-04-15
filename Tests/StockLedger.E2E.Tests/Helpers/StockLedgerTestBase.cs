@@ -13,6 +13,7 @@ public abstract class StockLedgerTestBase
         BaseAddress = new Uri("http://localhost:5164")
     };
 
+    protected const string V1 = "/api/v1";
     protected const string DefaultTenantId = "00000000-0000-0000-0000-000000000001";
 
     protected static readonly JsonSerializerOptions JsonOptions = new()
@@ -23,7 +24,7 @@ public abstract class StockLedgerTestBase
 
     protected static async Task<string> LoginAsync(string email, string password)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{V1}/auth/login")
         {
             Content = JsonContent.Create(new { email, password }, options: JsonOptions)
         };

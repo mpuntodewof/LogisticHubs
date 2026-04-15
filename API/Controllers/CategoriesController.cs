@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using API.Filters;
 using Application.DTOs.Categories;
 using Application.DTOs.Common;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/categories")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/categories")]
     [Authorize]
     public class CategoriesController : ControllerBase
     {

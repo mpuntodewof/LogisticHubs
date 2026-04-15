@@ -46,6 +46,21 @@ namespace Application.DTOs.Inventory
         public string? Notes { get; set; }
     }
 
+    public class RecordManualSaleRequest
+    {
+        [Required]
+        public Guid WarehouseId { get; set; }
+        [Required]
+        public Guid ProductVariantId { get; set; }
+        [Required]
+        [Range(1, int.MaxValue)]
+        public int Quantity { get; set; }
+        [MaxLength(100)]
+        public string? ReceiptNumber { get; set; }
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+    }
+
     public class CreateStockTransferRequest
     {
         public Guid SourceWarehouseId { get; set; }

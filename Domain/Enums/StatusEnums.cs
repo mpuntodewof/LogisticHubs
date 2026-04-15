@@ -103,4 +103,23 @@ namespace Domain.Enums
     {
         Trace, Debug, Information, Warning, Error, Critical
     }
+
+    // CSV Import
+    public enum ImportBatchStatus
+    {
+        Pending,
+        Processing,
+        Completed,
+        CompletedWithErrors,
+        Failed
+    }
+
+    public enum ImportRowStatus
+    {
+        Matched,
+        Unmatched,
+        Skipped,
+        Error,
+        Duplicate
+    }
 }

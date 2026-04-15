@@ -64,20 +64,17 @@ namespace Infrastructure.Repositories
         public async Task<Role> CreateAsync(Role role)
         {
             _context.Roles.Add(role);
-            await _context.SaveChangesAsync();
             return role;
         }
 
         public async Task UpdateAsync(Role role)
         {
             _context.Roles.Update(role);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Role role)
         {
             _context.Roles.Remove(role);
-            await _context.SaveChangesAsync();
         }
 
         public async Task SetRolePermissionsAsync(Guid roleId, List<Guid> permissionIds)
@@ -97,7 +94,6 @@ namespace Infrastructure.Repositories
                 });
             }
 
-            await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Permission>> GetAllPermissionsAsync()

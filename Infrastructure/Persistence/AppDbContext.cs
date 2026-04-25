@@ -75,6 +75,29 @@ namespace Infrastructure.Persistence
         public DbSet<CsvImportBatch> CsvImportBatches => Set<CsvImportBatch>();
         public DbSet<CsvImportRow> CsvImportRows => Set<CsvImportRow>();
 
+        // ── Multi-tenant query filter convention ──────────────────────────────────
+        // Every entity implementing ITenantScoped MUST call HasQueryFilter using
+        // one of these two shapes:
+        //
+        //   Soft-delete entity:
+        //     entity.HasQueryFilter(e => !e.IsDeleted &&
+        //         (_tenantContext == null || _tenantContext.TenantId == null
+        //          || e.TenantId == _tenantContext.TenantId));
+        //
+        //   Non-soft-delete entity:
+        //     entity.HasQueryFilter(e =>
+        //         _tenantContext == null || _tenantContext.TenantId == null
+        //         || e.TenantId == _tenantContext.TenantId);
+        //
+        // The "_tenantContext == null" branch keeps EF design-time tooling
+        // (migrations, model snapshot) and unauthenticated endpoints (login,
+        // register) functional. Authenticated endpoints always populate
+        // ITenantContext via TenantResolutionMiddleware before a query runs.
+        //
+        // Coverage is enforced by TenantQueryFilterCoverageTests in the unit
+        // test project — adding a new ITenantScoped entity without a filter
+        // will fail CI.
+        // ──────────────────────────────────────────────────────────────────────────
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

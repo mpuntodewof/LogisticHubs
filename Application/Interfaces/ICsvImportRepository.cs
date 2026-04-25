@@ -20,6 +20,7 @@ namespace Application.Interfaces
         Task<CsvImportBatch?> GetDetailByIdAsync(Guid id);
         Task<CsvImportBatch> CreateAsync(CsvImportBatch batch);
         Task UpdateAsync(CsvImportBatch batch);
+        Task DeleteAsync(CsvImportBatch batch);
         Task<bool> OrderNumberExistsForChannel(Guid salesChannelId, string orderNumber);
     }
 }

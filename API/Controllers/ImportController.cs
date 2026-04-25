@@ -39,6 +39,21 @@ namespace API.Controllers
             return CreatedAtAction(null, null, channel);
         }
 
+        [HttpPut("channels/{id:guid}")]
+        [RequirePermission("inventory.update")]
+        public async Task<ActionResult<SalesChannelDto>> UpdateChannel(Guid id, [FromBody] UpdateSalesChannelRequest request)
+        {
+            try
+            {
+                var channel = await _importUseCase.UpdateChannelAsync(id, request);
+                return Ok(channel);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+
         // ── CSV Import ───────────────────────────────────────────────────────
 
         [HttpPost("csv/preview")]
@@ -97,6 +112,38 @@ namespace API.Controllers
             return Ok(summary);
         }
 
+        // ── Initial Stock Import ─────────────────────────────────────────────
+
+        [HttpPost("csv/initial-stock")]
+        [RequirePermission("inventory.create")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<ActionResult<InitialStockResultDto>> ProcessInitialStockImport(
+            IFormFile file,
+            [FromForm] Guid warehouseId,
+            [FromForm] string skuColumn,
+            [FromForm] string quantityColumn)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "No file uploaded." });
+
+            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { error = "Only CSV files are accepted." });
+
+            var request = new StartInitialStockRequest
+            {
+                WarehouseId = warehouseId,
+                ColumnMapping = new InitialStockColumnMapping
+                {
+                    SkuColumn = skuColumn,
+                    QuantityColumn = quantityColumn
+                }
+            };
+
+            using var stream = file.OpenReadStream();
+            var result = await _importUseCase.ProcessInitialStockAsync(stream, file.FileName, request);
+            return Ok(result);
+        }
+
         // ── Import History ───────────────────────────────────────────────────
 
         [HttpGet("batches")]
@@ -114,6 +161,25 @@ namespace API.Controllers
             var batch = await _importUseCase.GetBatchDetailAsync(id);
             if (batch == null) return NotFound(new { error = "Import batch not found." });
             return Ok(batch);
+        }
+
+        [HttpDelete("batches/{id:guid}")]
+        [RequirePermission("inventory.update")]
+        public async Task<IActionResult> DeleteBatch(Guid id)
+        {
+            try
+            {
+                await _importUseCase.DeleteBatchAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
         }
     }
 }

@@ -97,8 +97,8 @@ namespace Application.UseCases.Import
             int successCount = 0, failedCount = 0, skippedCount = 0;
             var failedDetails = new List<CsvImportRowDto>();
 
-            await _transactionManager.BeginTransactionAsync();
-            try
+            ImportSummaryDto? summary = null;
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
                 await _importRepository.CreateAsync(batch);
 
@@ -255,9 +255,8 @@ namespace Application.UseCases.Import
                 batch.CompletedAt = DateTime.UtcNow;
 
                 await _unitOfWork.SaveChangesAsync();
-                await _transactionManager.CommitAsync();
 
-                return new ImportSummaryDto
+                summary = new ImportSummaryDto
                 {
                     BatchId = batch.Id,
                     Status = batch.Status,
@@ -268,13 +267,129 @@ namespace Application.UseCases.Import
                     DuplicateRows = skippedCount,
                     FailedRowDetails = failedDetails
                 };
-            }
-            catch
+            });
+
+            return summary!;
+        }
+
+        // ── Initial Stock Import ────────────────────────────────────────────────
+
+        public async Task<InitialStockResultDto> ProcessInitialStockAsync(
+            Stream csvStream, string fileName, StartInitialStockRequest request)
+        {
+            var warehouse = await _warehouseRepository.GetByIdAsync(request.WarehouseId)
+                ?? throw new KeyNotFoundException("Warehouse not found.");
+
+            var rows = await _csvParser.ParseAsync(csvStream);
+            if (rows.Count == 0)
+                throw new InvalidOperationException("CSV file is empty or has no data rows.");
+
+            var mapping = request.ColumnMapping;
+            int successCount = 0, failedCount = 0, skippedCount = 0;
+            var failedDetails = new List<InitialStockRowDto>();
+
+            InitialStockResultDto? result = null;
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
-                await _transactionManager.RollbackAsync();
-                batch.Status = ImportBatchStatus.Failed.ToString();
-                throw;
-            }
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    var row = rows[i];
+                    var rowNumber = i + 1;
+
+                    try
+                    {
+                        var sku = GetMappedValue(row, mapping.SkuColumn);
+                        var quantityStr = GetMappedValue(row, mapping.QuantityColumn);
+
+                        if (string.IsNullOrWhiteSpace(sku))
+                        {
+                            failedCount++;
+                            failedDetails.Add(new InitialStockRowDto { RowNumber = rowNumber, Sku = sku, ErrorMessage = "SKU is empty" });
+                            continue;
+                        }
+
+                        if (!int.TryParse(quantityStr?.Replace(",", "").Replace(".", ""), out var quantity) || quantity < 0)
+                        {
+                            failedCount++;
+                            failedDetails.Add(new InitialStockRowDto { RowNumber = rowNumber, Sku = sku, ErrorMessage = $"Invalid quantity: '{quantityStr}'" });
+                            continue;
+                        }
+
+                        var variant = await _variantRepository.GetBySkuAsync(sku);
+                        if (variant == null)
+                        {
+                            failedCount++;
+                            failedDetails.Add(new InitialStockRowDto { RowNumber = rowNumber, Sku = sku, Quantity = quantity, ErrorMessage = $"No product variant found for SKU: {sku}" });
+                            continue;
+                        }
+
+                        var stock = await _stockRepository.GetByWarehouseAndVariantAsync(warehouse.Id, variant.Id);
+                        if (stock != null && stock.QuantityOnHand > 0)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        var quantityBefore = stock?.QuantityOnHand ?? 0;
+
+                        if (stock == null)
+                        {
+                            stock = new WarehouseStock
+                            {
+                                Id = Guid.NewGuid(),
+                                WarehouseId = warehouse.Id,
+                                ProductVariantId = variant.Id,
+                                QuantityOnHand = quantity,
+                                QuantityReserved = 0,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            await _stockRepository.CreateAsync(stock);
+                        }
+                        else
+                        {
+                            stock.QuantityOnHand = quantity;
+                            await _stockRepository.UpdateAsync(stock);
+                        }
+
+                        var movement = new StockMovement
+                        {
+                            Id = Guid.NewGuid(),
+                            WarehouseId = warehouse.Id,
+                            ProductVariantId = variant.Id,
+                            MovementType = StockMovementType.In.ToString(),
+                            Reason = StockMovementReason.InitialStock.ToString(),
+                            Quantity = quantity,
+                            QuantityBefore = quantityBefore,
+                            QuantityAfter = quantity,
+                            ReferenceDocumentType = "InitialStockImport",
+                            Notes = $"Initial stock from CSV: {fileName}",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _movementRepository.CreateAsync(movement);
+
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        var sku = GetMappedValue(row, mapping.SkuColumn);
+                        failedCount++;
+                        failedDetails.Add(new InitialStockRowDto { RowNumber = rowNumber, Sku = sku, ErrorMessage = ex.Message });
+                    }
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                result = new InitialStockResultDto
+                {
+                    TotalRows = rows.Count,
+                    SuccessRows = successCount,
+                    FailedRows = failedCount,
+                    SkippedRows = skippedCount,
+                    FailedRowDetails = failedDetails
+                };
+            });
+
+            return result!;
         }
 
         // ── Sales Channels ───────────────────────────────────────────────────────
@@ -310,6 +425,42 @@ namespace Application.UseCases.Import
             };
 
             await _channelRepository.CreateAsync(channel);
+            await _unitOfWork.SaveChangesAsync();
+            return MapChannelToDto(channel);
+        }
+
+        public async Task DeleteBatchAsync(Guid id)
+        {
+            var batch = await _importRepository.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Import batch not found.");
+
+            // Safety: only allow deleting Failed batches. Completed batches have
+            // already mutated stock via StockMovement rows that reference this batch
+            // (see ReferenceDocumentId on StockMovement). Deleting a successful
+            // batch would leave orphaned audit trail entries.
+            if (!string.Equals(batch.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Only batches in Failed status can be deleted. Current status: {batch.Status}.");
+
+            await _importRepository.DeleteAsync(batch);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<SalesChannelDto> UpdateChannelAsync(Guid id, UpdateSalesChannelRequest request)
+        {
+            var channel = await _channelRepository.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Sales channel not found.");
+
+            if (request.Name != null)
+            {
+                channel.Name = request.Name;
+                channel.Slug = request.Name.ToLowerInvariant().Replace(" ", "-");
+            }
+            if (request.Description != null) channel.Description = request.Description;
+            if (request.PlatformFeePercent.HasValue) channel.PlatformFeePercent = request.PlatformFeePercent.Value;
+            if (request.IsActive.HasValue) channel.IsActive = request.IsActive.Value;
+
+            await _channelRepository.UpdateAsync(channel);
             await _unitOfWork.SaveChangesAsync();
             return MapChannelToDto(channel);
         }

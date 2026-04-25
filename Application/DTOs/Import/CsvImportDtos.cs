@@ -25,6 +25,19 @@ namespace Application.DTOs.Import
         public decimal PlatformFeePercent { get; set; }
     }
 
+    public class UpdateSalesChannelRequest
+    {
+        [MaxLength(100)]
+        public string? Name { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        public decimal? PlatformFeePercent { get; set; }
+
+        public bool? IsActive { get; set; }
+    }
+
     public class CsvImportBatchDto
     {
         public Guid Id { get; set; }
@@ -102,5 +115,40 @@ namespace Application.DTOs.Import
         public int SkippedRows { get; set; }
         public int DuplicateRows { get; set; }
         public List<CsvImportRowDto> FailedRowDetails { get; set; } = new();
+    }
+
+    // ── Initial Stock Import ────────────────────────────────────────────────
+
+    public class InitialStockColumnMapping
+    {
+        [Required]
+        public string SkuColumn { get; set; } = string.Empty;
+        [Required]
+        public string QuantityColumn { get; set; } = string.Empty;
+    }
+
+    public class StartInitialStockRequest
+    {
+        [Required]
+        public Guid WarehouseId { get; set; }
+        [Required]
+        public InitialStockColumnMapping ColumnMapping { get; set; } = new();
+    }
+
+    public class InitialStockResultDto
+    {
+        public int TotalRows { get; set; }
+        public int SuccessRows { get; set; }
+        public int FailedRows { get; set; }
+        public int SkippedRows { get; set; }
+        public List<InitialStockRowDto> FailedRowDetails { get; set; } = new();
+    }
+
+    public class InitialStockRowDto
+    {
+        public int RowNumber { get; set; }
+        public string? Sku { get; set; }
+        public int Quantity { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 }

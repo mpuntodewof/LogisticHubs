@@ -54,4 +54,23 @@ namespace BlazorApp.Client.Models
         public int FailedRows { get; set; }
         public DateTime CreatedAt { get; set; }
     }
+
+    // ── Initial Stock Import ────────────────────────────────────────────────
+
+    public class InitialStockResultDto
+    {
+        public int TotalRows { get; set; }
+        public int SuccessRows { get; set; }
+        public int FailedRows { get; set; }
+        public int SkippedRows { get; set; }
+        public List<InitialStockRowDto> FailedRowDetails { get; set; } = new();
+    }
+
+    public class InitialStockRowDto
+    {
+        public int RowNumber { get; set; }
+        public string? Sku { get; set; }
+        public int Quantity { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
 }

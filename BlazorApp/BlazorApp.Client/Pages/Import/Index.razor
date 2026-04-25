@@ -4,8 +4,18 @@
 @inject NavigationManager Nav
 
 <div class="page-header">
-    <h1>Import Sales</h1>
-    <p class="page-desc">Upload marketplace CSV files to deduct stock automatically</p>
+    <h1>Import Data</h1>
+    <p class="page-desc">Upload CSV files to import sales or set initial stock quantities</p>
+</div>
+
+@* ── Tab navigation ──────────────────────────────────────────────────── *@
+<div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border)">
+    <button class="@(_activeTab == "sales" ? "tab-active" : "tab-inactive")" @onclick='() => SwitchTab("sales")'>
+        &#128230; Import Sales
+    </button>
+    <button class="@(_activeTab == "stock" ? "tab-active" : "tab-inactive")" @onclick='() => SwitchTab("stock")'>
+        &#128230; Initial Stock
+    </button>
 </div>
 
 @if (!string.IsNullOrEmpty(_error))
@@ -16,28 +26,245 @@
     </div>
 }
 
-@if (_step == 1)
+@* ══════════════════════════════════════════════════════════════════════ *@
+@* ── TAB 1: Import Sales (existing flow) ─────────────────────────────  *@
+@* ══════════════════════════════════════════════════════════════════════ *@
+@if (_activeTab == "sales")
 {
-    <div class="card" style="margin-bottom:1.5rem">
-        <h3 style="margin-bottom:1rem">Step 1: Select Channel & Upload CSV</h3>
+    @if (_step == 1)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Step 1: Select Channel & Upload CSV</h3>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-            <div class="form-group">
-                <label>Sales Channel</label>
-                <select class="form-control-custom" @bind="_selectedChannelId">
-                    <option value="">-- Select Channel --</option>
-                    @if (_channels != null)
-                    {
-                        @foreach (var ch in _channels)
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                <div class="form-group">
+                    <label>Sales Channel</label>
+                    <select class="form-control-custom" @bind="_selectedChannelId">
+                        <option value="">-- Select Channel --</option>
+                        @if (_channels != null)
                         {
-                            <option value="@ch.Id">@ch.Name (@ch.PlatformFeePercent% fee)</option>
+                            @foreach (var ch in _channels)
+                            {
+                                <option value="@ch.Id">@ch.Name (@ch.PlatformFeePercent% fee)</option>
+                            }
                         }
-                    }
-                </select>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Warehouse</label>
+                    <select class="form-control-custom" @bind="_selectedWarehouseId">
+                        <option value="">-- Select Warehouse --</option>
+                        @if (_warehouses != null)
+                        {
+                            @foreach (var wh in _warehouses)
+                            {
+                                <option value="@wh.Id">@wh.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
+
+            <div class="form-group" style="margin-bottom:1rem">
+                <label>CSV File</label>
+                <InputFile OnChange="OnFileSelected" accept=".csv" class="form-control-custom" />
+                @if (_selectedFile != null)
+                {
+                    <small style="color:#94A3B8">Selected: @_selectedFile.Name (@(_selectedFile.Size / 1024) KB)</small>
+                }
+            </div>
+
+            <button class="btn-primary" @onclick="GoToStep2" disabled="@(_selectedFile == null || string.IsNullOrEmpty(_selectedChannelId) || string.IsNullOrEmpty(_selectedWarehouseId) || _loading)">
+                @if (_loading) { <span>Uploading...</span> } else { <span>Next: Map Columns</span> }
+            </button>
+
+            @if (_channels != null && _channels.Count == 0)
+            {
+                <div style="margin-top:1rem;padding:1rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px">
+                    <p style="margin-bottom:0.5rem"><strong>No sales channels yet.</strong> Create one first:</p>
+                    <div style="display:flex;gap:0.5rem;align-items:end">
+                        <input class="form-control-custom" placeholder="Channel name (e.g. Tokopedia)" @bind="_newChannelName" style="flex:1" />
+                        <input class="form-control-custom" type="number" step="0.1" placeholder="Fee %" @bind="_newChannelFee" style="width:100px" />
+                        <button class="btn-primary" @onclick="CreateChannel" disabled="@(string.IsNullOrWhiteSpace(_newChannelName))">Create</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_step == 2 && _csvHeaders != null)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Step 2: Map CSV Columns</h3>
+            <p style="color:#94A3B8;margin-bottom:1rem">We found @_csvHeaders.Count columns. Map them to StockLedger fields:</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                <div class="form-group">
+                    <label>Order Number *</label>
+                    <select class="form-control-custom" @bind="_mapOrderNumber">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>SKU *</label>
+                    <select class="form-control-custom" @bind="_mapSku">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <select class="form-control-custom" @bind="_mapQuantity">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unit Price *</label>
+                    <select class="form-control-custom" @bind="_mapUnitPrice">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Total Price</label>
+                    <select class="form-control-custom" @bind="_mapTotalPrice">
+                        <option value="">(auto-calculate)</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <select class="form-control-custom" @bind="_mapProductName">
+                        <option value="">(skip)</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Order Date</label>
+                    <select class="form-control-custom" @bind="_mapOrderDate">
+                        <option value="">(skip)</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Platform Fee</label>
+                    <select class="form-control-custom" @bind="_mapPlatformFee">
+                        <option value="">(auto from channel %)</option>
+                        @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:0.5rem">
+                <button class="btn-secondary" @onclick="() => _step = 1">Back</button>
+                <button class="btn-primary" @onclick="ProcessImport"
+                        disabled="@(string.IsNullOrEmpty(_mapOrderNumber) || string.IsNullOrEmpty(_mapSku) || string.IsNullOrEmpty(_mapQuantity) || string.IsNullOrEmpty(_mapUnitPrice) || _processing)">
+                    @if (_processing) { <span>Processing...</span> } else { <span>Import Now</span> }
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_step == 3 && _importResult != null)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Import Complete</h3>
+
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+                <div class="stat-card" style="border-left:3px solid #22C55E"><div class="stat-value" style="color:#22C55E">@_importResult.SuccessRows</div><div class="stat-label">Matched</div></div>
+                <div class="stat-card" style="border-left:3px solid #EF4444"><div class="stat-value" style="color:#EF4444">@_importResult.FailedRows</div><div class="stat-label">Failed</div></div>
+                <div class="stat-card" style="border-left:3px solid #F59E0B"><div class="stat-value" style="color:#F59E0B">@_importResult.SkippedRows</div><div class="stat-label">Duplicates</div></div>
+                <div class="stat-card"><div class="stat-value">@_importResult.TotalRows</div><div class="stat-label">Total Rows</div></div>
+            </div>
+
+            @if (_importResult.FailedRowDetails.Count > 0)
+            {
+                <h4 style="margin-bottom:0.5rem;color:#EF4444">Failed Rows</h4>
+                <div class="table-wrapper">
+                    <table class="lh-table">
+                        <thead><tr><th>Row</th><th>SKU</th><th>Qty</th><th>Error</th></tr></thead>
+                        <tbody>
+                            @foreach (var row in _importResult.FailedRowDetails.Take(50))
+                            {
+                                <tr>
+                                    <td>@row.RowNumber</td>
+                                    <td><code>@row.Sku</code></td>
+                                    <td>@row.Quantity</td>
+                                    <td style="color:#EF4444">@row.ErrorMessage</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <div style="margin-top:1rem;display:flex;gap:0.5rem">
+                <button class="btn-primary" @onclick="ResetImport">Import Another File</button>
+                <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/stock-movements")'>View Stock Movements</button>
+            </div>
+        </div>
+    }
+
+    <div class="card">
+        <h3 style="margin-bottom:1rem">Import History</h3>
+        @if (_batches == null)
+        {
+            <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
+        }
+        else if (_batches.Count == 0)
+        {
+            <div class="empty-state"><div class="empty-state-icon">&#128230;</div><div class="empty-state-text">No imports yet</div></div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="lh-table">
+                    <thead><tr><th>File</th><th>Channel</th><th>Warehouse</th><th>Status</th><th>Success</th><th>Failed</th><th>Total</th><th>Date</th></tr></thead>
+                    <tbody>
+                        @foreach (var b in _batches)
+                        {
+                            <tr>
+                                <td>@b.FileName</td>
+                                <td>@b.SalesChannelName</td>
+                                <td>@b.WarehouseName</td>
+                                <td><span class="badge @StatusClass(b.Status)">@b.Status</span></td>
+                                <td style="color:#22C55E">@b.SuccessRows</td>
+                                <td style="color:#EF4444">@b.FailedRows</td>
+                                <td>@b.TotalRows</td>
+                                <td>@b.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@* ══════════════════════════════════════════════════════════════════════ *@
+@* ── TAB 2: Initial Stock ────────────────────────────────────────────  *@
+@* ══════════════════════════════════════════════════════════════════════ *@
+@if (_activeTab == "stock")
+{
+    @if (_stockStep == 1)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Step 1: Select Warehouse & Upload CSV</h3>
+            <p style="color:#94A3B8;margin-bottom:1rem">Upload a CSV with SKU and quantity columns to set initial stock levels for a warehouse.</p>
+
+            <div style="margin-bottom:1rem;padding:1rem;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px">
+                <strong style="color:#3B82F6">CSV Format Example:</strong>
+                <pre style="margin:0.5rem 0 0;font-size:0.85rem;color:#CBD5E1">sku,quantity
+IND-MIE-GRG-5P,100
+AQUA-600ML,200
+KA-SPE-165G,50</pre>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1rem">
                 <label>Warehouse</label>
-                <select class="form-control-custom" @bind="_selectedWarehouseId">
+                <select class="form-control-custom" @bind="_stockWarehouseId">
                     <option value="">-- Select Warehouse --</option>
                     @if (_warehouses != null)
                     {
@@ -48,189 +275,103 @@
                     }
                 </select>
             </div>
-        </div>
 
-        <div class="form-group" style="margin-bottom:1rem">
-            <label>CSV File</label>
-            <InputFile OnChange="OnFileSelected" accept=".csv" class="form-control-custom" />
-            @if (_selectedFile != null)
-            {
-                <small style="color:#94A3B8">Selected: @_selectedFile.Name (@(_selectedFile.Size / 1024) KB)</small>
-            }
-        </div>
+            <div class="form-group" style="margin-bottom:1rem">
+                <label>CSV File</label>
+                <InputFile OnChange="OnStockFileSelected" accept=".csv" class="form-control-custom" />
+                @if (_stockFile != null)
+                {
+                    <small style="color:#94A3B8">Selected: @_stockFile.Name (@(_stockFile.Size / 1024) KB)</small>
+                }
+            </div>
 
-        <button class="btn-primary" @onclick="GoToStep2" disabled="@(_selectedFile == null || string.IsNullOrEmpty(_selectedChannelId) || string.IsNullOrEmpty(_selectedWarehouseId) || _loading)">
-            @if (_loading) { <span>Uploading...</span> } else { <span>Next: Map Columns</span> }
-        </button>
-
-        @if (_channels != null && _channels.Count == 0)
-        {
-            <div style="margin-top:1rem;padding:1rem;background:#1E293B;border-radius:8px">
-                <p style="margin-bottom:0.5rem"><strong>No sales channels yet.</strong> Create one first:</p>
-                <div style="display:flex;gap:0.5rem;align-items:end">
-                    <input class="form-control-custom" placeholder="Channel name (e.g. Tokopedia)" @bind="_newChannelName" style="flex:1" />
-                    <input class="form-control-custom" type="number" step="0.1" placeholder="Fee %" @bind="_newChannelFee" style="width:100px" />
-                    <button class="btn-primary" @onclick="CreateChannel" disabled="@(string.IsNullOrWhiteSpace(_newChannelName))">Create</button>
-                </div>
-            </div>
-        }
-    </div>
-}
-
-@if (_step == 2 && _csvHeaders != null)
-{
-    <div class="card" style="margin-bottom:1.5rem">
-        <h3 style="margin-bottom:1rem">Step 2: Map CSV Columns</h3>
-        <p style="color:#94A3B8;margin-bottom:1rem">We found @_csvHeaders.Count columns. Map them to StockLedger fields:</p>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-            <div class="form-group">
-                <label>Order Number *</label>
-                <select class="form-control-custom" @bind="_mapOrderNumber">
-                    <option value="">-- Select --</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>SKU *</label>
-                <select class="form-control-custom" @bind="_mapSku">
-                    <option value="">-- Select --</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Quantity *</label>
-                <select class="form-control-custom" @bind="_mapQuantity">
-                    <option value="">-- Select --</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Unit Price *</label>
-                <select class="form-control-custom" @bind="_mapUnitPrice">
-                    <option value="">-- Select --</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Total Price</label>
-                <select class="form-control-custom" @bind="_mapTotalPrice">
-                    <option value="">(auto-calculate)</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Product Name</label>
-                <select class="form-control-custom" @bind="_mapProductName">
-                    <option value="">(skip)</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Order Date</label>
-                <select class="form-control-custom" @bind="_mapOrderDate">
-                    <option value="">(skip)</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Platform Fee</label>
-                <select class="form-control-custom" @bind="_mapPlatformFee">
-                    <option value="">(auto from channel %)</option>
-                    @foreach (var h in _csvHeaders) { <option value="@h">@h</option> }
-                </select>
-            </div>
-        </div>
-
-        <div style="display:flex;gap:0.5rem">
-            <button class="btn-secondary" @onclick="() => _step = 1">Back</button>
-            <button class="btn-primary" @onclick="ProcessImport"
-                    disabled="@(string.IsNullOrEmpty(_mapOrderNumber) || string.IsNullOrEmpty(_mapSku) || string.IsNullOrEmpty(_mapQuantity) || string.IsNullOrEmpty(_mapUnitPrice) || _processing)">
-                @if (_processing) { <span>Processing...</span> } else { <span>Import Now</span> }
+            <button class="btn-primary" @onclick="StockGoToStep2" disabled="@(_stockFile == null || string.IsNullOrEmpty(_stockWarehouseId) || _loading)">
+                @if (_loading) { <span>Uploading...</span> } else { <span>Next: Map Columns</span> }
             </button>
         </div>
-    </div>
-}
+    }
 
-@if (_step == 3 && _importResult != null)
-{
-    <div class="card" style="margin-bottom:1.5rem">
-        <h3 style="margin-bottom:1rem">Import Complete</h3>
+    @if (_stockStep == 2 && _stockCsvHeaders != null)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Step 2: Map CSV Columns</h3>
+            <p style="color:#94A3B8;margin-bottom:1rem">We found @_stockCsvHeaders.Count columns. Map them to the required fields:</p>
 
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
-            <div class="stat-card" style="border-left:3px solid #22C55E"><div class="stat-value" style="color:#22C55E">@_importResult.SuccessRows</div><div class="stat-label">Matched</div></div>
-            <div class="stat-card" style="border-left:3px solid #EF4444"><div class="stat-value" style="color:#EF4444">@_importResult.FailedRows</div><div class="stat-label">Failed</div></div>
-            <div class="stat-card" style="border-left:3px solid #F59E0B"><div class="stat-value" style="color:#F59E0B">@_importResult.SkippedRows</div><div class="stat-label">Duplicates</div></div>
-            <div class="stat-card"><div class="stat-value">@_importResult.TotalRows</div><div class="stat-label">Total Rows</div></div>
-        </div>
-
-        @if (_importResult.FailedRowDetails.Count > 0)
-        {
-            <h4 style="margin-bottom:0.5rem;color:#EF4444">Failed Rows</h4>
-            <div class="table-wrapper">
-                <table class="lh-table">
-                    <thead><tr><th>Row</th><th>SKU</th><th>Qty</th><th>Error</th></tr></thead>
-                    <tbody>
-                        @foreach (var row in _importResult.FailedRowDetails.Take(50))
-                        {
-                            <tr>
-                                <td>@row.RowNumber</td>
-                                <td><code>@row.Sku</code></td>
-                                <td>@row.Quantity</td>
-                                <td style="color:#EF4444">@row.ErrorMessage</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                <div class="form-group">
+                    <label>SKU *</label>
+                    <select class="form-control-custom" @bind="_stockMapSku">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _stockCsvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <select class="form-control-custom" @bind="_stockMapQuantity">
+                        <option value="">-- Select --</option>
+                        @foreach (var h in _stockCsvHeaders) { <option value="@h">@h</option> }
+                    </select>
+                </div>
             </div>
-        }
 
-        <div style="margin-top:1rem;display:flex;gap:0.5rem">
-            <button class="btn-primary" @onclick="ResetImport">Import Another File</button>
-            <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/stock-movements")'>View Stock Movements</button>
+            <div style="display:flex;gap:0.5rem">
+                <button class="btn-secondary" @onclick="() => _stockStep = 1">Back</button>
+                <button class="btn-primary" @onclick="ProcessInitialStock"
+                        disabled="@(string.IsNullOrEmpty(_stockMapSku) || string.IsNullOrEmpty(_stockMapQuantity) || _processing)">
+                    @if (_processing) { <span>Processing...</span> } else { <span>Set Initial Stock</span> }
+                </button>
+            </div>
         </div>
-    </div>
+    }
+
+    @if (_stockStep == 3 && _stockResult != null)
+    {
+        <div class="card" style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:1rem">Initial Stock Import Complete</h3>
+
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+                <div class="stat-card" style="border-left:3px solid #22C55E"><div class="stat-value" style="color:#22C55E">@_stockResult.SuccessRows</div><div class="stat-label">Created</div></div>
+                <div class="stat-card" style="border-left:3px solid #EF4444"><div class="stat-value" style="color:#EF4444">@_stockResult.FailedRows</div><div class="stat-label">Failed</div></div>
+                <div class="stat-card" style="border-left:3px solid #F59E0B"><div class="stat-value" style="color:#F59E0B">@_stockResult.SkippedRows</div><div class="stat-label">Skipped (already set)</div></div>
+                <div class="stat-card"><div class="stat-value">@_stockResult.TotalRows</div><div class="stat-label">Total Rows</div></div>
+            </div>
+
+            @if (_stockResult.FailedRowDetails.Count > 0)
+            {
+                <h4 style="margin-bottom:0.5rem;color:#EF4444">Failed Rows</h4>
+                <div class="table-wrapper">
+                    <table class="lh-table">
+                        <thead><tr><th>Row</th><th>SKU</th><th>Qty</th><th>Error</th></tr></thead>
+                        <tbody>
+                            @foreach (var row in _stockResult.FailedRowDetails.Take(50))
+                            {
+                                <tr>
+                                    <td>@row.RowNumber</td>
+                                    <td><code>@row.Sku</code></td>
+                                    <td>@row.Quantity</td>
+                                    <td style="color:#EF4444">@row.ErrorMessage</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <div style="margin-top:1rem;display:flex;gap:0.5rem">
+                <button class="btn-primary" @onclick="ResetStockImport">Import Another File</button>
+                <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/stock-movements")'>View Stock Movements</button>
+            </div>
+        </div>
+    }
 }
-
-<div class="card">
-    <h3 style="margin-bottom:1rem">Import History</h3>
-    @if (_batches == null)
-    {
-        <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
-    }
-    else if (_batches.Count == 0)
-    {
-        <div class="empty-state"><div class="empty-state-icon">&#128230;</div><div class="empty-state-text">No imports yet</div></div>
-    }
-    else
-    {
-        <div class="table-wrapper">
-            <table class="lh-table">
-                <thead><tr><th>File</th><th>Channel</th><th>Warehouse</th><th>Status</th><th>Success</th><th>Failed</th><th>Total</th><th>Date</th></tr></thead>
-                <tbody>
-                    @foreach (var b in _batches)
-                    {
-                        <tr>
-                            <td>@b.FileName</td>
-                            <td>@b.SalesChannelName</td>
-                            <td>@b.WarehouseName</td>
-                            <td><span class="badge @StatusClass(b.Status)">@b.Status</span></td>
-                            <td style="color:#22C55E">@b.SuccessRows</td>
-                            <td style="color:#EF4444">@b.FailedRows</td>
-                            <td>@b.TotalRows</td>
-                            <td>@b.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
 
 @code {
-    private int _step = 1;
+    private string _activeTab = "sales";
     private bool _loading, _processing;
     private string _error = string.Empty;
+
+    // ── Sales Import State ──────────────────────────────────────────────
+    private int _step = 1;
 
     // Step 1
     private List<Models.SalesChannelDto>? _channels;
@@ -252,6 +393,17 @@
 
     // History
     private List<Models.ImportBatchDto>? _batches;
+
+    // ── Initial Stock State ─────────────────────────────────────────────
+    private int _stockStep = 1;
+    private string _stockWarehouseId = string.Empty;
+    private Microsoft.AspNetCore.Components.Forms.IBrowserFile? _stockFile;
+    private List<string>? _stockCsvHeaders;
+    private string _stockMapSku = string.Empty;
+    private string _stockMapQuantity = string.Empty;
+    private Models.InitialStockResultDto? _stockResult;
+
+    // ── Lifecycle ────────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
@@ -290,6 +442,14 @@
         }));
         await Task.WhenAll(tasks);
     }
+
+    private void SwitchTab(string tab)
+    {
+        _activeTab = tab;
+        _error = string.Empty;
+    }
+
+    // ── Sales Import Methods ────────────────────────────────────────────
 
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
@@ -365,7 +525,6 @@
             {
                 _importResult = result.Data;
                 _step = 3;
-                // Refresh history
                 var batchResult = await Api.GetImportBatchesAsync(1, 20);
                 if (batchResult.Success && batchResult.Data != null) _batches = batchResult.Data.Items.ToList();
             }
@@ -404,6 +563,93 @@
         _mapOrderNumber = _mapSku = _mapQuantity = _mapUnitPrice = string.Empty;
         _mapTotalPrice = _mapProductName = _mapOrderDate = _mapPlatformFee = null;
     }
+
+    // ── Initial Stock Methods ───────────────────────────────────────────
+
+    private void OnStockFileSelected(InputFileChangeEventArgs e)
+    {
+        _stockFile = e.File;
+    }
+
+    private async Task StockGoToStep2()
+    {
+        if (_stockFile == null) return;
+        _loading = true;
+        _error = string.Empty;
+        try
+        {
+            using var stream = _stockFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+            var result = await Api.PreviewCsvHeadersAsync(ms, _stockFile.Name);
+            if (result.Success && result.Data != null)
+            {
+                _stockCsvHeaders = result.Data;
+                _stockStep = 2;
+                AutoMapStockColumns();
+            }
+            else
+            {
+                _error = result.ErrorMessage ?? "Failed to parse CSV headers.";
+            }
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        _loading = false;
+    }
+
+    private void AutoMapStockColumns()
+    {
+        if (_stockCsvHeaders == null) return;
+        foreach (var h in _stockCsvHeaders)
+        {
+            var lower = h.ToLower();
+            if (lower.Contains("sku") || lower.Contains("kode")) _stockMapSku = h;
+            else if (lower.Contains("qty") || lower.Contains("jumlah") || lower.Contains("quantity") || lower.Contains("stock") || lower.Contains("stok")) _stockMapQuantity = h;
+        }
+    }
+
+    private async Task ProcessInitialStock()
+    {
+        if (_stockFile == null) return;
+        _processing = true;
+        _error = string.Empty;
+        try
+        {
+            using var stream = _stockFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+
+            var result = await Api.ProcessInitialStockImportAsync(
+                ms, _stockFile.Name,
+                Guid.Parse(_stockWarehouseId),
+                _stockMapSku, _stockMapQuantity);
+
+            if (result.Success && result.Data != null)
+            {
+                _stockResult = result.Data;
+                _stockStep = 3;
+            }
+            else
+            {
+                _error = result.ErrorMessage ?? "Initial stock import failed.";
+            }
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        _processing = false;
+    }
+
+    private void ResetStockImport()
+    {
+        _stockStep = 1;
+        _stockFile = null;
+        _stockCsvHeaders = null;
+        _stockResult = null;
+        _stockMapSku = _stockMapQuantity = string.Empty;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     private static string StatusClass(string status) => status switch
     {

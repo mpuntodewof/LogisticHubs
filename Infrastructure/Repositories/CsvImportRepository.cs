@@ -59,6 +59,13 @@ namespace Infrastructure.Repositories
             // Tracked by change tracker
         }
 
+        public async Task DeleteAsync(CsvImportBatch batch)
+        {
+            var rows = await _context.Set<CsvImportRow>().Where(r => r.CsvImportBatchId == batch.Id).ToListAsync();
+            _context.Set<CsvImportRow>().RemoveRange(rows);
+            _context.Set<CsvImportBatch>().Remove(batch);
+        }
+
         public async Task<bool> OrderNumberExistsForChannel(Guid salesChannelId, string orderNumber)
         {
             return await _context.Set<CsvImportRow>()

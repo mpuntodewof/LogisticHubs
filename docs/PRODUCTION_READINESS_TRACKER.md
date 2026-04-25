@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-25 (Phase 1 in progress) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-25 (Phase 1 in progress; dirty tree resolved) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -19,12 +19,12 @@
 
 | Phase | Total | ✅ Done | 🟨 In Progress | ⚠️ Partial | ⬜ Not Started | ⏸️ Blocked |
 |-------|------:|------:|------:|------:|------:|------:|
-| Phase 1 — Pre-Launch Foundation | 10 | 4 | 0 | 2 | 4 | 0 |
+| Phase 1 — Pre-Launch Foundation | 10 | 5 | 0 | 1 | 4 | 0 |
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
 | Phase 3 — Post-Launch Hardening | 9 | 0 | 0 | 0 | 9 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 0 | 1 | 7 | 0 |
-| **Totals** | **44** | **4** | **0** | **3** | **37** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 2 | 3 | 3 | 0 |
+| **Totals** | **44** | **5** | **2** | **4** | **33** | **0** |
 
 ---
 
@@ -43,7 +43,7 @@
 | 1.7 | Fix CORS unsafe fallback | P0 | S | ✅ | Throws on startup in non-Development if `AllowedOrigins` is empty |
 | 1.8 | Move secrets out of env vars | P0 | M | ⬜ | JWT secret + DB creds → Key Vault / Secrets Manager |
 | 1.9 | PPN / e-Faktur correctness audit | P0 | M | ⬜ | Sign-off from Indonesian accountant + property tests |
-| 1.10 | Resolve 47 uncommitted files on `develop` | P0 | S | ⚠️ | Mid-sprint churn — clarify or stash before reviewing |
+| 1.10 | Resolve 47 uncommitted files on `develop` | P0 | S | ✅ | Split into 6 logical commits: finance seed, transaction wrapper refactor, CSV import expansion, reports dashboard, E2E test corrections, theme + UI restyle |
 
 **Phase 1 calendar estimate:** 6–10 weeks
 
@@ -114,10 +114,10 @@
 
 | # | Item | Priority | Effort | Status | Notes |
 |---|------|---------|--------|--------|-------|
-| 5.1 | Tokopedia CSV parser | P0 | M | ⬜ | Headline value prop |
-| 5.2 | Shopee CSV parser | P0 | M | ⬜ | Headline value prop |
-| 5.3 | P&L report (basic + per-channel) | P0 | L | ⬜ | What the Owner persona pays for |
-| 5.4 | Margin per product / per channel report | P0 | M | ⬜ | Same as 5.3 |
+| 5.1 | Tokopedia CSV parser | P0 | M | ⚠️ | Column-mapping flow + sample fixture landed; verify against real Tokopedia export |
+| 5.2 | Shopee CSV parser | P0 | M | ⚠️ | Same as 5.1 — sample fixture present, real-export validation outstanding |
+| 5.3 | P&L report (basic + per-channel) | P0 | L | 🟨 | Finance dashboard view + report endpoints scaffolded; per-channel P&L logic to verify |
+| 5.4 | Margin per product / per channel report | P0 | M | 🟨 | Tied to 5.3 dashboard work |
 | 5.5 | Balance sheet | P1 | L | ⬜ | Standard format, ties to journals |
 | 5.6 | PPN input/output summary for DJP | P1 | M | ⬜ | Monthly DJP-format export |
 | 5.7 | Stock reconciliation workflow | P1 | M | ⚠️ | File modified — verify current state |
@@ -162,6 +162,11 @@
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-25 | 5.4 | ⬜ → 🟨 | Tied to 5.3 dashboard work (commit `323542d`) |
+| 2026-04-25 | 5.3 | ⬜ → 🟨 | Finance dashboard view (336 LOC) + report endpoints scaffolded (commit `323542d`); per-channel P&L logic to verify |
+| 2026-04-25 | 5.2 | ⬜ → ⚠️ | Column-mapping flow + sample Shopee fixture landed (commit `b0165c4`); real-export validation outstanding |
+| 2026-04-25 | 5.1 | ⬜ → ⚠️ | Column-mapping flow + sample Tokopedia fixture landed (commit `b0165c4`); real-export validation outstanding |
+| 2026-04-25 | 1.10 | ⚠️ → ✅ | 47 dirty files split into 6 logical commits: finance seed (`5659120`), tx wrapper (`45912fe`), CSV import (`b0165c4`), reports (`323542d`), E2E corrections (`e3f2362`), theme/UI (`98b3232`). Solution builds clean. |
 | 2026-04-25 | 1.5 | ⬜ → ⚠️ | Migration bundle published as CI artifact via `dotnet ef migrations bundle`; deploy-side execution pending 1.4 |
 | 2026-04-25 | 1.3 | ⬜ → ✅ | CI now pushes images to GHCR (`ghcr.io/<repo>`) with branch, sha, and `latest`-on-main tags. Smoke-tested after push. |
 | 2026-04-25 | 1.2 | ⬜ → ✅ | New `e2e-tests` job in CI: MySQL service container, API started on :5164, all E2E flows execute on every PR/push |

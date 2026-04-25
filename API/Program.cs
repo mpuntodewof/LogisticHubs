@@ -166,9 +166,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddMySql(connectionString, name: "mysql", tags: ["db", "ready"]);
 
-// CORS — locked to configured origins
+// CORS — locked to configured origins. Fail closed in non-Development if unconfigured.
 var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? [];
 Log.Information("CORS allowed origins ({Count}): {Origins}", allowedOrigins.Length, string.Join(", ", allowedOrigins));
+if (allowedOrigins.Length == 0 && !builder.Environment.IsDevelopment())
+    throw new InvalidOperationException(
+        "CorsSettings:AllowedOrigins must be configured in non-Development environments. " +
+        "Set at least one origin via CorsSettings__AllowedOrigins__0.");
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -181,17 +186,19 @@ builder.Services.AddCors(options =>
 });
 
 // Rate Limiting
+var isDev = builder.Environment.IsDevelopment();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Auth endpoints: 5 requests per minute per IP
+    // Auth endpoints: 5 req/min per IP in prod; relaxed to 1000/min in Development
+    // so E2E test runs (which burst many logins) don't trip the limiter.
     options.AddPolicy("auth", context =>
         RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = isDev ? 1000 : 5,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 2,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,

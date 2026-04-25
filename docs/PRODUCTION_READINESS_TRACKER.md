@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-25 | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-25 (Phase 1 in progress) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -19,12 +19,12 @@
 
 | Phase | Total | ✅ Done | 🟨 In Progress | ⚠️ Partial | ⬜ Not Started | ⏸️ Blocked |
 |-------|------:|------:|------:|------:|------:|------:|
-| Phase 1 — Pre-Launch Foundation | 10 | 0 | 0 | 1 | 9 | 0 |
+| Phase 1 — Pre-Launch Foundation | 10 | 4 | 0 | 2 | 4 | 0 |
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
 | Phase 3 — Post-Launch Hardening | 9 | 0 | 0 | 0 | 9 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
 | Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 0 | 1 | 7 | 0 |
-| **Totals** | **44** | **0** | **0** | **2** | **42** | **0** |
+| **Totals** | **44** | **4** | **0** | **3** | **37** | **0** |
 
 ---
 
@@ -34,13 +34,13 @@
 
 | # | Item | Priority | Effort | Status | Notes |
 |---|------|---------|--------|--------|-------|
-| 1.1 | Align E2E test TFM to net8.0 | P0 | S | ⬜ | E2E csproj currently targets net9.0 — CI runs on net8.0 |
-| 1.2 | Add E2E job to CI workflow | P0 | S | ⬜ | All 8 E2E flows must run on every PR |
-| 1.3 | Docker registry push + tag strategy | P0 | M | ⬜ | Current CI builds image then discards it |
-| 1.4 | Production deploy pipeline (staging → prod) | P0 | L | ⬜ | One-command release; staging smoke-test gate |
-| 1.5 | Run EF migrations in deploy pipeline | P0 | S | ⬜ | Migrations only auto-run in Development today |
+| 1.1 | Align E2E test TFM to net8.0 | P0 | S | ✅ | Verified `dotnet build` succeeds on net8.0 |
+| 1.2 | Add E2E job to CI workflow | P0 | S | ✅ | New `e2e-tests` job spins up MySQL service, starts API on :5164, runs all flows |
+| 1.3 | Docker registry push + tag strategy | P0 | M | ✅ | Pushes to GHCR with branch/sha/latest tags; build cache via GH Actions |
+| 1.4 | Production deploy pipeline (staging → prod) | P0 | L | ⬜ | One-command release; staging smoke-test gate. **Awaiting deploy target decision** |
+| 1.5 | Run EF migrations in deploy pipeline | P0 | S | ⚠️ | Migration bundle published as CI artifact; deploy step pending 1.4 |
 | 1.6 | Automated MySQL backups + tested restore | P0 | M | ⬜ | Daily dump, 30-day retention, restore drill required |
-| 1.7 | Fix CORS unsafe fallback | P0 | S | ⬜ | Empty `AllowedOrigins` falls back to `AllowAnyOrigin` |
+| 1.7 | Fix CORS unsafe fallback | P0 | S | ✅ | Throws on startup in non-Development if `AllowedOrigins` is empty |
 | 1.8 | Move secrets out of env vars | P0 | M | ⬜ | JWT secret + DB creds → Key Vault / Secrets Manager |
 | 1.9 | PPN / e-Faktur correctness audit | P0 | M | ⬜ | Sign-off from Indonesian accountant + property tests |
 | 1.10 | Resolve 47 uncommitted files on `develop` | P0 | S | ⚠️ | Mid-sprint churn — clarify or stash before reviewing |
@@ -162,4 +162,9 @@
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-25 | 1.5 | ⬜ → ⚠️ | Migration bundle published as CI artifact via `dotnet ef migrations bundle`; deploy-side execution pending 1.4 |
+| 2026-04-25 | 1.3 | ⬜ → ✅ | CI now pushes images to GHCR (`ghcr.io/<repo>`) with branch, sha, and `latest`-on-main tags. Smoke-tested after push. |
+| 2026-04-25 | 1.2 | ⬜ → ✅ | New `e2e-tests` job in CI: MySQL service container, API started on :5164, all E2E flows execute on every PR/push |
+| 2026-04-25 | 1.1 | ⬜ → ✅ | E2E csproj retargeted to net8.0; verified `dotnet build` succeeds |
+| 2026-04-25 | 1.7 | ⬜ → ✅ | API throws on startup in non-Development if `CorsSettings:AllowedOrigins` is empty (fail-closed) |
 | 2026-04-25 | — | Tracker created | Baseline from production-readiness analysis. 42 items not started, 2 partial (1.10, 5.7). |

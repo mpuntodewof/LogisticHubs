@@ -38,5 +38,15 @@ namespace API.Controllers
             var dashboard = await _reportUseCase.GetDashboardAsync();
             return Ok(dashboard);
         }
+
+        // Finance-focused landing view for Accountants. Scoped to permissions the
+        // accountant role already has: chart-of-accounts.read + invoices.read.
+        [HttpGet("finance-dashboard")]
+        [RequirePermission("chart-of-accounts.read")]
+        public async Task<ActionResult<FinanceDashboardSummary>> GetFinanceDashboard()
+        {
+            var dashboard = await _reportUseCase.GetFinanceDashboardAsync();
+            return Ok(dashboard);
+        }
     }
 }

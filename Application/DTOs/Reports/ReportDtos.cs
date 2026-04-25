@@ -106,4 +106,25 @@ namespace Application.DTOs.Reports
         public int QuantityOnHand { get; set; }
         public int? ReorderPoint { get; set; }
     }
+
+    // Composed view used by the Accountant landing page. Aggregates existing
+    // finance/P&L data so the page loads with a single request.
+    public class FinanceDashboardSummary
+    {
+        public FinanceSummary Finance { get; set; } = new();
+        public ProfitAndLossReport MonthToDateProfitAndLoss { get; set; } = new();
+        public List<ChannelProfitLine> ChannelBreakdown { get; set; } = new();
+        public List<RecentInvoiceDto> RecentInvoices { get; set; } = new();
+    }
+
+    public class RecentInvoiceDto
+    {
+        public Guid Id { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string? CounterpartyName { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime InvoiceDate { get; set; }
+        public DateTime DueDate { get; set; }
+        public decimal GrandTotal { get; set; }
+    }
 }

@@ -1,27 +1,43 @@
 @page "/dashboard"
 @layout AppLayout
+@using BlazorApp.Client.Components
 @inject BlazorApp.Client.Services.ApiClient Api
+@inject BlazorApp.Client.Services.JwtAuthStateProvider JwtAuth
+@inject NavigationManager Nav
 
-<div class="page-header">
-    <div>
-        <h1>Dashboard</h1>
-        <p class="page-desc">Real-time business intelligence overview</p>
+@if (_roleChecked && _isAccountant)
+{
+    @* Accountants see ONLY the finance view on /dashboard *@
+    <FinanceDashboardView />
+}
+else if (_roleChecked)
+{
+    <div class="page-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p class="page-desc">Real-time business intelligence overview</p>
+        </div>
+        @if (_data != null)
+        {
+            <div style="display:flex;align-items:center;gap:.5rem">
+                <span class="pulse-dot"></span>
+                <span style="font-size:.7rem;color:var(--text-muted);font-weight:500">LIVE</span>
+            </div>
+        }
     </div>
-    @if (_data != null)
+
+    @if (_loading)
     {
-        <div style="display:flex;align-items:center;gap:.5rem">
-            <span class="pulse-dot"></span>
-            <span style="font-size:.7rem;color:var(--text-muted);font-weight:500">LIVE</span>
+        <div class="loading-spinner"><div class="spinner"></div> Initializing dashboard...</div>
+    }
+    else if (_data == null)
+    {
+        <div class="alert-custom alert-error" style="margin-bottom:1rem">
+            &#9888; @(_error ?? "Failed to load dashboard data.")
         </div>
     }
-</div>
-
-@if (_loading)
-{
-    <div class="loading-spinner"><div class="spinner"></div> Initializing dashboard...</div>
-}
-else if (_data != null)
-{
+    else if (_data != null)
+    {
     @* ── Stock Health KPIs ─────────────────────────────────────────── *@
     <div class="dash-section-title">Stock Health</div>
     <div class="dash-grid-4 mb-lg">
@@ -289,10 +305,14 @@ else if (_data != null)
             </table>
         </div>
     }
+    }
 }
 
 @code {
+    private bool _roleChecked;
+    private bool _isAccountant;
     private bool _loading = true;
+    private string? _error;
     private BlazorApp.Client.Models.DashboardSummary? _data;
 
     private readonly int[] _sparkHeights1 = { 18, 12, 24, 8, 20, 14, 26, 10, 22, 16, 28, 6 };
@@ -302,13 +322,41 @@ else if (_data != null)
 
     protected override async Task OnInitializedAsync()
     {
+        var roles = (await JwtAuth.GetRolesAsync()).ToList();
+        _isAccountant = roles.Contains("Accountant", StringComparer.OrdinalIgnoreCase);
+        _roleChecked = true;
+
+        if (_isAccountant)
+        {
+            // Finance-only view renders via <FinanceDashboardView /> — it fetches its own data.
+            return;
+        }
+
         try
         {
             var result = await Api.GetDashboardSummaryAsync();
             if (result.Success && result.Data != null)
+            {
                 _data = result.Data;
+            }
+            else if (result.IsUnauthorized)
+            {
+                Nav.NavigateTo("/login");
+                return;
+            }
+            else if (result.IsForbidden)
+            {
+                _error = "Your role doesn't have access to the inventory dashboard.";
+            }
+            else
+            {
+                _error = result.ErrorMessage ?? "Failed to load dashboard data.";
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _error = $"Dashboard failed to load: {ex.Message}";
+        }
         _loading = false;
     }
 }

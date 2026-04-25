@@ -1,3 +1,4 @@
+using Application.DTOs.Common;
 using Application.DTOs.Reports;
 using Application.Interfaces;
 using Domain.Enums;
@@ -7,10 +8,12 @@ namespace Application.UseCases.Reports
     public class ReportUseCase
     {
         private readonly IReportRepository _reportRepository;
+        private readonly IInvoiceRepository _invoiceRepository;
 
-        public ReportUseCase(IReportRepository reportRepository)
+        public ReportUseCase(IReportRepository reportRepository, IInvoiceRepository invoiceRepository)
         {
             _reportRepository = reportRepository;
+            _invoiceRepository = invoiceRepository;
         }
 
         public async Task<ProfitAndLossReport> GetProfitAndLossAsync(DateTime from, DateTime to)
@@ -62,6 +65,34 @@ namespace Application.UseCases.Reports
                 RecentImports = await _reportRepository.GetRecentImportsAsync(5),
                 TopProducts = await _reportRepository.GetTopProductsAsync(monthStart, DateTime.UtcNow, 10),
                 LowStockAlerts = await _reportRepository.GetLowStockAlertsAsync(20)
+            };
+        }
+
+        public async Task<FinanceDashboardSummary> GetFinanceDashboardAsync()
+        {
+            var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var pnl = await GetProfitAndLossAsync(monthStart, DateTime.UtcNow);
+            var finance = await _reportRepository.GetFinanceSummaryAsync();
+
+            // Pull the 5 most recent invoices across all statuses.
+            var recent = await _invoiceRepository.GetPagedAsync(
+                new PagedRequest { Page = 1, PageSize = 5, SortBy = "InvoiceDate", SortDescending = true });
+
+            return new FinanceDashboardSummary
+            {
+                Finance = finance,
+                MonthToDateProfitAndLoss = pnl,
+                ChannelBreakdown = pnl.ChannelBreakdown,
+                RecentInvoices = recent.Items.Select(i => new RecentInvoiceDto
+                {
+                    Id = i.Id,
+                    InvoiceNumber = i.InvoiceNumber,
+                    CounterpartyName = i.CounterpartyName,
+                    Status = i.Status,
+                    InvoiceDate = i.InvoiceDate,
+                    DueDate = i.DueDate,
+                    GrandTotal = i.GrandTotal
+                }).ToList()
             };
         }
     }

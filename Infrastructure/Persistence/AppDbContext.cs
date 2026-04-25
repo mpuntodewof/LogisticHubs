@@ -451,6 +451,7 @@ namespace Infrastructure.Persistence
             SeedRolesAndPermissions(modelBuilder);
             SeedUsers(modelBuilder);
             SeedProductCatalog(modelBuilder);
+            SeedFinanceData(modelBuilder);
         }
 
         // ── SaveChanges: auto-stamp TenantId, audit fields, soft-delete ────
@@ -935,6 +936,92 @@ namespace Infrastructure.Persistence
                 new ProductTaxRate { ProductId = p08, TaxRateId = taxPPN11,  TenantId = t },  // Lifebuoy
                 new ProductTaxRate { ProductId = p09, TaxRateId = taxPPN11,  TenantId = t },  // So Klin
                 new ProductTaxRate { ProductId = p10, TaxRateId = taxPPN11,  TenantId = t }   // Teh Pucuk
+            );
+        }
+
+        // ── Seed: Finance Data (Chart of Accounts + Payment Terms) ──────────
+        private static void SeedFinanceData(ModelBuilder modelBuilder)
+        {
+            var t = DefaultTenantId;
+            var d = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            // ── Chart of Accounts ───────────────────────────────────────────
+
+            // Top-level parent accounts
+            var acc1000 = new Guid("f1000000-0000-0000-0000-000000000001");
+            var acc2000 = new Guid("f1000000-0000-0000-0000-000000000002");
+            var acc3000 = new Guid("f1000000-0000-0000-0000-000000000003");
+            var acc4000 = new Guid("f1000000-0000-0000-0000-000000000004");
+            var acc5000 = new Guid("f1000000-0000-0000-0000-000000000005");
+            var acc6000 = new Guid("f1000000-0000-0000-0000-000000000006");
+
+            // Child accounts
+            var acc1100 = new Guid("f1000000-0000-0000-0000-000000001100");
+            var acc1110 = new Guid("f1000000-0000-0000-0000-000000001110");
+            var acc1120 = new Guid("f1000000-0000-0000-0000-000000001120");
+            var acc1200 = new Guid("f1000000-0000-0000-0000-000000001200");
+            var acc1300 = new Guid("f1000000-0000-0000-0000-000000001300");
+            var acc2100 = new Guid("f1000000-0000-0000-0000-000000002100");
+            var acc2200 = new Guid("f1000000-0000-0000-0000-000000002200");
+            var acc2210 = new Guid("f1000000-0000-0000-0000-000000002210");
+            var acc3100 = new Guid("f1000000-0000-0000-0000-000000003100");
+            var acc3200 = new Guid("f1000000-0000-0000-0000-000000003200");
+            var acc4100 = new Guid("f1000000-0000-0000-0000-000000004100");
+            var acc4200 = new Guid("f1000000-0000-0000-0000-000000004200");
+            var acc4300 = new Guid("f1000000-0000-0000-0000-000000004300");
+            var acc5100 = new Guid("f1000000-0000-0000-0000-000000005100");
+            var acc6100 = new Guid("f1000000-0000-0000-0000-000000006100");
+            var acc6200 = new Guid("f1000000-0000-0000-0000-000000006200");
+            var acc6300 = new Guid("f1000000-0000-0000-0000-000000006300");
+
+            modelBuilder.Entity<ChartOfAccount>().HasData(
+                // ── Top-level parent accounts ───────────────────────────────
+                new ChartOfAccount { Id = acc1000, AccountCode = "1000", Name = "Aset",                    AccountType = "Asset",     NormalBalance = "Debit",  IsActive = true, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc2000, AccountCode = "2000", Name = "Liabilitas",              AccountType = "Liability", NormalBalance = "Credit", IsActive = true, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc3000, AccountCode = "3000", Name = "Ekuitas",                 AccountType = "Equity",    NormalBalance = "Credit", IsActive = true, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc4000, AccountCode = "4000", Name = "Pendapatan",              AccountType = "Revenue",   NormalBalance = "Credit", IsActive = true, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc5000, AccountCode = "5000", Name = "Harga Pokok Penjualan",   AccountType = "Expense",   NormalBalance = "Debit",  IsActive = true, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc6000, AccountCode = "6000", Name = "Beban Operasional",       AccountType = "Expense",   NormalBalance = "Debit",  IsActive = true, TenantId = t, CreatedAt = d },
+
+                // ── Asset children ──────────────────────────────────────────
+                new ChartOfAccount { Id = acc1100, AccountCode = "1100", Name = "Kas & Bank",              AccountType = "Asset",     AccountSubType = "Cash",       NormalBalance = "Debit",  IsActive = true, ParentAccountId = acc1000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc1110, AccountCode = "1110", Name = "Kas Tunai",               AccountType = "Asset",     AccountSubType = "Cash",       NormalBalance = "Debit",  IsActive = true, ParentAccountId = acc1100, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc1120, AccountCode = "1120", Name = "Bank BCA",                AccountType = "Asset",     AccountSubType = "Bank",       NormalBalance = "Debit",  IsActive = true, ParentAccountId = acc1100, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc1200, AccountCode = "1200", Name = "Piutang Usaha (AR)",      AccountType = "Asset",     AccountSubType = "Receivable", NormalBalance = "Debit",  IsActive = true, IsSystemAccount = true, ParentAccountId = acc1000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc1300, AccountCode = "1300", Name = "Persediaan Barang",       AccountType = "Asset",     AccountSubType = "Inventory",  NormalBalance = "Debit",  IsActive = true, IsSystemAccount = true, ParentAccountId = acc1000, TenantId = t, CreatedAt = d },
+
+                // ── Liability children ──────────────────────────────────────
+                new ChartOfAccount { Id = acc2100, AccountCode = "2100", Name = "Hutang Usaha (AP)",       AccountType = "Liability", AccountSubType = "Payable",    NormalBalance = "Credit", IsActive = true, IsSystemAccount = true, ParentAccountId = acc2000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc2200, AccountCode = "2200", Name = "PPN Keluaran",            AccountType = "Liability", AccountSubType = "Tax",        NormalBalance = "Credit", IsActive = true, IsSystemAccount = true, ParentAccountId = acc2000, TenantId = t, CreatedAt = d },
+
+                // ── PPN Masukan is an Asset (tax receivable) ────────────────
+                new ChartOfAccount { Id = acc2210, AccountCode = "2210", Name = "PPN Masukan",             AccountType = "Asset",     AccountSubType = "Tax",        NormalBalance = "Debit",  IsActive = true, IsSystemAccount = true, ParentAccountId = acc1000, TenantId = t, CreatedAt = d },
+
+                // ── Equity children ─────────────────────────────────────────
+                new ChartOfAccount { Id = acc3100, AccountCode = "3100", Name = "Modal Pemilik",           AccountType = "Equity",    AccountSubType = "Capital",           NormalBalance = "Credit", IsActive = true, ParentAccountId = acc3000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc3200, AccountCode = "3200", Name = "Laba Ditahan",            AccountType = "Equity",    AccountSubType = "RetainedEarnings",  NormalBalance = "Credit", IsActive = true, ParentAccountId = acc3000, TenantId = t, CreatedAt = d },
+
+                // ── Revenue children (per channel) ──────────────────────────
+                new ChartOfAccount { Id = acc4100, AccountCode = "4100", Name = "Penjualan - Tokopedia",   AccountType = "Revenue",   AccountSubType = "Sales",      NormalBalance = "Credit", IsActive = true, ParentAccountId = acc4000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc4200, AccountCode = "4200", Name = "Penjualan - Shopee",      AccountType = "Revenue",   AccountSubType = "Sales",      NormalBalance = "Credit", IsActive = true, ParentAccountId = acc4000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc4300, AccountCode = "4300", Name = "Penjualan - Offline",     AccountType = "Revenue",   AccountSubType = "Sales",      NormalBalance = "Credit", IsActive = true, ParentAccountId = acc4000, TenantId = t, CreatedAt = d },
+
+                // ── COGS child ──────────────────────────────────────────────
+                new ChartOfAccount { Id = acc5100, AccountCode = "5100", Name = "HPP - Barang Dagang",     AccountType = "Expense",   AccountSubType = "COGS",        NormalBalance = "Debit",  IsActive = true, IsSystemAccount = true, ParentAccountId = acc5000, TenantId = t, CreatedAt = d },
+
+                // ── Operating expense children ──────────────────────────────
+                new ChartOfAccount { Id = acc6100, AccountCode = "6100", Name = "Biaya Platform - Tokopedia", AccountType = "Expense", AccountSubType = "PlatformFee", NormalBalance = "Debit", IsActive = true, ParentAccountId = acc6000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc6200, AccountCode = "6200", Name = "Biaya Platform - Shopee",    AccountType = "Expense", AccountSubType = "PlatformFee", NormalBalance = "Debit", IsActive = true, ParentAccountId = acc6000, TenantId = t, CreatedAt = d },
+                new ChartOfAccount { Id = acc6300, AccountCode = "6300", Name = "Biaya Pengiriman",            AccountType = "Expense", AccountSubType = "Shipping",    NormalBalance = "Debit", IsActive = true, ParentAccountId = acc6000, TenantId = t, CreatedAt = d }
+            );
+
+            // ── Payment Terms ───────────────────────────────────────────────
+            modelBuilder.Entity<PaymentTerm>().HasData(
+                new PaymentTerm { Id = new Guid("f2000000-0000-0000-0000-000000000001"), Code = "COD",   Name = "Cash on Delivery", Description = "Bayar saat barang diterima",  DueDays = 0,  IsActive = true, TenantId = t, CreatedAt = d },
+                new PaymentTerm { Id = new Guid("f2000000-0000-0000-0000-000000000002"), Code = "NET7",  Name = "Net 7",            Description = "Pembayaran dalam 7 hari",    DueDays = 7,  IsActive = true, TenantId = t, CreatedAt = d },
+                new PaymentTerm { Id = new Guid("f2000000-0000-0000-0000-000000000003"), Code = "NET14", Name = "Net 14",           Description = "Pembayaran dalam 14 hari",   DueDays = 14, IsActive = true, TenantId = t, CreatedAt = d },
+                new PaymentTerm { Id = new Guid("f2000000-0000-0000-0000-000000000004"), Code = "NET30", Name = "Net 30",           Description = "Pembayaran dalam 30 hari",   DueDays = 30, IsActive = true, TenantId = t, CreatedAt = d },
+                new PaymentTerm { Id = new Guid("f2000000-0000-0000-0000-000000000005"), Code = "NET60", Name = "Net 60",           Description = "Pembayaran dalam 60 hari",   DueDays = 60, IsActive = true, TenantId = t, CreatedAt = d }
             );
         }
     }

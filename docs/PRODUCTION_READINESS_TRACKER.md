@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-25 (Phase 1 in progress; dirty tree resolved) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-25 (Phase 1 in progress; dirty tree resolved; 3.4 done) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -21,10 +21,10 @@
 |-------|------:|------:|------:|------:|------:|------:|
 | Phase 1 — Pre-Launch Foundation | 10 | 5 | 0 | 1 | 4 | 0 |
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
-| Phase 3 — Post-Launch Hardening | 9 | 0 | 0 | 0 | 9 | 0 |
+| Phase 3 — Post-Launch Hardening | 9 | 1 | 0 | 0 | 8 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
 | Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 2 | 3 | 3 | 0 |
-| **Totals** | **44** | **5** | **2** | **4** | **33** | **0** |
+| **Totals** | **44** | **6** | **2** | **4** | **32** | **0** |
 
 ---
 
@@ -81,7 +81,7 @@
 | 3.1 | Error tracking (Sentry / App Insights) | P1 | S | ⬜ | 2-hour setup; pays back on first incident |
 | 3.2 | OpenTelemetry → Prometheus/Grafana | P2 | M | ⬜ | p50/p95/p99 latency per endpoint |
 | 3.3 | Uptime monitor + alerting | P1 | S | ⬜ | Poll `/health/ready`, page on 3 failures |
-| 3.4 | EF Core global query filters for `ITenantScoped` | P1 | M | ⬜ | Fail-closed tenant isolation |
+| 3.4 | EF Core global query filters for `ITenantScoped` | P1 | M | ✅ | All 29 entities filtered; convention documented; coverage test added (`TenantQueryFilterCoverageTests`). Fail-CLOSED when no tenant context still pending — separate follow-up |
 | 3.5 | Async CSV import via background job + status endpoint | P2 | L | ⬜ | 10k-row imports without HTTP timeout |
 | 3.6 | Document & test idempotency on financial writes | P1 | M | ⬜ | Invoice, payment, journal post — replay safe |
 | 3.7 | Refresh-token revocation list | P2 | M | ⬜ | Logout/password-change invalidates tokens |
@@ -162,6 +162,8 @@
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-25 | 3.4 | ⬜ → ✅ | All 29 ITenantScoped entities filtered; convention documented in AppDbContext; new TenantQueryFilterCoverageTests guard against drift (54/54 unit tests pass). Fail-CLOSED migration documented as future work in commit `746adb8`. |
+| 2026-04-25 | — | (test fix) | Fixed 13 broken unit tests inadvertently introduced by commit `45912fe` (ExecuteInTransactionAsync refactor) — mocks now invoke the work delegate. Commit `d271e1c`. |
 | 2026-04-25 | 5.4 | ⬜ → 🟨 | Tied to 5.3 dashboard work (commit `323542d`) |
 | 2026-04-25 | 5.3 | ⬜ → 🟨 | Finance dashboard view (336 LOC) + report endpoints scaffolded (commit `323542d`); per-channel P&L logic to verify |
 | 2026-04-25 | 5.2 | ⬜ → ⚠️ | Column-mapping flow + sample Shopee fixture landed (commit `b0165c4`); real-export validation outstanding |

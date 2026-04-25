@@ -65,8 +65,8 @@ namespace Application.UseCases.Finance
                     throw new KeyNotFoundException($"Account {line.AccountId} not found.");
             }
 
-            await _transactionManager.BeginTransactionAsync();
-            try
+            Guid createdId = Guid.Empty;
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
                 // Generate entry number inside transaction
                 var entryNumber = await GenerateEntryNumberAsync(request.EntryDate);
@@ -101,17 +101,12 @@ namespace Application.UseCases.Finance
                 var created = await _repository.CreateAsync(entry);
 
                 await _unitOfWork.SaveChangesAsync();
-                await _transactionManager.CommitAsync();
+                createdId = created.Id;
+            });
 
-                // Reload with lines and accounts for the response
-                var detail = await _repository.GetDetailByIdAsync(created.Id);
-                return MapToDetailDto(detail!);
-            }
-            catch
-            {
-                await _transactionManager.RollbackAsync();
-                throw;
-            }
+            // Reload with lines and accounts for the response
+            var detail = await _repository.GetDetailByIdAsync(createdId);
+            return MapToDetailDto(detail!);
         }
 
         // ── Post ─────────────────────────────────────────────────────────────────

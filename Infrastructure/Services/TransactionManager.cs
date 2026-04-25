@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure.Services
@@ -39,6 +40,33 @@ namespace Infrastructure.Services
             await _transaction.RollbackAsync(ct);
             await _transaction.DisposeAsync();
             _transaction = null;
+        }
+
+        public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken ct = default)
+        {
+            var strategy = _context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async token =>
+            {
+                if (_transaction != null)
+                    throw new InvalidOperationException("Transaction already in progress.");
+
+                _transaction = await _context.Database.BeginTransactionAsync(token);
+                try
+                {
+                    await work(token);
+                    await _transaction.CommitAsync(token);
+                }
+                catch
+                {
+                    await _transaction.RollbackAsync(token);
+                    throw;
+                }
+                finally
+                {
+                    await _transaction.DisposeAsync();
+                    _transaction = null;
+                }
+            }, ct);
         }
     }
 }

@@ -34,8 +34,7 @@ namespace Application.UseCases.Inventory
 
             var result = new StockReconciliationResult { TotalItems = request.Counts.Count };
 
-            await _transactionManager.BeginTransactionAsync();
-            try
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
                 foreach (var count in request.Counts)
                 {
@@ -106,14 +105,9 @@ namespace Application.UseCases.Inventory
                 }
 
                 await _unitOfWork.SaveChangesAsync();
-                await _transactionManager.CommitAsync();
-                return result;
-            }
-            catch
-            {
-                await _transactionManager.RollbackAsync();
-                throw;
-            }
+            });
+
+            return result;
         }
     }
 }

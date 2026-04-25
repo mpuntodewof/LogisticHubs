@@ -22,6 +22,7 @@ namespace Infrastructure.Repositories
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.BaseUnitOfMeasure)
+                .Include(p => p.Variants)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(request.Search))

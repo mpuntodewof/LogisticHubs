@@ -52,8 +52,8 @@ namespace Application.UseCases.Tax
             if (request.Items == null || request.Items.Count == 0)
                 throw new InvalidOperationException("Invoice must have at least one item.");
 
-            await _transactionManager.BeginTransactionAsync();
-            try
+            InvoiceDto? dto = null;
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
                 var invoiceNumber = await GenerateInvoiceNumberAsync();
                 var invoiceDate = DateTime.UtcNow;
@@ -144,14 +144,10 @@ namespace Application.UseCases.Tax
                 var created = await _invoiceRepository.CreateAsync(invoice);
 
                 await _unitOfWork.SaveChangesAsync();
-                await _transactionManager.CommitAsync();
-                return MapToDto(created);
-            }
-            catch
-            {
-                await _transactionManager.RollbackAsync();
-                throw;
-            }
+                dto = MapToDto(created);
+            });
+
+            return dto!;
         }
 
         public async Task IssueAsync(Guid id)

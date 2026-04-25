@@ -52,88 +52,86 @@ namespace Application.UseCases.Inventory
         {
             for (int attempt = 1; attempt <= MaxConcurrencyRetries; attempt++)
             {
-                await _transactionManager.BeginTransactionAsync();
                 try
                 {
-                    // Get or create warehouse stock
-                    var stock = await _stockRepository.GetByWarehouseAndVariantAsync(request.WarehouseId, request.ProductVariantId);
-                    bool isNewStock = stock == null;
-
-                    if (isNewStock)
+                    StockMovementDto? dto = null;
+                    await _transactionManager.ExecuteInTransactionAsync(async _ =>
                     {
-                        stock = new WarehouseStock
+                        // Get or create warehouse stock
+                        var stock = await _stockRepository.GetByWarehouseAndVariantAsync(request.WarehouseId, request.ProductVariantId);
+                        bool isNewStock = stock == null;
+
+                        if (isNewStock)
+                        {
+                            stock = new WarehouseStock
+                            {
+                                Id = Guid.NewGuid(),
+                                WarehouseId = request.WarehouseId,
+                                ProductVariantId = request.ProductVariantId,
+                                QuantityOnHand = 0,
+                                QuantityReserved = 0,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                        }
+
+                        var quantityBefore = stock!.QuantityOnHand;
+
+                        switch (request.MovementType)
+                        {
+                            case StockMovementType.In:
+                                stock.QuantityOnHand += request.Quantity;
+                                break;
+
+                            case StockMovementType.Out:
+                                if (stock.QuantityOnHand < request.Quantity)
+                                    throw new InvalidOperationException("Insufficient stock for outbound movement.");
+                                stock.QuantityOnHand -= request.Quantity;
+                                break;
+
+                            case StockMovementType.Adjustment:
+                                stock.QuantityOnHand = quantityBefore + request.Quantity;
+                                break;
+
+                            default:
+                                throw new InvalidOperationException($"Unsupported movement type: {request.MovementType}");
+                        }
+
+                        var quantityAfter = stock.QuantityOnHand;
+
+                        var movement = new StockMovement
                         {
                             Id = Guid.NewGuid(),
                             WarehouseId = request.WarehouseId,
                             ProductVariantId = request.ProductVariantId,
-                            QuantityOnHand = 0,
-                            QuantityReserved = 0,
+                            MovementType = request.MovementType.ToString(),
+                            Reason = request.Reason.ToString(),
+                            Quantity = request.Quantity,
+                            QuantityBefore = quantityBefore,
+                            QuantityAfter = quantityAfter,
+                            ReferenceDocumentType = request.ReferenceDocumentType,
+                            ReferenceDocumentId = request.ReferenceDocumentId,
+                            ReferenceDocumentNumber = request.ReferenceDocumentNumber,
+                            Notes = request.Notes,
                             CreatedAt = DateTime.UtcNow
                         };
-                    }
 
-                    var quantityBefore = stock!.QuantityOnHand;
+                        if (isNewStock)
+                            await _stockRepository.CreateAsync(stock);
+                        else
+                            await _stockRepository.UpdateAsync(stock);
 
-                    switch (request.MovementType)
-                    {
-                        case StockMovementType.In:
-                            stock.QuantityOnHand += request.Quantity;
-                            break;
+                        var created = await _movementRepository.CreateAsync(movement);
 
-                        case StockMovementType.Out:
-                            if (stock.QuantityOnHand < request.Quantity)
-                                throw new InvalidOperationException("Insufficient stock for outbound movement.");
-                            stock.QuantityOnHand -= request.Quantity;
-                            break;
+                        await _unitOfWork.SaveChangesAsync();
+                        dto = MapToDto(created);
+                    });
 
-                        case StockMovementType.Adjustment:
-                            stock.QuantityOnHand = quantityBefore + request.Quantity;
-                            break;
-
-                        default:
-                            throw new InvalidOperationException($"Unsupported movement type: {request.MovementType}");
-                    }
-
-                    var quantityAfter = stock.QuantityOnHand;
-
-                    var movement = new StockMovement
-                    {
-                        Id = Guid.NewGuid(),
-                        WarehouseId = request.WarehouseId,
-                        ProductVariantId = request.ProductVariantId,
-                        MovementType = request.MovementType.ToString(),
-                        Reason = request.Reason.ToString(),
-                        Quantity = request.Quantity,
-                        QuantityBefore = quantityBefore,
-                        QuantityAfter = quantityAfter,
-                        ReferenceDocumentType = request.ReferenceDocumentType,
-                        ReferenceDocumentId = request.ReferenceDocumentId,
-                        ReferenceDocumentNumber = request.ReferenceDocumentNumber,
-                        Notes = request.Notes,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    if (isNewStock)
-                        await _stockRepository.CreateAsync(stock);
-                    else
-                        await _stockRepository.UpdateAsync(stock);
-
-                    var created = await _movementRepository.CreateAsync(movement);
-
-                    await _unitOfWork.SaveChangesAsync();
-                    await _transactionManager.CommitAsync();
-                    return MapToDto(created);
+                    return dto!;
                 }
                 catch (ConcurrencyConflictException) when (attempt < MaxConcurrencyRetries)
                 {
-                    await _transactionManager.RollbackAsync();
                     // Retry with fresh data on next iteration
                     continue;
-                }
-                catch
-                {
-                    await _transactionManager.RollbackAsync();
-                    throw;
                 }
             }
 
@@ -160,8 +158,8 @@ namespace Application.UseCases.Inventory
             if (request.SourceWarehouseId == request.DestinationWarehouseId)
                 throw new InvalidOperationException("Source and destination warehouses must be different.");
 
-            await _transactionManager.BeginTransactionAsync();
-            try
+            StockMovementDto? transferDto = null;
+            await _transactionManager.ExecuteInTransactionAsync(async _ =>
             {
                 // Get or create source stock
                 var sourceStock = await _stockRepository.GetByWarehouseAndVariantAsync(
@@ -260,14 +258,10 @@ namespace Application.UseCases.Inventory
                 await _movementRepository.CreateAsync(inMovement);
 
                 await _unitOfWork.SaveChangesAsync();
-                await _transactionManager.CommitAsync();
-                return MapToDto(createdOut);
-            }
-            catch
-            {
-                await _transactionManager.RollbackAsync();
-                throw;
-            }
+                transferDto = MapToDto(createdOut);
+            });
+
+            return transferDto!;
         }
 
         private static StockMovementDto MapToDto(StockMovement m) => new()

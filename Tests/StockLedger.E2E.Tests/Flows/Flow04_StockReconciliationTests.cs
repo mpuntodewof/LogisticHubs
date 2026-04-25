@@ -10,7 +10,7 @@ public class Flow04_StockReconciliationTests : StockLedgerTestBase
     [Fact]
     public async Task Reconciliation_AdjustsStockAndCreatesMovements()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         // Get a warehouse
         var warehousesResp = await AuthGet(token, $"{V1}/warehouses?page=1&pageSize=1");

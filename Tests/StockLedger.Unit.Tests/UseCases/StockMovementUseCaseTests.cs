@@ -19,6 +19,16 @@ public class StockMovementUseCaseTests
 
     public StockMovementUseCaseTests()
     {
+        // Make the mocked TransactionManager actually invoke the work delegate
+        // so the use-case body executes inside the test.
+        _transactionManager
+            .ExecuteInTransactionAsync(Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>())
+            .Returns(async ci =>
+            {
+                var work = ci.Arg<Func<CancellationToken, Task>>();
+                await work(ci.Arg<CancellationToken>());
+            });
+
         _sut = new StockMovementUseCase(_movementRepo, _stockRepo, _transactionManager, _unitOfWork);
     }
 
@@ -54,7 +64,8 @@ public class StockMovementUseCaseTests
         result.QuantityBefore.Should().Be(50);
         result.QuantityAfter.Should().Be(60);
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-        await _transactionManager.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _transactionManager.Received(1).ExecuteInTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -119,7 +130,10 @@ public class StockMovementUseCaseTests
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*Insufficient stock*");
-        await _transactionManager.Received(1).RollbackAsync(Arg.Any<CancellationToken>());
+        // Wrapper handles rollback internally on exception; we just verify the
+        // wrapper itself was invoked.
+        await _transactionManager.Received(1).ExecuteInTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

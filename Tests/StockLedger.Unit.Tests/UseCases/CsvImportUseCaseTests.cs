@@ -30,6 +30,16 @@ public class CsvImportUseCaseTests
 
     public CsvImportUseCaseTests()
     {
+        // Make the mocked TransactionManager actually invoke the work delegate
+        // so the use-case body executes inside the test.
+        _transactionManager
+            .ExecuteInTransactionAsync(Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>())
+            .Returns(async ci =>
+            {
+                var work = ci.Arg<Func<CancellationToken, Task>>();
+                await work(ci.Arg<CancellationToken>());
+            });
+
         _sut = new CsvImportUseCase(
             _importRepo, _channelRepo, _variantRepo, _stockRepo,
             _movementRepo, _warehouseRepo, _transactionManager, _unitOfWork, _csvParser);
@@ -124,7 +134,8 @@ public class CsvImportUseCaseTests
         stock2.QuantityOnHand.Should().Be(27); // 30 - 3
 
         await _movementRepo.Received(2).CreateAsync(Arg.Any<StockMovement>());
-        await _transactionManager.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _transactionManager.Received(1).ExecuteInTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
     }
 
     // ── Test 2: Unmatched SKU ───────────────────────────────────────────────

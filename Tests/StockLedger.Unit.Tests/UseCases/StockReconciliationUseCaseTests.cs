@@ -21,6 +21,16 @@ public class StockReconciliationUseCaseTests
 
     public StockReconciliationUseCaseTests()
     {
+        // Make the mocked TransactionManager actually invoke the work delegate
+        // so the use-case body executes inside the test.
+        _transactionManager
+            .ExecuteInTransactionAsync(Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>())
+            .Returns(async ci =>
+            {
+                var work = ci.Arg<Func<CancellationToken, Task>>();
+                await work(ci.Arg<CancellationToken>());
+            });
+
         _sut = new StockReconciliationUseCase(
             _stockRepo, _movementRepo, _variantRepo, _transactionManager, _unitOfWork);
 
@@ -78,7 +88,8 @@ public class StockReconciliationUseCaseTests
         result.Variances.Should().HaveCount(1);
         result.Variances[0].Variance.Should().Be(0);
         await _movementRepo.DidNotReceive().CreateAsync(Arg.Any<StockMovement>());
-        await _transactionManager.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _transactionManager.Received(1).ExecuteInTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -235,6 +246,7 @@ public class StockReconciliationUseCaseTests
 
         await _movementRepo.Received(2).CreateAsync(Arg.Any<StockMovement>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-        await _transactionManager.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _transactionManager.Received(1).ExecuteInTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
     }
 }

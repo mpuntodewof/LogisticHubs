@@ -22,7 +22,19 @@ public abstract class StockLedgerTestBase
         Converters = { new JsonStringEnumConverter() }
     };
 
-    protected static async Task<string> LoginAsync(string email, string password)
+    // Token cache — the /auth/login endpoint is rate-limited to 5 req/min per IP.
+    // xUnit creates a new test-class instance per [Fact], so caching by credentials
+    // keeps the whole suite under the limit while still exercising the full login path once.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Task<string>>> _tokenCache = new();
+
+    protected static Task<string> LoginAsync(string email, string password)
+    {
+        var key = $"{email}|{password}";
+        var lazy = _tokenCache.GetOrAdd(key, _ => new Lazy<Task<string>>(() => LoginDirectAsync(email, password)));
+        return lazy.Value;
+    }
+
+    private static async Task<string> LoginDirectAsync(string email, string password)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"{V1}/auth/login")
         {

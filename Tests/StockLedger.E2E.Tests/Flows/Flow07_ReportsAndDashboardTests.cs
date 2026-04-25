@@ -10,7 +10,7 @@ public class Flow07_ReportsAndDashboardTests : StockLedgerTestBase
     [Fact]
     public async Task Dashboard_ReturnsValidSummary()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         var resp = await AuthGet(token, $"{V1}/reports/dashboard");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -34,7 +34,7 @@ public class Flow07_ReportsAndDashboardTests : StockLedgerTestBase
     [Fact]
     public async Task ProfitAndLoss_ReturnsReportWithDateRange()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         var from = DateTime.UtcNow.AddMonths(-3).ToString("yyyy-MM-dd");
         var to = DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -52,7 +52,7 @@ public class Flow07_ReportsAndDashboardTests : StockLedgerTestBase
     [Fact]
     public async Task Export_Invoices_ReturnsCsvFile()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         var resp = await AuthGet(token, $"{V1}/export/invoices");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -65,7 +65,7 @@ public class Flow07_ReportsAndDashboardTests : StockLedgerTestBase
     [Fact]
     public async Task Export_Products_ReturnsCsvFile()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         var resp = await AuthGet(token, $"{V1}/export/products");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -77,7 +77,7 @@ public class Flow07_ReportsAndDashboardTests : StockLedgerTestBase
     [Fact]
     public async Task Notifications_ReturnsValidResponse()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         var resp = await AuthGet(token, $"{V1}/notifications");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);

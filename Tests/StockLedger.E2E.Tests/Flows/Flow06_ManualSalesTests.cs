@@ -10,7 +10,7 @@ public class Flow06_ManualSalesTests : StockLedgerTestBase
     [Fact]
     public async Task ManualSale_DeductsStockAndCreatesMovement()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         // Get a warehouse with stock
         var stockResp = await AuthGet(token, $"{V1}/warehouse-stock?page=1&pageSize=5");
@@ -56,7 +56,7 @@ public class Flow06_ManualSalesTests : StockLedgerTestBase
     [Fact]
     public async Task ManualSale_InsufficientStock_Returns409()
     {
-        var token = await LoginAsync("admin@stockledger.test", "Admin123!@#");
+        var token = await LoginAsync("admin@stockledger.io", "password123");
 
         // Try to sell 999999 units — should fail
         var stockResp = await AuthGet(token, $"{V1}/warehouse-stock?page=1&pageSize=1");

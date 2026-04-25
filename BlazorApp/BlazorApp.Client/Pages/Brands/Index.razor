@@ -4,15 +4,16 @@
 @inject ApiClient Api
 @inject NavigationManager Nav
 @inject AuthService AuthSvc
+@inject AuthenticationStateProvider AuthState
 
-<PageTitle>Brands — NiagaOne</PageTitle>
+<PageTitle>Brands — StockLedger</PageTitle>
 
 <div class="page-header">
     <div>
         <h1 class="page-title">Brands</h1>
         <div class="page-sub">Manage product brands</div>
     </div>
-    <button class="btn-primary-custom" @onclick="() => _showCreate = true">
+    <button class="btn-primary-custom" @onclick="OpenCreate">
         &#43; New Brand
     </button>
 </div>
@@ -37,12 +38,16 @@ else
                         <th>Description</th>
                         <th>Active</th>
                         <th>Created</th>
+                        @if (_canUpdate || _canDelete)
+                        {
+                            <th style="width:90px">Actions</th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
                     @if (_pagedResult == null || !_pagedResult.Items.Any())
                     {
-                        <tr><td colspan="5">
+                        <tr><td colspan="@(_canUpdate || _canDelete ? 6 : 5)">
                             <div class="empty-state">
                                 <div class="empty-state-icon">&#127991;</div>
                                 <div class="empty-state-text">No brands found.</div>
@@ -59,6 +64,21 @@ else
                                 <td>@(b.Description ?? "—")</td>
                                 <td><span class="badge-status @(b.IsActive ? "status-active" : "status-inactive")">@(b.IsActive ? "Active" : "Inactive")</span></td>
                                 <td>@b.CreatedAt.ToString("MMM d, yyyy")</td>
+                                @if (_canUpdate || _canDelete)
+                                {
+                                    <td>
+                                        <div class="row-actions">
+                                            @if (_canUpdate)
+                                            {
+                                                <button class="btn-icon" title="Edit" @onclick="() => OpenEdit(b)">&#9998;</button>
+                                            }
+                                            @if (_canDelete)
+                                            {
+                                                <button class="btn-icon btn-icon-danger" title="Delete" @onclick="() => ConfirmDelete(b)">&#128465;</button>
+                                            }
+                                        </div>
+                                    </td>
+                                }
                             </tr>
                         }
                     }
@@ -76,32 +96,33 @@ else
     </div>
 }
 
-@if (_showCreate)
+@* ── Create / Edit Modal ── *@
+@if (_showModal)
 {
     <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
         <div class="card" style="width:460px;max-width:95vw">
             <div class="card-header-custom">
-                <span class="card-title-custom">New Brand</span>
-                <button class="btn-logout" @onclick="() => _showCreate = false">&#x2715;</button>
+                <span class="card-title-custom">@(_editId == null ? "New Brand" : "Edit Brand")</span>
+                <button class="btn-logout" @onclick="CloseModal">&#x2715;</button>
             </div>
             <div class="card-body-custom">
-                @if (!string.IsNullOrEmpty(_createError))
+                @if (!string.IsNullOrEmpty(_modalError))
                 {
-                    <div class="alert-custom alert-error">&#9888; @_createError</div>
+                    <div class="alert-custom alert-error">&#9888; @_modalError</div>
                 }
                 <div class="form-group">
                     <label class="form-label">Name</label>
-                    <input class="form-control-custom" @bind="_newItem.Name" placeholder="Brand name" />
+                    <input class="form-control-custom" @bind="_formItem.Name" placeholder="Brand name" />
                 </div>
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <input class="form-control-custom" @bind="_newItem.Description" placeholder="Optional description" />
+                    <input class="form-control-custom" @bind="_formItem.Description" placeholder="Optional description" />
                 </div>
                 <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
-                    <button class="btn-outline" @onclick="() => _showCreate = false">Cancel</button>
-                    <button class="btn-primary-custom" @onclick="CreateAsync" disabled="@_creating">
-                        @if (_creating) { <span class="spinner" style="border-top-color:#fff"></span> }
-                        Create
+                    <button class="btn-outline" @onclick="CloseModal">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="SaveAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        @(_editId == null ? "Create" : "Save Changes")
                     </button>
                 </div>
             </div>
@@ -109,19 +130,48 @@ else
     </div>
 }
 
+@* ── Delete Confirmation Dialog ── *@
+@if (_showDeleteDialog)
+{
+    <div class="dialog-overlay">
+        <div class="dialog-card">
+            <div class="dialog-icon">&#128465;</div>
+            <div class="dialog-title">Delete Brand</div>
+            <div class="dialog-message">Are you sure you want to delete <strong>@_deleteTarget?.Name</strong>? This action cannot be undone.</div>
+            <div class="dialog-actions">
+                <button class="btn-outline" @onclick="() => _showDeleteDialog = false">Cancel</button>
+                <button class="btn-danger" @onclick="DeleteAsync" disabled="@_deleting">
+                    @if (_deleting) { <span class="spinner" style="border-top-color:#fff"></span> }
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private bool _loading = true;
-    private bool _showCreate;
-    private bool _creating;
-    private string _createError = string.Empty;
+    private bool _showModal;
+    private bool _saving;
+    private bool _showDeleteDialog;
+    private bool _deleting;
+    private Guid? _editId;
+    private string _modalError = string.Empty;
     private string _search = string.Empty;
     private int _page = 1;
     private int _pageSize = 20;
+    private bool _canUpdate, _canDelete;
     private PagedResult<BrandDto>? _pagedResult;
-    private readonly CreateBrandRequest _newItem = new();
+    private CreateBrandRequest _formItem = new();
+    private BrandDto? _deleteTarget;
 
     protected override async Task OnInitializedAsync()
     {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        var perms = state.User.Claims.Where(c => c.Type == "permissions").Select(c => c.Value).ToHashSet();
+        _canUpdate = perms.Contains("brands.update");
+        _canDelete = perms.Contains("brands.delete");
+
         await LoadDataAsync();
         _loading = false;
     }
@@ -131,37 +181,95 @@ else
         var apiResult = await Api.GetBrandsAsync(_page, _pageSize, _search); if (apiResult.Success) _pagedResult = apiResult.Data;
     }
 
-    private async Task SearchAsync()
-    {
-        _page = 1;
-        await LoadDataAsync();
-    }
-
-    private async Task HandleSearchKey(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter") await SearchAsync();
-    }
-
+    private async Task SearchAsync() { _page = 1; await LoadDataAsync(); }
+    private async Task HandleSearchKey(KeyboardEventArgs e) { if (e.Key == "Enter") await SearchAsync(); }
     private async Task PrevPage() { _page--; await LoadDataAsync(); }
     private async Task NextPage() { _page++; await LoadDataAsync(); }
 
-    private async Task CreateAsync()
+    private void OpenCreate()
     {
-        _creating = true;
-        _createError = string.Empty;
+        _editId = null;
+        _formItem = new();
+        _modalError = string.Empty;
+        _showModal = true;
+    }
 
-        var result = await Api.CreateBrandAsync(_newItem);
-        if (result.Success && result.Data != null)
+    private void OpenEdit(BrandDto b)
+    {
+        _editId = b.Id;
+        _formItem = new CreateBrandRequest
         {
-            _showCreate = false;
-            _page = 1;
+            Name = b.Name,
+            Description = b.Description
+        };
+        _modalError = string.Empty;
+        _showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+        _editId = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _modalError = string.Empty;
+
+        bool success;
+        string? errorMessage;
+
+        if (_editId == null)
+        {
+            var result = await Api.CreateBrandAsync(_formItem);
+            success = result.Success;
+            errorMessage = result.ErrorMessage;
+        }
+        else
+        {
+            var result = await Api.UpdateBrandAsync(_editId.Value, _formItem);
+            success = result.Success;
+            errorMessage = result.ErrorMessage;
+        }
+
+        if (success)
+        {
+            CloseModal();
             await LoadDataAsync();
         }
         else
         {
-            _createError = result.ErrorMessage ?? "Failed to create brand.";
+            _modalError = errorMessage ?? (_editId == null ? "Failed to create brand." : "Failed to update brand.");
         }
 
-        _creating = false;
+        _saving = false;
+    }
+
+    private void ConfirmDelete(BrandDto b)
+    {
+        _deleteTarget = b;
+        _showDeleteDialog = true;
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_deleteTarget == null) return;
+        _deleting = true;
+
+        var result = await Api.DeleteBrandAsync(_deleteTarget.Id);
+        if (result.Success)
+        {
+            _showDeleteDialog = false;
+            _deleteTarget = null;
+            await LoadDataAsync();
+        }
+        else
+        {
+            _showDeleteDialog = false;
+            _modalError = result.ErrorMessage ?? "Failed to delete brand.";
+        }
+
+        _deleting = false;
     }
 }

@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using BlazorApp.Client.Models;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace BlazorApp.Client.Services
 {
@@ -52,7 +53,7 @@ namespace BlazorApp.Client.Services
         }
 
         // ── Auth ─────────────────────────────────────────────────────────────────
-
+        #region Auth
         public async Task<ApiResult<LoginResponse>> LoginAsync(LoginRequest request)
         {
             var response = await _http.PostAsJsonAsync($"{V1}/auth/login", request);
@@ -84,6 +85,8 @@ namespace BlazorApp.Client.Services
             var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
             return ApiResult<LoginResponse>.Ok(data!);
         }
+        
+        #endregion
 
         // ── Shipments ────────────────────────────────────────────────────────────
 
@@ -673,30 +676,30 @@ namespace BlazorApp.Client.Services
 
         // ── Warehouse Stock (Inventory) ──────────────────────────────────────────
 
-        public async Task<ApiResult<PagedResult<object>>> GetWarehouseStockAsync(int page = 1, int pageSize = 20, string? search = null)
+        public async Task<ApiResult<PagedResult<JsonElement>>> GetWarehouseStockAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
             var url = $"{V1}/warehouse-stock?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
-                return ApiResult<PagedResult<object>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
-            var data = await resp.Content.ReadFromJsonAsync<PagedResult<object>>();
-            return ApiResult<PagedResult<object>>.Ok(data!);
+                return ApiResult<PagedResult<JsonElement>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<PagedResult<JsonElement>>();
+            return ApiResult<PagedResult<JsonElement>>.Ok(data!);
         }
 
         // ── Stock Movements ──────────────────────────────────────────────────────
 
-        public async Task<ApiResult<PagedResult<object>>> GetStockMovementsAsync(int page = 1, int pageSize = 20, string? search = null)
+        public async Task<ApiResult<PagedResult<JsonElement>>> GetStockMovementsAsync(int page = 1, int pageSize = 20, string? search = null)
         {
             await AttachTokenAsync();
             var url = $"{V1}/stock-movements?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
             var resp = await _http.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
-                return ApiResult<PagedResult<object>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
-            var data = await resp.Content.ReadFromJsonAsync<PagedResult<object>>();
-            return ApiResult<PagedResult<object>>.Ok(data!);
+                return ApiResult<PagedResult<JsonElement>>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<PagedResult<JsonElement>>();
+            return ApiResult<PagedResult<JsonElement>>.Ok(data!);
         }
 
         // ── Sales Orders ─────────────────────────────────────────────────────────
@@ -1945,6 +1948,24 @@ namespace BlazorApp.Client.Services
             return ApiResult<ImportSummaryDto>.Ok(data!);
         }
 
+        public async Task<ApiResult<InitialStockResultDto>> ProcessInitialStockImportAsync(
+            Stream fileStream, string fileName, Guid warehouseId, string skuCol, string quantityCol)
+        {
+            await AttachTokenAsync();
+            AttachIdempotencyKey();
+            using var content = new MultipartFormDataContent();
+            content.Add(new StreamContent(fileStream), "file", fileName);
+            content.Add(new StringContent(warehouseId.ToString()), "warehouseId");
+            content.Add(new StringContent(skuCol), "skuColumn");
+            content.Add(new StringContent(quantityCol), "quantityColumn");
+            var resp = await _http.PostAsync($"{V1}/import/csv/initial-stock", content);
+            ClearIdempotencyKey();
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<InitialStockResultDto>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<InitialStockResultDto>();
+            return ApiResult<InitialStockResultDto>.Ok(data!);
+        }
+
         public async Task<ApiResult<PagedResult<ImportBatchDto>>> GetImportBatchesAsync(int page = 1, int pageSize = 20)
         {
             await AttachTokenAsync();
@@ -1965,6 +1986,16 @@ namespace BlazorApp.Client.Services
                 return ApiResult<DashboardSummary>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
             var data = await resp.Content.ReadFromJsonAsync<DashboardSummary>();
             return ApiResult<DashboardSummary>.Ok(data!);
+        }
+
+        public async Task<ApiResult<FinanceDashboardSummary>> GetFinanceDashboardSummaryAsync()
+        {
+            await AttachTokenAsync();
+            var resp = await _http.GetAsync($"{V1}/reports/finance-dashboard");
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<FinanceDashboardSummary>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<FinanceDashboardSummary>();
+            return ApiResult<FinanceDashboardSummary>.Ok(data!);
         }
 
         public async Task<ApiResult<ProfitAndLossReport>> GetProfitAndLossAsync(DateTime? from = null, DateTime? to = null)

@@ -11,12 +11,34 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="BlazorApp.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <HeadOutlet @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
 </head>
 
 <body>
     <BlazorApp.Client.Routes @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.themeInterop = {
+            get: function() { return localStorage.getItem('theme') || 'dark'; },
+            set: function(theme) {
+                localStorage.setItem('theme', theme);
+                document.documentElement.setAttribute('data-theme', theme);
+            },
+            toggle: function() {
+                var current = localStorage.getItem('theme') || 'dark';
+                var next = current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', next);
+                document.documentElement.setAttribute('data-theme', next);
+                return next;
+            }
+        };
+    </script>
 </body>
 
 </html>

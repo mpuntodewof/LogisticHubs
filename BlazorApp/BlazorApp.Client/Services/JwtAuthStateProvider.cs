@@ -76,6 +76,13 @@ namespace BlazorApp.Client.Services
                 .Select(c => c.Value);
         }
 
+        /// <summary>
+        /// Landing route for the currently authenticated user. Currently always
+        /// /dashboard — the page itself renders a role-appropriate view
+        /// (finance-only for Accountants, inventory-first for everyone else).
+        /// </summary>
+        public Task<string> GetDefaultLandingRouteAsync() => Task.FromResult("/dashboard");
+
         private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
             var handler = new JwtSecurityTokenHandler();

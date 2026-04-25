@@ -2,10 +2,11 @@
 @inject AuthService AuthSvc
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 @if (!_authChecked)
 {
-    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0F172A">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--body-bg)">
         <div class="loading-spinner"><div class="spinner"></div> Loading...</div>
     </div>
 }
@@ -150,6 +151,12 @@ else
                 <span class="nav-icon">&#128736;</span> Profile
             </NavLink>
 
+            <button class="theme-toggle" @onclick="ToggleThemeAsync">
+                <span class="theme-toggle-icon">@(_isDark ? "\u2600\uFE0F" : "\uD83C\uDF19")</span>
+                @(_isDark ? "Light Mode" : "Dark Mode")
+                <span class="theme-toggle-track"></span>
+            </button>
+
             <div class="sidebar-footer">
                 <div class="user-chip">
                     <div class="user-avatar">@_initials</div>
@@ -172,6 +179,7 @@ else
 
 @code {
     private bool _authChecked;
+    private bool _isDark = true;
     private string _userName = "User";
     private string _userRole = "";
     private string _initials = "U";
@@ -208,6 +216,22 @@ else
             .ToHashSet();
 
         _authChecked = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var theme = await JS.InvokeAsync<string>("themeInterop.get");
+            _isDark = theme != "light";
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleThemeAsync()
+    {
+        var newTheme = await JS.InvokeAsync<string>("themeInterop.toggle");
+        _isDark = newTheme != "light";
     }
 
     private bool Has(string permission) => _permissions.Contains(permission);

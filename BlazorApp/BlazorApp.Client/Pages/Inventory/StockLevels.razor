@@ -1,5 +1,6 @@
 @page "/warehouse-stock"
 @layout AppLayout
+@using System.Text.Json
 
 @inject ApiClient Api
 @inject NavigationManager Nav
@@ -60,15 +61,14 @@ else
                     {
                         @foreach (var item in _pagedResult.Items)
                         {
-                            var dict = item as IDictionary<string, object>;
                             <tr>
-                                <td><strong>@GetVal(dict, "warehouseName")</strong></td>
-                                <td>@GetVal(dict, "sku")</td>
-                                <td>@GetVal(dict, "productName")</td>
-                                <td>@GetVal(dict, "onHand")</td>
-                                <td>@GetVal(dict, "reserved")</td>
-                                <td>@GetVal(dict, "available")</td>
-                                <td>@GetVal(dict, "reorderPoint")</td>
+                                <td><strong>@GetVal(item, "warehouseName")</strong></td>
+                                <td>@GetVal(item, "sku")</td>
+                                <td>@GetVal(item, "productVariantName")</td>
+                                <td>@GetVal(item, "quantityOnHand")</td>
+                                <td>@GetVal(item, "quantityReserved")</td>
+                                <td>@GetVal(item, "quantityAvailable")</td>
+                                <td>@GetVal(item, "reorderPoint")</td>
                             </tr>
                         }
                     }
@@ -92,7 +92,7 @@ else
     private string _error = string.Empty;
     private int _page = 1;
     private int _pageSize = 20;
-    private PagedResult<object>? _pagedResult;
+    private PagedResult<JsonElement>? _pagedResult;
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,13 +136,20 @@ else
     private async Task PrevPage() { _page--; await LoadDataAsync(); }
     private async Task NextPage() { _page++; await LoadDataAsync(); }
 
-    private static string GetVal(IDictionary<string, object>? dict, string key)
+    private const string Dash = "—";
+
+    private static string GetVal(JsonElement element, string key)
     {
-        if (dict == null) return "\u2014";
-        // Try exact key, then PascalCase
-        if (dict.TryGetValue(key, out var val)) return val?.ToString() ?? "\u2014";
-        var pascal = char.ToUpper(key[0]) + key[1..];
-        if (dict.TryGetValue(pascal, out val)) return val?.ToString() ?? "\u2014";
-        return "\u2014";
+        if (element.ValueKind != JsonValueKind.Object) return Dash;
+        if (!element.TryGetProperty(key, out var prop)) return Dash;
+        return prop.ValueKind switch
+        {
+            JsonValueKind.Null or JsonValueKind.Undefined => Dash,
+            JsonValueKind.String => prop.GetString() ?? Dash,
+            JsonValueKind.Number => prop.ToString(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            _ => prop.ToString()
+        };
     }
 }

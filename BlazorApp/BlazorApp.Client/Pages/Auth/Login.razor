@@ -3,16 +3,17 @@
 
 @inject AuthService AuthSvc
 @inject AuthenticationStateProvider AuthState
+@inject JwtAuthStateProvider JwtAuth
 @inject NavigationManager Nav
 
-<PageTitle>Sign In — NiagaOne</PageTitle>
+<PageTitle>Sign In — StockLedger</PageTitle>
 
 <div class="auth-card">
     <div class="auth-logo">
-        <div class="auth-logo-icon">&#128666;</div>
+        <div class="auth-logo-icon">&#128230;</div>
         <div>
-            <div class="auth-logo-text">NiagaOne</div>
-            <div class="auth-logo-sub">Fleet Management Platform</div>
+            <div class="auth-logo-text">StockLedger</div>
+            <div class="auth-logo-sub">Inventory + Finance</div>
         </div>
     </div>
 
@@ -64,7 +65,7 @@
         var state = await AuthState.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {
-            Nav.NavigateTo("/dashboard");
+            Nav.NavigateTo(await JwtAuth.GetDefaultLandingRouteAsync());
         }
     }
 
@@ -76,7 +77,7 @@
         var success = await AuthSvc.LoginAsync(_model);
         if (success)
         {
-            Nav.NavigateTo("/dashboard");
+            Nav.NavigateTo(await JwtAuth.GetDefaultLandingRouteAsync());
             return;
         }
         else

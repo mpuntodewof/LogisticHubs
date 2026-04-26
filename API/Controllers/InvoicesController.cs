@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Tax;
 using Application.UseCases.Tax;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all invoices (paginated).</summary>
         [HttpGet]
-        [RequirePermission("invoices.read")]
+        [RequirePermission(Permissions.Invoices.Read)]
         public async Task<ActionResult<PagedResult<InvoiceDto>>> GetAll(
             [FromQuery] PagedRequest request,
             [FromQuery] string? status)
@@ -34,7 +35,7 @@ namespace API.Controllers
 
         /// <summary>Get an invoice by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("invoices.read")]
+        [RequirePermission(Permissions.Invoices.Read)]
         public async Task<ActionResult<InvoiceDetailDto>> GetById(Guid id)
         {
             var invoice = await _invoiceUseCase.GetByIdAsync(id);
@@ -44,7 +45,7 @@ namespace API.Controllers
 
         /// <summary>Create a new invoice.</summary>
         [HttpPost]
-        [RequirePermission("invoices.create")]
+        [RequirePermission(Permissions.Invoices.Create)]
         public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceRequest request)
         {
             try
@@ -60,7 +61,7 @@ namespace API.Controllers
 
         /// <summary>Issue an invoice.</summary>
         [HttpPost("{id:guid}/issue")]
-        [RequirePermission("invoices.issue")]
+        [RequirePermission(Permissions.Invoices.Issue)]
         public async Task<IActionResult> Issue(Guid id)
         {
             try
@@ -76,7 +77,7 @@ namespace API.Controllers
 
         /// <summary>Assign a tax invoice number.</summary>
         [HttpPost("{id:guid}/assign-tax-number")]
-        [RequirePermission("invoices.assign-tax-number")]
+        [RequirePermission(Permissions.Invoices.AssignTaxNumber)]
         public async Task<IActionResult> AssignTaxInvoiceNumber(Guid id, [FromBody] AssignTaxInvoiceNumberRequest request)
         {
             try
@@ -92,7 +93,7 @@ namespace API.Controllers
 
         /// <summary>Mark an invoice as paid.</summary>
         [HttpPost("{id:guid}/mark-paid")]
-        [RequirePermission("invoices.pay")]
+        [RequirePermission(Permissions.Invoices.Pay)]
         public async Task<IActionResult> MarkPaid(Guid id)
         {
             try
@@ -108,7 +109,7 @@ namespace API.Controllers
 
         /// <summary>Cancel an invoice.</summary>
         [HttpPost("{id:guid}/cancel")]
-        [RequirePermission("invoices.cancel")]
+        [RequirePermission(Permissions.Invoices.Cancel)]
         public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelInvoiceRequest request)
         {
             try
@@ -124,7 +125,7 @@ namespace API.Controllers
 
         /// <summary>Delete a draft invoice.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("invoices.delete")]
+        [RequirePermission(Permissions.Invoices.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

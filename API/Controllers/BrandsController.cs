@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Brands;
 using Application.DTOs.Common;
 using Application.UseCases.Brands;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all brands (paginated).</summary>
         [HttpGet]
-        [RequirePermission("brands.read")]
+        [RequirePermission(Permissions.Brands.Read)]
         public async Task<ActionResult<PagedResult<BrandDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _brandUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a brand by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("brands.read")]
+        [RequirePermission(Permissions.Brands.Read)]
         public async Task<ActionResult<BrandDto>> GetById(Guid id)
         {
             var brand = await _brandUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new brand.</summary>
         [HttpPost]
-        [RequirePermission("brands.create")]
+        [RequirePermission(Permissions.Brands.Create)]
         public async Task<ActionResult<BrandDto>> Create([FromBody] CreateBrandRequest request)
         {
             try
@@ -62,7 +63,7 @@ namespace API.Controllers
 
         /// <summary>Update a brand.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("brands.update")]
+        [RequirePermission(Permissions.Brands.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBrandRequest request)
         {
             try
@@ -82,7 +83,7 @@ namespace API.Controllers
 
         /// <summary>Delete a brand.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("brands.delete")]
+        [RequirePermission(Permissions.Brands.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

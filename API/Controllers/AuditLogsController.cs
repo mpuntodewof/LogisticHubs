@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Audit;
 using Application.DTOs.Common;
 using Application.UseCases.Audit;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all audit logs (paginated).</summary>
         [HttpGet]
-        [RequirePermission("audit-logs.read")]
+        [RequirePermission(Permissions.AuditLogs.Read)]
         public async Task<ActionResult<PagedResult<AuditLogDto>>> GetAll(
             [FromQuery] PagedRequest request,
             [FromQuery] Guid? userId = null,
@@ -38,7 +39,7 @@ namespace API.Controllers
 
         /// <summary>Get an audit log by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("audit-logs.read")]
+        [RequirePermission(Permissions.AuditLogs.Read)]
         public async Task<ActionResult<AuditLogDetailDto>> GetById(Guid id)
         {
             var result = await _auditLogUseCase.GetByIdAsync(id);

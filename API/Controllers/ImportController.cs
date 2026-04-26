@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Import;
 using Application.UseCases.Import;
@@ -21,10 +22,10 @@ namespace API.Controllers
             _importUseCase = importUseCase;
         }
 
-        // ── Sales Channels ───────────────────────────────────────────────────
+        // â”€â”€ Sales Channels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         [HttpGet("channels")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<PagedResult<SalesChannelDto>>> GetChannels([FromQuery] PagedRequest request)
         {
             var result = await _importUseCase.GetChannelsAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
         }
 
         [HttpPost("channels")]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         public async Task<ActionResult<SalesChannelDto>> CreateChannel([FromBody] CreateSalesChannelRequest request)
         {
             var channel = await _importUseCase.CreateChannelAsync(request);
@@ -40,7 +41,7 @@ namespace API.Controllers
         }
 
         [HttpPut("channels/{id:guid}")]
-        [RequirePermission("inventory.update")]
+        [RequirePermission(Permissions.Inventory.Update)]
         public async Task<ActionResult<SalesChannelDto>> UpdateChannel(Guid id, [FromBody] UpdateSalesChannelRequest request)
         {
             try
@@ -54,10 +55,10 @@ namespace API.Controllers
             }
         }
 
-        // ── CSV Import ───────────────────────────────────────────────────────
+        // â”€â”€ CSV Import â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         [HttpPost("csv/preview")]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         public ActionResult<List<string>> PreviewCsvHeaders(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -69,7 +70,7 @@ namespace API.Controllers
         }
 
         [HttpPost("csv/process")]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB max
         public async Task<ActionResult<ImportSummaryDto>> ProcessCsvImport(
             IFormFile file,
@@ -112,10 +113,10 @@ namespace API.Controllers
             return Ok(summary);
         }
 
-        // ── Initial Stock Import ─────────────────────────────────────────────
+        // â”€â”€ Initial Stock Import â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         [HttpPost("csv/initial-stock")]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         [RequestSizeLimit(10 * 1024 * 1024)]
         public async Task<ActionResult<InitialStockResultDto>> ProcessInitialStockImport(
             IFormFile file,
@@ -144,10 +145,10 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        // ── Import History ───────────────────────────────────────────────────
+        // â”€â”€ Import History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         [HttpGet("batches")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<PagedResult<CsvImportBatchDto>>> GetBatches([FromQuery] PagedRequest request)
         {
             var result = await _importUseCase.GetBatchesAsync(request);
@@ -155,7 +156,7 @@ namespace API.Controllers
         }
 
         [HttpGet("batches/{id:guid}")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<CsvImportBatchDetailDto>> GetBatchDetail(Guid id)
         {
             var batch = await _importUseCase.GetBatchDetailAsync(id);
@@ -164,7 +165,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("batches/{id:guid}")]
-        [RequirePermission("inventory.update")]
+        [RequirePermission(Permissions.Inventory.Update)]
         public async Task<IActionResult> DeleteBatch(Guid id)
         {
             try

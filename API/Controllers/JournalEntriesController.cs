@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Finance;
 using Application.UseCases.Finance;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all journal entries (paginated).</summary>
         [HttpGet]
-        [RequirePermission("journal-entries.read")]
+        [RequirePermission(Permissions.JournalEntries.Read)]
         public async Task<ActionResult<PagedResult<JournalEntryDto>>> GetAll(
             [FromQuery] PagedRequest request,
             [FromQuery] string? status = null)
@@ -34,7 +35,7 @@ namespace API.Controllers
 
         /// <summary>Get a journal entry by ID with lines.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("journal-entries.read")]
+        [RequirePermission(Permissions.JournalEntries.Read)]
         public async Task<ActionResult<JournalEntryDetailDto>> GetById(Guid id)
         {
             var entry = await _useCase.GetByIdAsync(id);
@@ -44,7 +45,7 @@ namespace API.Controllers
 
         /// <summary>Create a new journal entry.</summary>
         [HttpPost]
-        [RequirePermission("journal-entries.create")]
+        [RequirePermission(Permissions.JournalEntries.Create)]
         public async Task<ActionResult<JournalEntryDetailDto>> Create([FromBody] CreateJournalEntryRequest request)
         {
             try
@@ -64,7 +65,7 @@ namespace API.Controllers
 
         /// <summary>Post a draft journal entry.</summary>
         [HttpPost("{id:guid}/post")]
-        [RequirePermission("journal-entries.post")]
+        [RequirePermission(Permissions.JournalEntries.Post)]
         public async Task<IActionResult> Post(Guid id)
         {
             try
@@ -84,7 +85,7 @@ namespace API.Controllers
 
         /// <summary>Void a posted journal entry.</summary>
         [HttpPost("{id:guid}/void")]
-        [RequirePermission("journal-entries.void")]
+        [RequirePermission(Permissions.JournalEntries.Void)]
         public async Task<IActionResult> Void(Guid id, [FromBody] VoidJournalEntryRequest request)
         {
             try
@@ -104,7 +105,7 @@ namespace API.Controllers
 
         /// <summary>Delete a draft journal entry.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("journal-entries.delete")]
+        [RequirePermission(Permissions.JournalEntries.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

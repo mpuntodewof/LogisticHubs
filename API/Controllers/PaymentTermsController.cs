@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Finance;
 using Application.UseCases.Finance;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all payment terms (paginated).</summary>
         [HttpGet]
-        [RequirePermission("payment-terms.read")]
+        [RequirePermission(Permissions.PaymentTerms.Read)]
         public async Task<ActionResult<PagedResult<PaymentTermDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _useCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a payment term by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("payment-terms.read")]
+        [RequirePermission(Permissions.PaymentTerms.Read)]
         public async Task<ActionResult<PaymentTermDto>> GetById(Guid id)
         {
             var term = await _useCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new payment term.</summary>
         [HttpPost]
-        [RequirePermission("payment-terms.create")]
+        [RequirePermission(Permissions.PaymentTerms.Create)]
         public async Task<ActionResult<PaymentTermDto>> Create([FromBody] CreatePaymentTermRequest request)
         {
             try
@@ -58,7 +59,7 @@ namespace API.Controllers
 
         /// <summary>Update a payment term.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("payment-terms.update")]
+        [RequirePermission(Permissions.PaymentTerms.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentTermRequest request)
         {
             try
@@ -74,7 +75,7 @@ namespace API.Controllers
 
         /// <summary>Delete a payment term.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("payment-terms.delete")]
+        [RequirePermission(Permissions.PaymentTerms.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

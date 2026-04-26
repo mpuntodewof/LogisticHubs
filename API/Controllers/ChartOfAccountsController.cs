@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Finance;
 using Application.UseCases.Finance;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all chart of accounts (paginated).</summary>
         [HttpGet]
-        [RequirePermission("chart-of-accounts.read")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
         public async Task<ActionResult<PagedResult<ChartOfAccountDto>>> GetAll(
             [FromQuery] PagedRequest request,
             [FromQuery] string? accountType = null)
@@ -34,7 +35,7 @@ namespace API.Controllers
 
         /// <summary>Get a chart of account by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("chart-of-accounts.read")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
         public async Task<ActionResult<ChartOfAccountDto>> GetById(Guid id)
         {
             var account = await _useCase.GetByIdAsync(id);
@@ -44,7 +45,7 @@ namespace API.Controllers
 
         /// <summary>Create a new chart of account.</summary>
         [HttpPost]
-        [RequirePermission("chart-of-accounts.create")]
+        [RequirePermission(Permissions.ChartOfAccounts.Create)]
         public async Task<ActionResult<ChartOfAccountDto>> Create([FromBody] CreateChartOfAccountRequest request)
         {
             try
@@ -64,7 +65,7 @@ namespace API.Controllers
 
         /// <summary>Update a chart of account.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("chart-of-accounts.update")]
+        [RequirePermission(Permissions.ChartOfAccounts.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateChartOfAccountRequest request)
         {
             try
@@ -84,7 +85,7 @@ namespace API.Controllers
 
         /// <summary>Delete a chart of account.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("chart-of-accounts.delete")]
+        [RequirePermission(Permissions.ChartOfAccounts.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

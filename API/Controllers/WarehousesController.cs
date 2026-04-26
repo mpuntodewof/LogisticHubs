@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Warehouses;
 using Application.UseCases.Warehouses;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all warehouses (paginated).</summary>
         [HttpGet]
-        [RequirePermission("warehouses.manage")]
+        [RequirePermission(Permissions.Warehouses.Manage)]
         public async Task<ActionResult<PagedResult<WarehouseDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _warehouseUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a warehouse by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("warehouses.manage")]
+        [RequirePermission(Permissions.Warehouses.Manage)]
         public async Task<ActionResult<WarehouseDto>> GetById(Guid id)
         {
             var warehouse = await _warehouseUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new warehouse.</summary>
         [HttpPost]
-        [RequirePermission("warehouses.manage")]
+        [RequirePermission(Permissions.Warehouses.Manage)]
         public async Task<ActionResult<WarehouseDto>> Create([FromBody] CreateWarehouseRequest request)
         {
             try
@@ -58,7 +59,7 @@ namespace API.Controllers
 
         /// <summary>Update a warehouse.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("warehouses.manage")]
+        [RequirePermission(Permissions.Warehouses.Manage)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateWarehouseRequest request)
         {
             try
@@ -78,7 +79,7 @@ namespace API.Controllers
 
         /// <summary>Delete a warehouse.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("warehouses.manage")]
+        [RequirePermission(Permissions.Warehouses.Manage)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Products;
 using Application.UseCases.Products;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get images for a product.</summary>
         [HttpGet]
-        [RequirePermission("products.read")]
+        [RequirePermission(Permissions.Products.Read)]
         public async Task<ActionResult<IEnumerable<ProductImageDto>>> GetByProduct([FromQuery] Guid productId)
         {
             try
@@ -39,7 +40,7 @@ namespace API.Controllers
 
         /// <summary>Create a new product image.</summary>
         [HttpPost]
-        [RequirePermission("products.update")]
+        [RequirePermission(Permissions.Products.Update)]
         public async Task<ActionResult<ProductImageDto>> Create([FromBody] CreateProductImageRequest request)
         {
             try
@@ -59,7 +60,7 @@ namespace API.Controllers
 
         /// <summary>Delete a product image.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("products.update")]
+        [RequirePermission(Permissions.Products.Update)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

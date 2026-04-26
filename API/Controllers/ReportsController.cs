@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Reports;
 using Application.UseCases.Reports;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +22,7 @@ namespace API.Controllers
         }
 
         [HttpGet("profit-and-loss")]
-        [RequirePermission("chart-of-accounts.read")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
         public async Task<ActionResult<ProfitAndLossReport>> GetProfitAndLoss(
             [FromQuery] DateTime? from, [FromQuery] DateTime? to)
         {
@@ -32,7 +33,7 @@ namespace API.Controllers
         }
 
         [HttpGet("dashboard")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<DashboardSummary>> GetDashboard()
         {
             var dashboard = await _reportUseCase.GetDashboardAsync();
@@ -42,7 +43,7 @@ namespace API.Controllers
         // Finance-focused landing view for Accountants. Scoped to permissions the
         // accountant role already has: chart-of-accounts.read + invoices.read.
         [HttpGet("finance-dashboard")]
-        [RequirePermission("chart-of-accounts.read")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
         public async Task<ActionResult<FinanceDashboardSummary>> GetFinanceDashboard()
         {
             var dashboard = await _reportUseCase.GetFinanceDashboardAsync();

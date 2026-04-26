@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Inventory;
 using Application.UseCases.Inventory;
@@ -27,7 +28,7 @@ namespace API.Controllers
 
         /// <summary>Get all warehouse stock (paginated, optionally filtered).</summary>
         [HttpGet]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<PagedResult<WarehouseStockDto>>> GetAll([FromQuery] PagedRequest request, [FromQuery] Guid? warehouseId, [FromQuery] Guid? productVariantId)
         {
             var result = await _warehouseStockUseCase.GetPagedAsync(request, warehouseId, productVariantId);
@@ -36,7 +37,7 @@ namespace API.Controllers
 
         /// <summary>Get low stock items.</summary>
         [HttpGet("low-stock")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<IEnumerable<WarehouseStockDto>>> GetLowStock([FromQuery] Guid? warehouseId)
         {
             var result = await _warehouseStockUseCase.GetLowStockAsync(warehouseId);
@@ -45,7 +46,7 @@ namespace API.Controllers
 
         /// <summary>Update stock settings (reorder point, min/max levels).</summary>
         [HttpPut("{id:guid}/settings")]
-        [RequirePermission("inventory.update")]
+        [RequirePermission(Permissions.Inventory.Update)]
         public async Task<IActionResult> UpdateSettings(Guid id, [FromBody] UpdateWarehouseStockRequest request)
         {
             try
@@ -65,7 +66,7 @@ namespace API.Controllers
 
         /// <summary>Reconcile stock with physical counts.</summary>
         [HttpPost("reconcile")]
-        [RequirePermission("inventory.update")]
+        [RequirePermission(Permissions.Inventory.Update)]
         public async Task<ActionResult<StockReconciliationResult>> Reconcile([FromBody] StockReconciliationRequest request)
         {
             var result = await _reconciliationUseCase.ReconcileAsync(request);

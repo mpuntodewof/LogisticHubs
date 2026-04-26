@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Products;
 using Application.UseCases.Products;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all product variants (paginated, optionally filtered by product).</summary>
         [HttpGet]
-        [RequirePermission("products.read")]
+        [RequirePermission(Permissions.Products.Read)]
         public async Task<ActionResult<PagedResult<ProductVariantDto>>> GetAll([FromQuery] PagedRequest request, [FromQuery] Guid? productId)
         {
             var result = await _productVariantUseCase.GetPagedAsync(request, productId);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a product variant by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("products.read")]
+        [RequirePermission(Permissions.Products.Read)]
         public async Task<ActionResult<ProductVariantDto>> GetById(Guid id)
         {
             var variant = await _productVariantUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new product variant.</summary>
         [HttpPost]
-        [RequirePermission("products.create")]
+        [RequirePermission(Permissions.Products.Create)]
         public async Task<ActionResult<ProductVariantDto>> Create([FromBody] CreateProductVariantRequest request)
         {
             try
@@ -62,7 +63,7 @@ namespace API.Controllers
 
         /// <summary>Update a product variant.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("products.update")]
+        [RequirePermission(Permissions.Products.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductVariantRequest request)
         {
             try
@@ -82,7 +83,7 @@ namespace API.Controllers
 
         /// <summary>Delete a product variant.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("products.delete")]
+        [RequirePermission(Permissions.Products.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

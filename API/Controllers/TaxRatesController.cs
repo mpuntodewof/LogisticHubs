@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Tax;
 using Application.UseCases.Tax;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all tax rates (paginated).</summary>
         [HttpGet]
-        [RequirePermission("tax-rates.read")]
+        [RequirePermission(Permissions.TaxRates.Read)]
         public async Task<ActionResult<PagedResult<TaxRateDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _taxRateUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a tax rate by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("tax-rates.read")]
+        [RequirePermission(Permissions.TaxRates.Read)]
         public async Task<ActionResult<TaxRateDto>> GetById(Guid id)
         {
             var taxRate = await _taxRateUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new tax rate.</summary>
         [HttpPost]
-        [RequirePermission("tax-rates.create")]
+        [RequirePermission(Permissions.TaxRates.Create)]
         public async Task<ActionResult<TaxRateDto>> Create([FromBody] CreateTaxRateRequest request)
         {
             try
@@ -58,7 +59,7 @@ namespace API.Controllers
 
         /// <summary>Update a tax rate.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("tax-rates.update")]
+        [RequirePermission(Permissions.TaxRates.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTaxRateRequest request)
         {
             try
@@ -74,7 +75,7 @@ namespace API.Controllers
 
         /// <summary>Delete a tax rate.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("tax-rates.delete")]
+        [RequirePermission(Permissions.TaxRates.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -90,7 +91,7 @@ namespace API.Controllers
 
         /// <summary>Assign a tax rate to a product.</summary>
         [HttpPost("{id:guid}/products/{productId:guid}")]
-        [RequirePermission("tax-rates.assign")]
+        [RequirePermission(Permissions.TaxRates.Assign)]
         public async Task<IActionResult> AssignToProduct(Guid id, Guid productId)
         {
             try
@@ -106,7 +107,7 @@ namespace API.Controllers
 
         /// <summary>Remove a tax rate from a product.</summary>
         [HttpDelete("{id:guid}/products/{productId:guid}")]
-        [RequirePermission("tax-rates.assign")]
+        [RequirePermission(Permissions.TaxRates.Assign)]
         public async Task<IActionResult> RemoveFromProduct(Guid id, Guid productId)
         {
             try
@@ -122,7 +123,7 @@ namespace API.Controllers
 
         /// <summary>Get tax rates for a product.</summary>
         [HttpGet("by-product/{productId:guid}")]
-        [RequirePermission("tax-rates.read")]
+        [RequirePermission(Permissions.TaxRates.Read)]
         public async Task<ActionResult<IEnumerable<TaxRateDto>>> GetByProduct(Guid productId)
         {
             var taxRates = await _taxRateUseCase.GetByProductIdAsync(productId);

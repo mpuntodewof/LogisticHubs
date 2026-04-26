@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Inventory;
 using Application.UseCases.Inventory;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all stock movements (paginated, optionally filtered).</summary>
         [HttpGet]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<PagedResult<StockMovementDto>>> GetAll([FromQuery] PagedRequest request, [FromQuery] Guid? warehouseId, [FromQuery] Guid? productVariantId, [FromQuery] string? movementType)
         {
             var result = await _stockMovementUseCase.GetPagedAsync(request, warehouseId, productVariantId, movementType);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a stock movement by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("inventory.read")]
+        [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<StockMovementDto>> GetById(Guid id)
         {
             var movement = await _stockMovementUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new stock movement.</summary>
         [HttpPost]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         public async Task<ActionResult<StockMovementDto>> Create([FromBody] CreateStockMovementRequest request)
         {
             try
@@ -62,7 +63,7 @@ namespace API.Controllers
 
         /// <summary>Record a manual offline sale.</summary>
         [HttpPost("manual-sale")]
-        [RequirePermission("inventory.create")]
+        [RequirePermission(Permissions.Inventory.Create)]
         public async Task<ActionResult<StockMovementDto>> RecordManualSale([FromBody] RecordManualSaleRequest request)
         {
             var result = await _stockMovementUseCase.RecordManualSaleAsync(request);
@@ -71,7 +72,7 @@ namespace API.Controllers
 
         /// <summary>Create a stock transfer between warehouses.</summary>
         [HttpPost("transfer")]
-        [RequirePermission("inventory.transfer")]
+        [RequirePermission(Permissions.Inventory.Transfer)]
         public async Task<ActionResult<StockMovementDto>> CreateTransfer([FromBody] CreateStockTransferRequest request)
         {
             try

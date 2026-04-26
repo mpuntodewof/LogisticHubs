@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Categories;
 using Application.DTOs.Common;
 using Application.UseCases.Categories;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all categories (paginated).</summary>
         [HttpGet]
-        [RequirePermission("categories.read")]
+        [RequirePermission(Permissions.Categories.Read)]
         public async Task<ActionResult<PagedResult<CategoryDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _categoryUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get category tree.</summary>
         [HttpGet("tree")]
-        [RequirePermission("categories.read")]
+        [RequirePermission(Permissions.Categories.Read)]
         public async Task<ActionResult<IEnumerable<CategoryTreeDto>>> GetTree()
         {
             var result = await _categoryUseCase.GetTreeAsync();
@@ -41,7 +42,7 @@ namespace API.Controllers
 
         /// <summary>Get a category by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("categories.read")]
+        [RequirePermission(Permissions.Categories.Read)]
         public async Task<ActionResult<CategoryDto>> GetById(Guid id)
         {
             var category = await _categoryUseCase.GetByIdAsync(id);
@@ -51,7 +52,7 @@ namespace API.Controllers
 
         /// <summary>Create a new category.</summary>
         [HttpPost]
-        [RequirePermission("categories.create")]
+        [RequirePermission(Permissions.Categories.Create)]
         public async Task<ActionResult<CategoryDto>> Create([FromBody] CreateCategoryRequest request)
         {
             try
@@ -71,7 +72,7 @@ namespace API.Controllers
 
         /// <summary>Update a category.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("categories.update")]
+        [RequirePermission(Permissions.Categories.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequest request)
         {
             try
@@ -91,7 +92,7 @@ namespace API.Controllers
 
         /// <summary>Delete a category.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("categories.delete")]
+        [RequirePermission(Permissions.Categories.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

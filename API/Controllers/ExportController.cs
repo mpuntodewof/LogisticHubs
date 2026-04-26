@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Export;
 using Application.UseCases.Export;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +22,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{entityType}")]
-        [RequirePermission("audit-logs.export")]
+        [RequirePermission(Permissions.AuditLogs.Export)]
         public async Task<IActionResult> Export(
             string entityType,
             [FromQuery] DateTime? from,

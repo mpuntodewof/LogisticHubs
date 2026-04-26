@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.UnitsOfMeasure;
 using Application.UseCases.UnitsOfMeasure;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all units of measure (paginated).</summary>
         [HttpGet]
-        [RequirePermission("units.read")]
+        [RequirePermission(Permissions.Units.Read)]
         public async Task<ActionResult<PagedResult<UnitOfMeasureDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _unitOfMeasureUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a unit of measure by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("units.read")]
+        [RequirePermission(Permissions.Units.Read)]
         public async Task<ActionResult<UnitOfMeasureDto>> GetById(Guid id)
         {
             var unit = await _unitOfMeasureUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new unit of measure.</summary>
         [HttpPost]
-        [RequirePermission("units.create")]
+        [RequirePermission(Permissions.Units.Create)]
         public async Task<ActionResult<UnitOfMeasureDto>> Create([FromBody] CreateUnitOfMeasureRequest request)
         {
             try
@@ -62,7 +63,7 @@ namespace API.Controllers
 
         /// <summary>Update a unit of measure.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("units.update")]
+        [RequirePermission(Permissions.Units.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUnitOfMeasureRequest request)
         {
             try
@@ -82,7 +83,7 @@ namespace API.Controllers
 
         /// <summary>Delete a unit of measure.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("units.delete")]
+        [RequirePermission(Permissions.Units.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -102,7 +103,7 @@ namespace API.Controllers
 
         /// <summary>Get conversions for a unit of measure.</summary>
         [HttpGet("{id:guid}/conversions")]
-        [RequirePermission("units.read")]
+        [RequirePermission(Permissions.Units.Read)]
         public async Task<ActionResult<IEnumerable<UnitConversionDto>>> GetConversions(Guid id)
         {
             try
@@ -118,7 +119,7 @@ namespace API.Controllers
 
         /// <summary>Create a unit conversion.</summary>
         [HttpPost("conversions")]
-        [RequirePermission("units.create")]
+        [RequirePermission(Permissions.Units.Create)]
         public async Task<ActionResult<UnitConversionDto>> CreateConversion([FromBody] CreateUnitConversionRequest request)
         {
             try
@@ -138,7 +139,7 @@ namespace API.Controllers
 
         /// <summary>Update a unit conversion.</summary>
         [HttpPut("conversions/{id:guid}")]
-        [RequirePermission("units.update")]
+        [RequirePermission(Permissions.Units.Update)]
         public async Task<IActionResult> UpdateConversion(Guid id, [FromBody] UpdateUnitConversionRequest request)
         {
             try
@@ -158,7 +159,7 @@ namespace API.Controllers
 
         /// <summary>Delete a unit conversion.</summary>
         [HttpDelete("conversions/{id:guid}")]
-        [RequirePermission("units.delete")]
+        [RequirePermission(Permissions.Units.Delete)]
         public async Task<IActionResult> DeleteConversion(Guid id)
         {
             try

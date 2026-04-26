@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Roles;
 using Application.UseCases.Roles;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all roles with their permissions (paginated).</summary>
         [HttpGet]
-        [RequirePermission("roles.read")]
+        [RequirePermission(Permissions.Roles.Read)]
         public async Task<ActionResult<PagedResult<RoleDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _roleUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a specific role by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("roles.read")]
+        [RequirePermission(Permissions.Roles.Read)]
         public async Task<ActionResult<RoleDto>> GetById(Guid id)
         {
             var role = await _roleUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new custom role.</summary>
         [HttpPost]
-        [RequirePermission("roles.create")]
+        [RequirePermission(Permissions.Roles.Create)]
         public async Task<ActionResult<RoleDto>> Create([FromBody] CreateRoleRequest request)
         {
             try
@@ -58,7 +59,7 @@ namespace API.Controllers
 
         /// <summary>Update a role's name or description.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("roles.update")]
+        [RequirePermission(Permissions.Roles.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoleRequest request)
         {
             try
@@ -78,7 +79,7 @@ namespace API.Controllers
 
         /// <summary>Delete a custom role. System roles cannot be deleted.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("roles.delete")]
+        [RequirePermission(Permissions.Roles.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -98,7 +99,7 @@ namespace API.Controllers
 
         /// <summary>Replace all permissions for a role.</summary>
         [HttpPut("{id:guid}/permissions")]
-        [RequirePermission("roles.update")]
+        [RequirePermission(Permissions.Roles.Update)]
         public async Task<IActionResult> UpdatePermissions(Guid id, [FromBody] UpdateRolePermissionsRequest request)
         {
             try
@@ -114,7 +115,7 @@ namespace API.Controllers
 
         /// <summary>Get all available permissions.</summary>
         [HttpGet("/api/permissions")]
-        [RequirePermission("roles.read")]
+        [RequirePermission(Permissions.Roles.Read)]
         public async Task<ActionResult<IEnumerable<PermissionDto>>> GetAllPermissions()
         {
             var permissions = await _roleUseCase.GetAllPermissionsAsync();

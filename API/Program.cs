@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using API.Filters;
 using Asp.Versioning;
+using Domain.Constants;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -120,38 +121,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Authorization: register a policy per permission
-string[] allPermissions =
-[
-    // Users & RBAC
-    "users.create", "users.read", "users.update", "users.delete",
-    "roles.create", "roles.read", "roles.update", "roles.delete", "roles.assign",
-    // Catalog
-    "categories.create", "categories.read", "categories.update", "categories.delete",
-    "brands.create", "brands.read", "brands.update", "brands.delete",
-    "units.create", "units.read", "units.update", "units.delete",
-    "products.create", "products.read", "products.update", "products.delete",
-    // Inventory
-    "inventory.read", "inventory.create", "inventory.update", "inventory.transfer",
-    "warehouses.manage",
-    // Finance
-    "chart-of-accounts.create", "chart-of-accounts.read", "chart-of-accounts.update", "chart-of-accounts.delete",
-    "journal-entries.create", "journal-entries.read", "journal-entries.post", "journal-entries.void", "journal-entries.delete",
-    "payment-terms.create", "payment-terms.read", "payment-terms.update", "payment-terms.delete",
-    // Tax & Invoices
-    "tax-rates.create", "tax-rates.read", "tax-rates.update", "tax-rates.delete", "tax-rates.assign",
-    "invoices.create", "invoices.read", "invoices.issue", "invoices.assign-tax-number", "invoices.pay", "invoices.cancel", "invoices.delete",
-    // Audit
-    "audit-logs.read", "audit-logs.export",
-    "system-logs.read",
-    // Settings
-    "tenant-settings.read", "tenant-settings.update",
-    "system-settings.read", "system-settings.update"
-];
-
+// Authorization: register a policy per permission. Source of truth is
+// Domain.Constants.Permissions — typed constants used by both this
+// registration and the [RequirePermission(...)] attributes on controllers.
 builder.Services.AddAuthorization(options =>
 {
-    foreach (var permission in allPermissions)
+    foreach (var permission in Permissions.All())
     {
         options.AddPolicy($"Permission:{permission}", policy =>
             policy.RequireAuthenticatedUser()

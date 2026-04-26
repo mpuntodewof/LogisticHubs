@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Products;
 using Application.UseCases.Products;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all products (paginated).</summary>
         [HttpGet]
-        [RequirePermission("products.read")]
+        [RequirePermission(Permissions.Products.Read)]
         public async Task<ActionResult<PagedResult<ProductDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _productUseCase.GetPagedAsync(request);
@@ -32,7 +33,7 @@ namespace API.Controllers
 
         /// <summary>Get a product by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("products.read")]
+        [RequirePermission(Permissions.Products.Read)]
         public async Task<ActionResult<ProductDto>> GetById(Guid id)
         {
             var product = await _productUseCase.GetByIdAsync(id);
@@ -42,7 +43,7 @@ namespace API.Controllers
 
         /// <summary>Create a new product.</summary>
         [HttpPost]
-        [RequirePermission("products.create")]
+        [RequirePermission(Permissions.Products.Create)]
         public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductRequest request)
         {
             try
@@ -62,7 +63,7 @@ namespace API.Controllers
 
         /// <summary>Update a product.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("products.update")]
+        [RequirePermission(Permissions.Products.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request)
         {
             try
@@ -82,7 +83,7 @@ namespace API.Controllers
 
         /// <summary>Delete a product.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("products.delete")]
+        [RequirePermission(Permissions.Products.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

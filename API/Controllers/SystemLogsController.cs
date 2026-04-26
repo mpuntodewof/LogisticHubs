@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Audit;
 using Application.DTOs.Common;
 using Application.UseCases.Audit;
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         /// <summary>Get all system logs (paginated).</summary>
         [HttpGet]
-        [RequirePermission("system-logs.read")]
+        [RequirePermission(Permissions.SystemLogs.Read)]
         public async Task<ActionResult<PagedResult<SystemLogDto>>> GetAll(
             [FromQuery] PagedRequest request,
             [FromQuery] string? level = null,
@@ -38,7 +39,7 @@ namespace API.Controllers
 
         /// <summary>Get a system log by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("system-logs.read")]
+        [RequirePermission(Permissions.SystemLogs.Read)]
         public async Task<ActionResult<SystemLogDetailDto>> GetById(Guid id)
         {
             var result = await _systemLogUseCase.GetByIdAsync(id);

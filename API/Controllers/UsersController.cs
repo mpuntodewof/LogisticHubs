@@ -1,5 +1,6 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using API.Filters;
+using Domain.Constants;
 using Application.DTOs.Common;
 using Application.DTOs.Users;
 using Application.UseCases.Users;
@@ -24,7 +25,7 @@ namespace API.Controllers
 
         /// <summary>Get all users (paginated).</summary>
         [HttpGet]
-        [RequirePermission("users.read")]
+        [RequirePermission(Permissions.Users.Read)]
         public async Task<ActionResult<PagedResult<UserDto>>> GetAll([FromQuery] PagedRequest request)
         {
             var result = await _userUseCase.GetPagedAsync(request);
@@ -33,7 +34,7 @@ namespace API.Controllers
 
         /// <summary>Get a specific user by ID.</summary>
         [HttpGet("{id:guid}")]
-        [RequirePermission("users.read")]
+        [RequirePermission(Permissions.Users.Read)]
         public async Task<ActionResult<UserDto>> GetById(Guid id)
         {
             var user = await _userUseCase.GetByIdAsync(id);
@@ -43,7 +44,7 @@ namespace API.Controllers
 
         /// <summary>Update a user's name or active status.</summary>
         [HttpPut("{id:guid}")]
-        [RequirePermission("users.update")]
+        [RequirePermission(Permissions.Users.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
         {
             try
@@ -59,7 +60,7 @@ namespace API.Controllers
 
         /// <summary>Delete a user.</summary>
         [HttpDelete("{id:guid}")]
-        [RequirePermission("users.delete")]
+        [RequirePermission(Permissions.Users.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -75,7 +76,7 @@ namespace API.Controllers
 
         /// <summary>Assign a role to a user.</summary>
         [HttpPost("{id:guid}/roles")]
-        [RequirePermission("roles.assign")]
+        [RequirePermission(Permissions.Roles.Assign)]
         public async Task<IActionResult> AssignRole(Guid id, [FromBody] AssignRoleRequest request)
         {
             var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -99,7 +100,7 @@ namespace API.Controllers
 
         /// <summary>Remove a role from a user.</summary>
         [HttpDelete("{id:guid}/roles/{roleId:guid}")]
-        [RequirePermission("roles.assign")]
+        [RequirePermission(Permissions.Roles.Assign)]
         public async Task<IActionResult> RevokeRole(Guid id, Guid roleId)
         {
             try

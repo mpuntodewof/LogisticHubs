@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-26 (3.4 + 3.8 done; 3.6/3.9 next) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-27 (3.6 closed — idempotency on financial writes) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -21,10 +21,10 @@
 |-------|------:|------:|------:|------:|------:|------:|
 | Phase 1 — Pre-Launch Foundation | 10 | 5 | 0 | 1 | 4 | 0 |
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
-| Phase 3 — Post-Launch Hardening | 9 | 2 | 0 | 0 | 7 | 0 |
+| Phase 3 — Post-Launch Hardening | 9 | 3 | 0 | 0 | 6 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
 | Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 2 | 3 | 3 | 0 |
-| **Totals** | **44** | **7** | **2** | **4** | **31** | **0** |
+| **Totals** | **44** | **8** | **2** | **4** | **30** | **0** |
 
 ---
 
@@ -83,7 +83,7 @@
 | 3.3 | Uptime monitor + alerting | P1 | S | ⬜ | Poll `/health/ready`, page on 3 failures |
 | 3.4 | EF Core global query filters for `ITenantScoped` | P1 | M | ✅ | All 29 entities filtered; convention documented; coverage test added (`TenantQueryFilterCoverageTests`). Fail-CLOSED when no tenant context still pending — separate follow-up |
 | 3.5 | Async CSV import via background job + status endpoint | P2 | L | ⬜ | 10k-row imports without HTTP timeout |
-| 3.6 | Document & test idempotency on financial writes | P1 | M | ⬜ | Invoice, payment, journal post — replay safe |
+| 3.6 | Document & test idempotency on financial writes | P1 | M | ✅ | Hardened middleware: composite (TenantId, IdempotencyKey) PK, endpoint-signature reuse check (422), in-flight 409, 24h response replay, 5xx not cached. New `[Idempotent]` attribute applied to 11 financial write endpoints (invoice create/issue/assign-tax/pay/cancel, journal create/post/void, stock movement create/manual-sale/transfer). 12 new tests cover happy path, replay, conflict, TTL, tenant isolation, throw-cleanup |
 | 3.7 | Refresh-token revocation list | P2 | M | ⬜ | Logout/password-change invalidates tokens |
 | 3.8 | Permission constants class | P3 | S | ✅ | New `Domain/Constants/Permissions.cs` with nested classes; 109 controller attributes converted; coverage tests guard against drift |
 | 3.9 | Onboarding wizard ("value in <15 min") | P1 | L | ⬜ | Strategy doc Risk #2 |
@@ -162,6 +162,7 @@
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-27 | 3.6 | ⬜ → ✅ | Idempotency middleware rewritten for replay-safe financial writes. Composite (TenantId, IdempotencyKey) PK, ITenantScoped with global query filter, endpoint-signature reuse check (422), InProgress claim row gives 409 on concurrent duplicate (cleared on handler throw), 24h response replay, 5xx not cached. New `[Idempotent]` attribute enforces header presence (400) on 11 financial write endpoints across Invoices/JournalEntries/StockMovements. EF migration `HardenIdempotencyRecord` adds composite PK + Endpoint/Status columns. 12 new unit tests (70/70 pass). Commit `982c161`. |
 | 2026-04-26 | 3.8 | ⬜ → ✅ | New `Domain/Constants/Permissions.cs` with nested static classes; `Program.cs` enumerates from `Permissions.All()`; 109 `[RequirePermission(...)]` attributes across 21 controllers now use typed constants. Typos at call sites become compile errors. Coverage tests added (58/58 unit tests pass). Commit `2ea490a`. |
 | 2026-04-25 | 3.4 | ⬜ → ✅ | All 29 ITenantScoped entities filtered; convention documented in AppDbContext; new TenantQueryFilterCoverageTests guard against drift (54/54 unit tests pass). Fail-CLOSED migration documented as future work in commit `746adb8`. |
 | 2026-04-25 | — | (test fix) | Fixed 13 broken unit tests inadvertently introduced by commit `45912fe` (ExecuteInTransactionAsync refactor) — mocks now invoke the work delegate. Commit `d271e1c`. |

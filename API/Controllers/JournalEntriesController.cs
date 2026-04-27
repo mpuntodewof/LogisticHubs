@@ -46,6 +46,7 @@ namespace API.Controllers
         /// <summary>Create a new journal entry.</summary>
         [HttpPost]
         [RequirePermission(Permissions.JournalEntries.Create)]
+        [Idempotent]
         public async Task<ActionResult<JournalEntryDetailDto>> Create([FromBody] CreateJournalEntryRequest request)
         {
             try
@@ -66,6 +67,7 @@ namespace API.Controllers
         /// <summary>Post a draft journal entry.</summary>
         [HttpPost("{id:guid}/post")]
         [RequirePermission(Permissions.JournalEntries.Post)]
+        [Idempotent]
         public async Task<IActionResult> Post(Guid id)
         {
             try
@@ -86,6 +88,7 @@ namespace API.Controllers
         /// <summary>Void a posted journal entry.</summary>
         [HttpPost("{id:guid}/void")]
         [RequirePermission(Permissions.JournalEntries.Void)]
+        [Idempotent]
         public async Task<IActionResult> Void(Guid id, [FromBody] VoidJournalEntryRequest request)
         {
             try

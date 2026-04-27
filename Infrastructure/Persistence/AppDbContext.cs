@@ -438,8 +438,17 @@ namespace Infrastructure.Persistence
             // ── Idempotency ────────────────────────────────────────────────────
             modelBuilder.Entity<IdempotencyRecord>(entity =>
             {
-                entity.HasKey(e => e.IdempotencyKey);
+                // Composite key prevents cross-tenant collisions on a shared
+                // client-supplied IdempotencyKey value.
+                entity.HasKey(e => new { e.TenantId, e.IdempotencyKey });
                 entity.HasIndex(e => e.ExpiresAt);
+                entity.HasIndex(e => e.TenantId);
+                entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Endpoint).HasMaxLength(200).IsRequired();
+                entity.HasOne<Tenant>().WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasQueryFilter(e =>
+                    _tenantContext == null || _tenantContext.TenantId == null
+                    || e.TenantId == _tenantContext.TenantId);
             });
 
             // ── Import ─────────────────────────────────────────────────────────

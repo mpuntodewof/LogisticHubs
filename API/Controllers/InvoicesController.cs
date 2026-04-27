@@ -46,6 +46,7 @@ namespace API.Controllers
         /// <summary>Create a new invoice.</summary>
         [HttpPost]
         [RequirePermission(Permissions.Invoices.Create)]
+        [Idempotent]
         public async Task<ActionResult<InvoiceDto>> Create([FromBody] CreateInvoiceRequest request)
         {
             try
@@ -62,6 +63,7 @@ namespace API.Controllers
         /// <summary>Issue an invoice.</summary>
         [HttpPost("{id:guid}/issue")]
         [RequirePermission(Permissions.Invoices.Issue)]
+        [Idempotent]
         public async Task<IActionResult> Issue(Guid id)
         {
             try
@@ -78,6 +80,7 @@ namespace API.Controllers
         /// <summary>Assign a tax invoice number.</summary>
         [HttpPost("{id:guid}/assign-tax-number")]
         [RequirePermission(Permissions.Invoices.AssignTaxNumber)]
+        [Idempotent]
         public async Task<IActionResult> AssignTaxInvoiceNumber(Guid id, [FromBody] AssignTaxInvoiceNumberRequest request)
         {
             try
@@ -94,6 +97,7 @@ namespace API.Controllers
         /// <summary>Mark an invoice as paid.</summary>
         [HttpPost("{id:guid}/mark-paid")]
         [RequirePermission(Permissions.Invoices.Pay)]
+        [Idempotent]
         public async Task<IActionResult> MarkPaid(Guid id)
         {
             try
@@ -110,6 +114,7 @@ namespace API.Controllers
         /// <summary>Cancel an invoice.</summary>
         [HttpPost("{id:guid}/cancel")]
         [RequirePermission(Permissions.Invoices.Cancel)]
+        [Idempotent]
         public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelInvoiceRequest request)
         {
             try

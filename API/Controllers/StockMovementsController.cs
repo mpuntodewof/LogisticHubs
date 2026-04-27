@@ -44,6 +44,7 @@ namespace API.Controllers
         /// <summary>Create a new stock movement.</summary>
         [HttpPost]
         [RequirePermission(Permissions.Inventory.Create)]
+        [Idempotent]
         public async Task<ActionResult<StockMovementDto>> Create([FromBody] CreateStockMovementRequest request)
         {
             try
@@ -64,6 +65,7 @@ namespace API.Controllers
         /// <summary>Record a manual offline sale.</summary>
         [HttpPost("manual-sale")]
         [RequirePermission(Permissions.Inventory.Create)]
+        [Idempotent]
         public async Task<ActionResult<StockMovementDto>> RecordManualSale([FromBody] RecordManualSaleRequest request)
         {
             var result = await _stockMovementUseCase.RecordManualSaleAsync(request);
@@ -73,6 +75,7 @@ namespace API.Controllers
         /// <summary>Create a stock transfer between warehouses.</summary>
         [HttpPost("transfer")]
         [RequirePermission(Permissions.Inventory.Transfer)]
+        [Idempotent]
         public async Task<ActionResult<StockMovementDto>> CreateTransfer([FromBody] CreateStockTransferRequest request)
         {
             try

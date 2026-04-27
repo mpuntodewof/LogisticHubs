@@ -13,34 +13,33 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Clear any existing user-created data to avoid duplicate key conflicts
-            migrationBuilder.Sql("DELETE FROM `ChartOfAccounts` WHERE `TenantId` = '00000000-0000-0000-0000-000000000001'");
-            migrationBuilder.Sql("DELETE FROM `PaymentTerms` WHERE `TenantId` = '00000000-0000-0000-0000-000000000001'");
+            // Idempotent seed: INSERT IGNORE so re-running on a DB that already
+            // has these rows (e.g. from an earlier ad-hoc seed or partial apply)
+            // is a no-op instead of a duplicate-key error. Avoids the FK trap of
+            // DELETE-then-INSERT when JournalEntryLines already reference the
+            // chart of accounts.
+            migrationBuilder.Sql(@"
+INSERT IGNORE INTO `ChartOfAccounts`
+    (`Id`, `AccountCode`, `AccountSubType`, `AccountType`, `CreatedAt`, `CreatedBy`, `DeletedAt`, `DeletedBy`, `Description`, `IsActive`, `Name`, `NormalBalance`, `ParentAccountId`, `TenantId`, `UpdatedAt`, `UpdatedBy`)
+VALUES
+    ('f1000000-0000-0000-0000-000000000001', '1000', NULL, 'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Aset',                  'Debit',  NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000000002', '2000', NULL, 'Liability', '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Liabilitas',            'Credit', NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000000003', '3000', NULL, 'Equity',    '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Ekuitas',               'Credit', NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000000004', '4000', NULL, 'Revenue',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Pendapatan',            'Credit', NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000000005', '5000', NULL, 'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Harga Pokok Penjualan', 'Debit',  NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000000006', '6000', NULL, 'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 'Beban Operasional',     'Debit',  NULL, '00000000-0000-0000-0000-000000000001', NULL, NULL);
+");
 
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("f1000000-0000-0000-0000-000000000001"), "1000", null, "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Aset", "Debit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000000002"), "2000", null, "Liability", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Liabilitas", "Credit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000000003"), "3000", null, "Equity", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Ekuitas", "Credit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000000004"), "4000", null, "Revenue", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Pendapatan", "Credit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000000005"), "5000", null, "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Harga Pokok Penjualan", "Debit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000000006"), "6000", null, "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Beban Operasional", "Debit", null, new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "PaymentTerms",
-                columns: new[] { "Id", "Code", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "DueDays", "IsActive", "Name", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("f2000000-0000-0000-0000-000000000001"), "COD", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Bayar saat barang diterima", 0, true, "Cash on Delivery", new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f2000000-0000-0000-0000-000000000002"), "NET7", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pembayaran dalam 7 hari", 7, true, "Net 7", new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f2000000-0000-0000-0000-000000000003"), "NET14", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pembayaran dalam 14 hari", 14, true, "Net 14", new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f2000000-0000-0000-0000-000000000004"), "NET30", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pembayaran dalam 30 hari", 30, true, "Net 30", new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f2000000-0000-0000-0000-000000000005"), "NET60", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, "Pembayaran dalam 60 hari", 60, true, "Net 60", new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
+            migrationBuilder.Sql(@"
+INSERT IGNORE INTO `PaymentTerms`
+    (`Id`, `Code`, `CreatedAt`, `CreatedBy`, `DeletedAt`, `DeletedBy`, `Description`, `DueDays`, `IsActive`, `Name`, `TenantId`, `UpdatedAt`, `UpdatedBy`)
+VALUES
+    ('f2000000-0000-0000-0000-000000000001', 'COD',   '2026-01-01 00:00:00', NULL, NULL, NULL, 'Bayar saat barang diterima',  0, 1, 'Cash on Delivery', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f2000000-0000-0000-0000-000000000002', 'NET7',  '2026-01-01 00:00:00', NULL, NULL, NULL, 'Pembayaran dalam 7 hari',     7, 1, 'Net 7',            '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f2000000-0000-0000-0000-000000000003', 'NET14', '2026-01-01 00:00:00', NULL, NULL, NULL, 'Pembayaran dalam 14 hari',   14, 1, 'Net 14',           '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f2000000-0000-0000-0000-000000000004', 'NET30', '2026-01-01 00:00:00', NULL, NULL, NULL, 'Pembayaran dalam 30 hari',   30, 1, 'Net 30',           '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f2000000-0000-0000-0000-000000000005', 'NET60', '2026-01-01 00:00:00', NULL, NULL, NULL, 'Pembayaran dalam 60 hari',   60, 1, 'Net 60',           '00000000-0000-0000-0000-000000000001', NULL, NULL);
+");
 
             migrationBuilder.UpdateData(
                 table: "Permissions",
@@ -511,51 +510,31 @@ namespace Infrastructure.Migrations
                 column: "CreatedAt",
                 value: new DateTime(2026, 4, 16, 8, 34, 28, 923, DateTimeKind.Utc).AddTicks(605));
 
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[] { new Guid("f1000000-0000-0000-0000-000000001100"), "1100", "Cash", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Kas & Bank", "Debit", new Guid("f1000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null });
-
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "IsSystemAccount", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("f1000000-0000-0000-0000-000000001200"), "1200", "Receivable", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "Piutang Usaha (AR)", "Debit", new Guid("f1000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000001300"), "1300", "Inventory", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "Persediaan Barang", "Debit", new Guid("f1000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000002100"), "2100", "Payable", "Liability", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "Hutang Usaha (AP)", "Credit", new Guid("f1000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000002200"), "2200", "Tax", "Liability", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "PPN Keluaran", "Credit", new Guid("f1000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000002210"), "2210", "Tax", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "PPN Masukan", "Debit", new Guid("f1000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("f1000000-0000-0000-0000-000000003100"), "3100", "Capital", "Equity", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Modal Pemilik", "Credit", new Guid("f1000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000003200"), "3200", "RetainedEarnings", "Equity", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Laba Ditahan", "Credit", new Guid("f1000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000004100"), "4100", "Sales", "Revenue", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Penjualan - Tokopedia", "Credit", new Guid("f1000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000004200"), "4200", "Sales", "Revenue", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Penjualan - Shopee", "Credit", new Guid("f1000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000004300"), "4300", "Sales", "Revenue", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Penjualan - Offline", "Credit", new Guid("f1000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "IsSystemAccount", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[] { new Guid("f1000000-0000-0000-0000-000000005100"), "5100", "COGS", "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, true, "HPP - Barang Dagang", "Debit", new Guid("f1000000-0000-0000-0000-000000000005"), new Guid("00000000-0000-0000-0000-000000000001"), null, null });
-
-            migrationBuilder.InsertData(
-                table: "ChartOfAccounts",
-                columns: new[] { "Id", "AccountCode", "AccountSubType", "AccountType", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "IsActive", "Name", "NormalBalance", "ParentAccountId", "TenantId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("f1000000-0000-0000-0000-000000006100"), "6100", "PlatformFee", "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Biaya Platform - Tokopedia", "Debit", new Guid("f1000000-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000006200"), "6200", "PlatformFee", "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Biaya Platform - Shopee", "Debit", new Guid("f1000000-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000006300"), "6300", "Shipping", "Expense", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Biaya Pengiriman", "Debit", new Guid("f1000000-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000001110"), "1110", "Cash", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Kas Tunai", "Debit", new Guid("f1000000-0000-0000-0000-000000001100"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("f1000000-0000-0000-0000-000000001120"), "1120", "Bank", "Asset", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, null, null, true, "Bank BCA", "Debit", new Guid("f1000000-0000-0000-0000-000000001100"), new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
+            // Same idempotent INSERT IGNORE pattern for the detailed account
+            // hierarchy. Two column sets here: the IsSystemAccount column is
+            // present on a subset of these inserts; we emit it explicitly per row.
+            migrationBuilder.Sql(@"
+INSERT IGNORE INTO `ChartOfAccounts`
+    (`Id`, `AccountCode`, `AccountSubType`, `AccountType`, `CreatedAt`, `CreatedBy`, `DeletedAt`, `DeletedBy`, `Description`, `IsActive`, `IsSystemAccount`, `Name`, `NormalBalance`, `ParentAccountId`, `TenantId`, `UpdatedAt`, `UpdatedBy`)
+VALUES
+    ('f1000000-0000-0000-0000-000000001100', '1100', 'Cash',             'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Kas & Bank',                 'Debit',  'f1000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000001200', '1200', 'Receivable',       'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'Piutang Usaha (AR)',         'Debit',  'f1000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000001300', '1300', 'Inventory',        'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'Persediaan Barang',          'Debit',  'f1000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000002100', '2100', 'Payable',          'Liability', '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'Hutang Usaha (AP)',          'Credit', 'f1000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000002200', '2200', 'Tax',              'Liability', '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'PPN Keluaran',               'Credit', 'f1000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000002210', '2210', 'Tax',              'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'PPN Masukan',                'Debit',  'f1000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000003100', '3100', 'Capital',          'Equity',    '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Modal Pemilik',              'Credit', 'f1000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000003200', '3200', 'RetainedEarnings', 'Equity',    '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Laba Ditahan',               'Credit', 'f1000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000004100', '4100', 'Sales',            'Revenue',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Penjualan - Tokopedia',      'Credit', 'f1000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000004200', '4200', 'Sales',            'Revenue',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Penjualan - Shopee',         'Credit', 'f1000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000004300', '4300', 'Sales',            'Revenue',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Penjualan - Offline',        'Credit', 'f1000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000005100', '5100', 'COGS',             'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 1, 'HPP - Barang Dagang',        'Debit',  'f1000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000006100', '6100', 'PlatformFee',      'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Biaya Platform - Tokopedia', 'Debit',  'f1000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000006200', '6200', 'PlatformFee',      'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Biaya Platform - Shopee',    'Debit',  'f1000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000006300', '6300', 'Shipping',         'Expense',   '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Biaya Pengiriman',           'Debit',  'f1000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000001110', '1110', 'Cash',             'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Kas Tunai',                  'Debit',  'f1000000-0000-0000-0000-000000001100', '00000000-0000-0000-0000-000000000001', NULL, NULL),
+    ('f1000000-0000-0000-0000-000000001120', '1120', 'Bank',             'Asset',     '2026-01-01 00:00:00', NULL, NULL, NULL, NULL, 1, 0, 'Bank BCA',                   'Debit',  'f1000000-0000-0000-0000-000000001100', '00000000-0000-0000-0000-000000000001', NULL, NULL);
+");
         }
 
         /// <inheritdoc />

@@ -68,7 +68,7 @@ else
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => {})">Edit</button>
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(pt))">Edit</button>
                                 </td>
                             </tr>
                         }
@@ -129,15 +129,56 @@ else
     </div>
 }
 
+@* ── Edit Modal ── *@
+@if (_showEdit)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Edit Term</span>
+                <button class="btn-logout" @onclick="() => _showEdit = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-control-custom" @bind="_editReq.Name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Code</label>
+                    <input class="form-control-custom" @bind="_editReq.Code" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Days</label>
+                    <input class="form-control-custom" type="number" @bind="_editReq.DueDays" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showEdit = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="UpdateAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private bool _loading = true;
     private bool _showCreate;
+    private bool _showEdit;
     private bool _saving;
     private string _formError = string.Empty;
     private string _search = string.Empty;
 
     private List<PaymentTermDto> _items = new();
     private CreatePaymentTermRequest _createReq = new();
+    private CreatePaymentTermRequest _editReq = new();
+    private Guid _editId;
 
     private int _page = 1;
     private int _pageSize = 20;
@@ -198,6 +239,38 @@ else
         else
         {
             _formError = result.ErrorMessage ?? "Failed to create payment term.";
+        }
+
+        _saving = false;
+    }
+
+    private void OpenEdit(PaymentTermDto item)
+    {
+        _editId = item.Id;
+        _editReq = new CreatePaymentTermRequest
+        {
+            Name = item.Name,
+            Code = item.Code,
+            DueDays = item.DueDays
+        };
+        _formError = string.Empty;
+        _showEdit = true;
+    }
+
+    private async Task UpdateAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+
+        var result = await Api.UpdatePaymentTermAsync(_editId, _editReq);
+        if (result.Success)
+        {
+            _showEdit = false;
+            await LoadAsync();
+        }
+        else
+        {
+            _formError = result.ErrorMessage ?? "Failed to update payment term.";
         }
 
         _saving = false;

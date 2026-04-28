@@ -70,7 +70,7 @@ else
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => {})">Edit</button>
+                                    <button class="btn-outline" style="padding:.3rem .7rem;font-size:.75rem" @onclick="@(() => OpenEdit(t))">Edit</button>
                                 </td>
                             </tr>
                         }
@@ -146,9 +146,59 @@ else
     </div>
 }
 
+@* ── Edit Modal ── *@
+@if (_showEdit)
+{
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center">
+        <div class="card" style="width:460px;max-width:95vw">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Edit Tax Rate</span>
+                <button class="btn-logout" @onclick="() => _showEdit = false">&#x2715;</button>
+            </div>
+            <div class="card-body-custom">
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert-custom alert-error">&#9888; @_formError</div>
+                }
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-control-custom" @bind="_editReq.Name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Code</label>
+                    <input class="form-control-custom" @bind="_editReq.Code" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tax Type</label>
+                    <select class="form-control-custom" @bind="_editReq.TaxType">
+                        <option value="">-- Select Type --</option>
+                        <option value="PPN">PPN</option>
+                        <option value="PPh21">PPh 21</option>
+                        <option value="PPh23">PPh 23</option>
+                        <option value="PPh4(2)">PPh 4(2)</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rate (%)</label>
+                    <input class="form-control-custom" type="number" @bind="_editReq.Rate" />
+                </div>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+                    <button class="btn-outline" @onclick="() => _showEdit = false">Cancel</button>
+                    <button class="btn-primary-custom" @onclick="UpdateAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner" style="border-top-color:#fff"></span> }
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private bool _loading = true;
     private bool _showCreate;
+    private bool _showEdit;
     private bool _saving;
     private string _formError = string.Empty;
     private string _search = string.Empty;
@@ -156,6 +206,8 @@ else
 
     private List<TaxRateDto> _items = new();
     private CreateTaxRateRequest _createReq = new();
+    private CreateTaxRateRequest _editReq = new();
+    private Guid _editId;
 
     private int _page = 1;
     private int _pageSize = 20;
@@ -217,6 +269,39 @@ else
         else
         {
             _formError = result.ErrorMessage ?? "Failed to create tax rate.";
+        }
+
+        _saving = false;
+    }
+
+    private void OpenEdit(TaxRateDto item)
+    {
+        _editId = item.Id;
+        _editReq = new CreateTaxRateRequest
+        {
+            Name = item.Name,
+            Code = item.Code,
+            TaxType = item.TaxType,
+            Rate = item.Rate
+        };
+        _formError = string.Empty;
+        _showEdit = true;
+    }
+
+    private async Task UpdateAsync()
+    {
+        _saving = true;
+        _formError = string.Empty;
+
+        var result = await Api.UpdateTaxRateAsync(_editId, _editReq);
+        if (result.Success)
+        {
+            _showEdit = false;
+            await LoadAsync();
+        }
+        else
+        {
+            _formError = result.ErrorMessage ?? "Failed to update tax rate.";
         }
 
         _saving = false;

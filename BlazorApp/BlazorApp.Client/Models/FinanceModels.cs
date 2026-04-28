@@ -19,6 +19,15 @@ namespace BlazorApp.Client.Models
         public string AccountType { get; set; } = string.Empty;
     }
 
+    public class UpdateChartOfAccountRequest
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string? AccountSubType { get; set; }
+        public Guid? ParentAccountId { get; set; }
+        public bool? IsActive { get; set; }
+    }
+
     // ── Journal Entries ──────────────────────────────────────────────────────
 
     public class JournalEntryDto

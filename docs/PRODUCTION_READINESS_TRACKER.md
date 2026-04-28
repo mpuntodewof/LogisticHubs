@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-28 (5.6 PPN summary Output-only shipped; new item 2.13 PurchaseInvoice) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (added 5.9 dashboard action items, 5.10 batch/expiry deferred) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -38,8 +38,8 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | Phase 2 — First Paying Customer | 13 | 0 | 0 | 0 | 13 | 0 |
 | Phase 3 — Post-Launch Hardening | 8 | 3 | 0 | 0 | 5 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 9 | 3 | 3 | 0 | 3 | 0 |
-| **Totals** | **46** | **11** | **3** | **1** | **31** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 11 | 3 | 3 | 0 | 5 | 0 |
+| **Totals** | **48** | **11** | **3** | **1** | **33** | **0** |
 
 ---
 
@@ -140,8 +140,10 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | 5.6 | PPN input/output summary for DJP | P1 | M | 🟨 | **Output shipped (2026-04-28)** — `/reports/ppn` page + `GET /reports/ppn-summary?year=&month=` endpoint. Month picker, KPI cards (DPP / Output / Input / Net), per-rate breakdown table (groups by effective rate `PPN/DPP`, sorted highest-first), per-invoice line items with NPWP + e-Faktur columns, paginated 20/page, simple CSV export. New `Invoice.CounterpartyNPWP` column + EF migration `AddInvoiceCounterpartyNPWP`. 7 use-case tests. **Remaining for ✅:** PPN Input requires PurchaseInvoice entity — tracked as new item 2.13. Once 2.13 lands, this report extends to full Input/Output. |
 | 5.7 | Stock reconciliation workflow | P1 | M | ⚠️ | File modified — verify current state |
 | 5.8 | Low stock dashboard & alerts | P1 | M | ⬜ | Depends on 2.8 (email sender) |
+| 5.9 | Owner-persona action items on dashboard | P1 | M | ⬜ | **Added 2026-04-28.** Bundles three related insights that turn the dashboard from "what happened" → "what to do next": (a) Top Selling sort toggle (units ↔ revenue) — already shipped as units-only, (b) Low Stock **urgency** — replace static threshold with "runs out in N days" using avg daily sales velocity from `StockMovement` (Type=Out, Reason=Sale), (c) Dead Stock callout — list SKUs with no sales in last 60 days. Plus a small dashboard profit hint surfacing top-margin + loss-making SKUs (data already in `GetProductMarginsAsync`). Owner persona's "what should I do this week" answer. |
+| 5.10 | Batch + expiry tracking | P3 | XL | ⬜ | **Added 2026-04-28 (deferred).** Schema change: `Batch`/`Lot` entity per WarehouseStock, `ExpiryDate` + `BatchNumber` on goods receipts and stock movements, FEFO picking logic. **Out-of-scope for current ICP** (multi-channel SMB retailers). Building this shifts ICP toward FMCG/pharma/F&B distributors — different market, different competition (Mekari, Krishand). Do not start until ICP widening is an intentional decision with at least one paying customer asking for it. |
 
-**Phase 5 calendar estimate:** 10–14 weeks
+**Phase 5 calendar estimate:** 12–18 weeks (5.10 deferred from estimate)
 
 ---
 
@@ -180,6 +182,8 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-28 | 5.9 | (new) | New P1/M item: **Owner-persona action items on dashboard**. Bundles three insights from a feature-gap discussion: Top Selling sort toggle, Low Stock urgency (days-to-stockout via velocity), Dead Stock callout (no sales in N days). Plus dashboard profit hint surfacing top/loss-making SKUs. Headline value: dashboard goes from "what happened" → "what to do next." |
+| 2026-04-28 | 5.10 | (new, deferred) | New P3/XL item: **Batch + expiry tracking**. Discussed during the same feature-gap audit. Recorded but explicitly deferred — building this shifts ICP from multi-channel SMB retailers to FMCG/pharma distributors, which is a strategic widening that should not be started without at least one paying customer asking for it. Pre-existing entities (`ProductVariant`, `WarehouseStock`) have no expiry/batch fields and would need significant schema work. |
 | 2026-04-28 | 5.6 | ⬜ → 🟨 | PPN Output summary shipped; Input deferred to 2.13. New `/reports/ppn` page + `GET /reports/ppn-summary` endpoint. Month picker, 4 KPI cards (DPP/Output/Input/Net), per-rate breakdown grouped by effective rate `PPN/DPP`, per-invoice line items table with `TaxInvoiceNumber` (e-Faktur) + new `CounterpartyNPWP` columns, 20/page pagination, simple CSV export. New `Invoice.CounterpartyNPWP` column (varchar(32) NULL) + EF migration `20260428090534_AddInvoiceCounterpartyNPWP`. Endpoint reuses `Permissions.ChartOfAccounts.Read`. UI explicitly surfaces "Output-only / Input pending 2.13" caveat. 7 use-case tests pin DPP/PPN totals + per-rate grouping + zero-DPP exempt bucket + sort order. 101/101 unit tests pass. |
 | 2026-04-28 | 2.13 | (new) | New P1/L item: **PurchaseInvoice entity**. Discovered during 5.6 audit — currently `PurchaseOrder` + `GoodsReceipt` exist but no vendor *invoice* stage carrying tax data. Blocks PPN Input tracking + full PPN Output/Input/Net DJP report + AP journal entries. Once shipped, 5.6 closes to ✅ by adding `GetPpnInputInvoicesAsync` and toggling `InputAvailable=true`. |
 | 2026-04-28 | 5.4 | 🟨 → ✅ | Margin per product/per channel report shipped. New `Application/UseCases/Reports/ReportUseCase.GetProductMarginReportAsync` + `IReportRepository.GetProductMarginsAsync`/`GetProductChannelMarginsAsync` (raw aggregate queries, EF GroupBy on matched CSV rows joined to ProductVariant). New `/api/v1/reports/margin-per-product` endpoint reusing `Permissions.ChartOfAccounts.Read` (a dedicated `Permissions.Reports.*` group would require a seed migration — deferred). New `BlazorApp.Client/Pages/Finance/Margin.razor` page at `/reports/margin`: KPI cards, two tabs (per-product / per-product×channel), worst-margin-first sort, red/amber row highlighting for loss-making SKUs, client-side CSV export via JS interop (`window.downloadFile`). Cost source: `ProductVariant.CostPrice` point-in-time, with explicit caveat banner on the page. 8 new tests in `ReportUseCaseMarginTests` (94/94 unit tests pass). |

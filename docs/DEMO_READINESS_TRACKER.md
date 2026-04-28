@@ -1,7 +1,7 @@
 # StockLedger — Demo & Ship Readiness Tracker
 
 > Living document. Updated alongside [PRODUCTION_READINESS_TRACKER.md](PRODUCTION_READINESS_TRACKER.md).
-> **Last updated:** 2026-04-28 (5.6 PPN Output summary shipped) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (added 5.9 dashboard action items to demo roadmap) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -70,8 +70,11 @@ Three items, ~3–4 weeks of focused work. After this, you can pitch friendly cu
 | 1 | 5.1a | Validate parsers against real Tokopedia + Shopee exports | S (3–5 days) | **🟨 Partially done 2026-04-28** — auto-mapper extracted to testable `CsvHeaderAutoMapper` class, precedence bug fixed, 16 pinned tests for likely real-export shapes pass. Remaining: drop in actual seller-account export and add as final pinned cases. |
 | 2 | 5.4 | Margin per product / per channel report | M (1–2 wk) | **✅ Shipped 2026-04-28** — `/reports/margin` page with per-product and per-product×channel tabs, worst-margin-first sort, loss-making row highlighting, CSV export. Cost source: variant CostPrice point-in-time (caveat surfaced in UI). 8 use-case tests pin the math. |
 | 3 | 5.6 | PPN input/output summary for DJP | M (1–2 wk) | **🟨 Output shipped 2026-04-28** — `/reports/ppn` page with month picker, per-rate breakdown, per-invoice line items, NPWP + e-Faktur columns, CSV export. Output covers the full Issued/Paid invoice population. **Input pending PurchaseInvoice (tracker 2.13)** — once Input lands, this becomes ✅. |
+| 4 | 5.9 | Owner-persona action items on dashboard | M (1–2 wk) | Dashboard becomes "what to do this week" instead of "what happened last month." Bundles Low Stock urgency (days-to-stockout), Dead Stock callout (no sales in 60 days), Top Selling sort toggle, dashboard profit hint. The dead-stock line is the memorable demo moment — *"this is literally money stuck."* |
 
-After these three: Demo-ready ≈ **90%**. Remaining 10% gap is polish (Bahasa coverage, action-item recommendations, balance sheet) — none of it blocks a confident demo to early customers.
+After items 1–3: Demo-ready ≈ **88%**. After 5.9: ≈ **92%**. Remaining gap is polish (Bahasa coverage, balance sheet) — none of it blocks a confident demo to early customers.
+
+**Explicitly out of scope of demo-readiness:** Batch/expiry tracking (tracker 5.10) — that's an ICP-widening feature, not a demo gap.
 
 ---
 
@@ -115,6 +118,7 @@ These are real work but they're explicitly excluded so the scores answer the pro
 
 | Date | Aspect | Change | Notes |
 |------|--------|--------|-------|
+| 2026-04-28 | (no score change) | Added 5.9 to demo roadmap | Audit of 5 dashboard-insight feature ideas. Three (Top Selling, Margin per item, dashboard profit hint) already covered or one-off polish. Two genuinely useful gaps (Low Stock urgency, Dead Stock) bundled with the polish into new tracker item 5.9 — "Owner-persona action items on dashboard." Expiry Risk recorded as 5.10 but explicitly deferred (ICP-widening). After 5.9 ships, demo-ready projected ≈ 92%. |
 | 2026-04-28 | demo +3, ship +2 | 5.6 PPN Output summary shipped | Demo 82% → 85%; Ship 50% → 52%. Journey 4 score 75% → 80%. New `/reports/ppn` page closes the accountant-persona "where do I get the monthly DJP file" question for Output. New `Invoice.CounterpartyNPWP` column + migration. PPN Input deferred to new tracker item 2.13 (PurchaseInvoice entity). Score is +3 not +5 because full Net PPN (Output−Input) waits on 2.13. |
 | 2026-04-28 | demo +4, ship +3 | 5.4 margin per product shipped | Demo 78% → 82%; Ship 47% → 50%. Journey 4 score 60% → 75% — owner-persona "which SKU loses money on Shopee" question now has a dedicated screen. New `/reports/margin` page (per-product + per-product×channel tabs, worst-margin-first, loss-row highlighting, CSV export). Cost basis is variant CostPrice point-in-time with caveat surfaced. |
 | 2026-04-28 | demo +3, ship +2 | 5.1a auto-mapper hardened | Demo 75% → 78%; Ship 45% → 47%. Journey 3 score 85% → 88%. New `CsvHeaderAutoMapper` (Application layer, 16 pinned tests) replaces in-line frontend logic; fixes a precedence bug that silently dropped `"Order ID"` headers. Score ceiling on Journey 3 still capped pending real-account-export pinning. |

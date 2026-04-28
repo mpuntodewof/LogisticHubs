@@ -120,6 +120,52 @@ namespace BlazorApp.Client.Models
         public decimal GrandTotal { get; set; }
     }
 
+    // Mirrors Application.DTOs.Reports.ProductMarginReport. Cost source is
+    // ProductVariant.CostPrice "as of now" (not cost-at-time-of-sale) — UI surfaces
+    // this caveat on the page.
+    public class ProductMarginReport
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal TotalCogs { get; set; }
+        public decimal TotalPlatformFees { get; set; }
+        public decimal TotalNetMargin { get; set; }
+        public decimal NetMarginPercent { get; set; }
+        public List<ProductMarginLine> Products { get; set; } = new();
+        public List<ProductChannelMarginLine> ProductByChannel { get; set; } = new();
+    }
+
+    public class ProductMarginLine
+    {
+        public Guid ProductVariantId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public decimal Revenue { get; set; }
+        public decimal CostPrice { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal PlatformFees { get; set; }
+        public decimal NetMargin { get; set; }
+        public decimal NetMarginPercent { get; set; }
+    }
+
+    public class ProductChannelMarginLine
+    {
+        public Guid ProductVariantId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public Guid ChannelId { get; set; }
+        public string ChannelName { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public decimal Revenue { get; set; }
+        public decimal CostPrice { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal PlatformFees { get; set; }
+        public decimal NetMargin { get; set; }
+        public decimal NetMarginPercent { get; set; }
+    }
+
     public class NotificationSummary
     {
         public int TotalUnread { get; set; }

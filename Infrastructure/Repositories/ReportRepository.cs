@@ -58,6 +58,69 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // Margin per product — joins matched import rows to ProductVariant for current
+        // CostPrice. Per Q1-C: uses point-in-time variant cost, not cost-at-sale.
+        public async Task<List<ProductMarginLine>> GetProductMarginsAsync(DateTime from, DateTime to)
+        {
+            return await _context.Set<CsvImportRow>()
+                .Where(r => r.Status == ImportRowStatus.Matched.ToString()
+                    && r.MatchedProductVariantId != null
+                    && r.Batch.CreatedAt >= from
+                    && r.Batch.CreatedAt <= to)
+                .GroupBy(r => new
+                {
+                    VariantId = r.MatchedProductVariantId!.Value,
+                    r.MatchedProductVariant!.Sku,
+                    ProductName = r.MatchedProductVariant.Name,
+                    r.MatchedProductVariant.CostPrice
+                })
+                .Select(g => new ProductMarginLine
+                {
+                    ProductVariantId = g.Key.VariantId,
+                    Sku = g.Key.Sku,
+                    ProductName = g.Key.ProductName,
+                    UnitsSold = g.Sum(r => r.Quantity),
+                    Revenue = g.Sum(r => r.TotalPrice),
+                    CostPrice = g.Key.CostPrice,
+                    TotalCost = g.Key.CostPrice * g.Sum(r => r.Quantity),
+                    PlatformFees = g.Sum(r => r.PlatformFee)
+                    // NetMargin + NetMarginPercent computed in the use case.
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<ProductChannelMarginLine>> GetProductChannelMarginsAsync(DateTime from, DateTime to)
+        {
+            return await _context.Set<CsvImportRow>()
+                .Where(r => r.Status == ImportRowStatus.Matched.ToString()
+                    && r.MatchedProductVariantId != null
+                    && r.Batch.CreatedAt >= from
+                    && r.Batch.CreatedAt <= to)
+                .GroupBy(r => new
+                {
+                    VariantId = r.MatchedProductVariantId!.Value,
+                    r.MatchedProductVariant!.Sku,
+                    ProductName = r.MatchedProductVariant.Name,
+                    r.MatchedProductVariant.CostPrice,
+                    r.Batch.SalesChannelId,
+                    ChannelName = r.Batch.SalesChannel.Name
+                })
+                .Select(g => new ProductChannelMarginLine
+                {
+                    ProductVariantId = g.Key.VariantId,
+                    Sku = g.Key.Sku,
+                    ProductName = g.Key.ProductName,
+                    ChannelId = g.Key.SalesChannelId,
+                    ChannelName = g.Key.ChannelName,
+                    UnitsSold = g.Sum(r => r.Quantity),
+                    Revenue = g.Sum(r => r.TotalPrice),
+                    CostPrice = g.Key.CostPrice,
+                    TotalCost = g.Key.CostPrice * g.Sum(r => r.Quantity),
+                    PlatformFees = g.Sum(r => r.PlatformFee)
+                })
+                .ToListAsync();
+        }
+
         public async Task<StockHealthSummary> GetStockHealthAsync()
         {
             var stocks = _context.Set<WarehouseStock>();

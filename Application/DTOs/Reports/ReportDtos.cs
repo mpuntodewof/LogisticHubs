@@ -127,4 +127,50 @@ namespace Application.DTOs.Reports
         public DateTime DueDate { get; set; }
         public decimal GrandTotal { get; set; }
     }
+
+    // ── Margin per Product Report ────────────────────────────────────────────
+    // Cost source is ProductVariant.CostPrice "as of now" (point-in-time, not
+    // cost-at-time-of-sale). UI must surface this caveat — see Reports/Margin.razor.
+    public class ProductMarginReport
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal TotalCogs { get; set; }
+        public decimal TotalPlatformFees { get; set; }
+        public decimal TotalNetMargin { get; set; }
+        public decimal NetMarginPercent { get; set; }
+        public List<ProductMarginLine> Products { get; set; } = new();
+        public List<ProductChannelMarginLine> ProductByChannel { get; set; } = new();
+    }
+
+    public class ProductMarginLine
+    {
+        public Guid ProductVariantId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public decimal Revenue { get; set; }
+        public decimal CostPrice { get; set; }     // unit cost as of now
+        public decimal TotalCost { get; set; }     // CostPrice * UnitsSold
+        public decimal PlatformFees { get; set; }
+        public decimal NetMargin { get; set; }     // Revenue - TotalCost - PlatformFees
+        public decimal NetMarginPercent { get; set; }
+    }
+
+    public class ProductChannelMarginLine
+    {
+        public Guid ProductVariantId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public Guid ChannelId { get; set; }
+        public string ChannelName { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public decimal Revenue { get; set; }
+        public decimal CostPrice { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal PlatformFees { get; set; }
+        public decimal NetMargin { get; set; }
+        public decimal NetMarginPercent { get; set; }
+    }
 }

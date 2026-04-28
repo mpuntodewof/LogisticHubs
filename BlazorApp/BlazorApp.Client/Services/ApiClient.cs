@@ -1069,6 +1069,15 @@ namespace BlazorApp.Client.Services
             return ApiResult.Ok();
         }
 
+        public async Task<ApiResult> UpdateChartOfAccountAsync(Guid id, UpdateChartOfAccountRequest request)
+        {
+            await AttachTokenAsync();
+            var response = await _http.PutAsJsonAsync($"{V1}/chart-of-accounts/{id}", request);
+            if (!response.IsSuccessStatusCode)
+                return ApiResult.Fail((int)response.StatusCode, await ReadErrorMessageAsync(response));
+            return ApiResult.Ok();
+        }
+
         public async Task<ApiResult> DeleteChartOfAccountAsync(Guid id)
         {
             await AttachTokenAsync();
@@ -2011,6 +2020,21 @@ namespace BlazorApp.Client.Services
                 return ApiResult<ProfitAndLossReport>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
             var data = await resp.Content.ReadFromJsonAsync<ProfitAndLossReport>();
             return ApiResult<ProfitAndLossReport>.Ok(data!);
+        }
+
+        public async Task<ApiResult<ProductMarginReport>> GetMarginPerProductAsync(DateTime? from = null, DateTime? to = null)
+        {
+            await AttachTokenAsync();
+            var url = $"{V1}/reports/margin-per-product";
+            var queryParams = new List<string>();
+            if (from.HasValue) queryParams.Add($"from={from.Value:yyyy-MM-dd}");
+            if (to.HasValue) queryParams.Add($"to={to.Value:yyyy-MM-dd}");
+            if (queryParams.Count > 0) url += "?" + string.Join("&", queryParams);
+            var resp = await _http.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<ProductMarginReport>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<ProductMarginReport>();
+            return ApiResult<ProductMarginReport>.Ok(data!);
         }
 
         public async Task<ApiResult<NotificationSummary>> GetNotificationsAsync()

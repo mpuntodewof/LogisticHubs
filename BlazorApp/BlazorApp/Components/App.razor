@@ -38,6 +38,20 @@
                 return next;
             }
         };
+
+        // Trigger a client-side file download from an in-memory string. Used by
+        // report pages for CSV export. No server round-trip.
+        window.downloadFile = function(fileName, mimeType, content) {
+            var blob = new Blob([content], { type: mimeType });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
     </script>
 </body>
 

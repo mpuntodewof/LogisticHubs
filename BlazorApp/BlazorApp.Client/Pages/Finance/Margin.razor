@@ -1,0 +1,326 @@
+@page "/reports/margin"
+@layout AppLayout
+@inject BlazorApp.Client.Services.ApiClient Api
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<div class="page-header">
+    <div>
+        <h1>Margin per Product</h1>
+        <p class="page-desc">Net margin per SKU and per channel — sorted worst-first so loss-making products surface immediately</p>
+    </div>
+</div>
+
+<div class="report-filters">
+    <div class="form-group">
+        <label>From</label>
+        <input type="date" class="form-control-custom" style="min-width:160px" @bind="_fromDate" />
+    </div>
+    <div class="form-group">
+        <label>To</label>
+        <input type="date" class="form-control-custom" style="min-width:160px" @bind="_toDate" />
+    </div>
+    <button class="btn-primary" @onclick="LoadReport" disabled="@_loading" style="height:38px;margin-bottom:0">
+        @if (_loading) { <span>Generating...</span> } else { <span>Generate Report</span> }
+    </button>
+    <button class="btn-outline" @onclick="ExportCsv" disabled="@(_report == null || _loading)" style="height:38px;margin-bottom:0;margin-left:.5rem">
+        <span>&#128229;</span> Export CSV
+    </button>
+</div>
+
+<div class="margin-note">
+    <span class="margin-note-icon">&#9432;</span>
+    <div>
+        <strong>Note:</strong> Margins use the <em>current</em> cost price on each product variant, not the cost at the time of sale.
+        Re-pricing a product will retroactively change historical margins shown here.
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert-custom alert-error" style="margin-bottom:1.25rem">@_error</div>
+}
+
+@if (_report != null)
+{
+    @* ── KPI Cards ───────────────────────────────────────── *@
+    <div class="dash-grid-4 mb-lg">
+        <div class="glow-card glow-cyan anim-enter anim-d1">
+            <span class="glow-stat-icon">&#128176;</span>
+            <div class="glow-stat-label">Total Revenue</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalRevenue.ToString("N0")</div>
+        </div>
+        <div class="glow-card glow-amber anim-enter anim-d2">
+            <span class="glow-stat-icon">&#128230;</span>
+            <div class="glow-stat-label">Total COGS</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalCogs.ToString("N0")</div>
+        </div>
+        <div class="glow-card glow-rose anim-enter anim-d3">
+            <span class="glow-stat-icon">&#128181;</span>
+            <div class="glow-stat-label">Platform Fees</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalPlatformFees.ToString("N0")</div>
+        </div>
+        <div class="glow-card @(_report.TotalNetMargin >= 0 ? "glow-emerald" : "glow-rose") anim-enter anim-d4">
+            <span class="glow-stat-icon">&#127919;</span>
+            <div class="glow-stat-label">Net Margin</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalNetMargin.ToString("N0")</div>
+            <div class="glow-stat-trend @(_report.TotalNetMargin >= 0 ? "trend-up" : "trend-down")" style="margin-top:.5rem">
+                @_report.NetMarginPercent% overall
+            </div>
+        </div>
+    </div>
+
+    @* ── Tabs ───────────────────────────────────────────── *@
+    <div class="tab-bar mb-md">
+        <button class="tab-btn @(_activeTab == "products" ? "active" : "")" @onclick='() => _activeTab = "products"'>
+            Per Product (@_report.Products.Count)
+        </button>
+        <button class="tab-btn @(_activeTab == "byChannel" ? "active" : "")" @onclick='() => _activeTab = "byChannel"'>
+            Per Product × Channel (@_report.ProductByChannel.Count)
+        </button>
+    </div>
+
+    @if (_activeTab == "products")
+    {
+        @if (_report.Products.Count == 0)
+        {
+            <div class="card"><div class="empty-state">No matched sales data in this date range.</div></div>
+        }
+        else
+        {
+            <div class="card" style="padding:0">
+                <div class="table-wrapper">
+                    <table class="lh-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Product</th>
+                                <th class="margin-num">Units Sold</th>
+                                <th class="margin-num">Revenue</th>
+                                <th class="margin-num">Cost</th>
+                                <th class="margin-num">Platform Fees</th>
+                                <th class="margin-num">Net Margin</th>
+                                <th class="margin-num">Margin %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in PagedProducts())
+                            {
+                                <tr class="@MarginRowClass(p.NetMarginPercent)">
+                                    <td><code class="margin-sku">@p.Sku</code></td>
+                                    <td>@p.ProductName</td>
+                                    <td class="margin-num">@p.UnitsSold</td>
+                                    <td class="margin-num">Rp @p.Revenue.ToString("N0")</td>
+                                    <td class="margin-num">Rp @p.TotalCost.ToString("N0")</td>
+                                    <td class="margin-num">Rp @p.PlatformFees.ToString("N0")</td>
+                                    <td class="margin-num margin-strong @(p.NetMargin < 0 ? "margin-neg" : "")">Rp @p.NetMargin.ToString("N0")</td>
+                                    <td class="margin-num margin-strong @(p.NetMargin < 0 ? "margin-neg" : "")">@p.NetMarginPercent%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @PaginationFooter(_report.Products.Count, _productsPage, p => _productsPage = p)
+            </div>
+        }
+    }
+    else
+    {
+        @if (_report.ProductByChannel.Count == 0)
+        {
+            <div class="card"><div class="empty-state">No matched sales data in this date range.</div></div>
+        }
+        else
+        {
+            <div class="card" style="padding:0">
+                <div class="table-wrapper">
+                    <table class="lh-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Product</th>
+                                <th>Channel</th>
+                                <th class="margin-num">Units Sold</th>
+                                <th class="margin-num">Revenue</th>
+                                <th class="margin-num">Cost</th>
+                                <th class="margin-num">Platform Fees</th>
+                                <th class="margin-num">Net Margin</th>
+                                <th class="margin-num">Margin %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pc in PagedByChannel())
+                            {
+                                <tr class="@MarginRowClass(pc.NetMarginPercent)">
+                                    <td><code class="margin-sku">@pc.Sku</code></td>
+                                    <td>@pc.ProductName</td>
+                                    <td>@pc.ChannelName</td>
+                                    <td class="margin-num">@pc.UnitsSold</td>
+                                    <td class="margin-num">Rp @pc.Revenue.ToString("N0")</td>
+                                    <td class="margin-num">Rp @pc.TotalCost.ToString("N0")</td>
+                                    <td class="margin-num">Rp @pc.PlatformFees.ToString("N0")</td>
+                                    <td class="margin-num margin-strong @(pc.NetMargin < 0 ? "margin-neg" : "")">Rp @pc.NetMargin.ToString("N0")</td>
+                                    <td class="margin-num margin-strong @(pc.NetMargin < 0 ? "margin-neg" : "")">@pc.NetMarginPercent%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @PaginationFooter(_report.ProductByChannel.Count, _byChannelPage, p => _byChannelPage = p)
+            </div>
+        }
+    }
+}
+
+<style>
+    /* Caveat banner — matches app's glass theme */
+    .margin-note { display: flex; gap: .75rem; align-items: flex-start; padding: .85rem 1rem; margin-bottom: 1.25rem;
+        background: rgba(99, 102, 241, .06); border: 1px solid rgba(99, 102, 241, .2); border-radius: var(--radius-sm);
+        font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; backdrop-filter: blur(8px); }
+    .margin-note-icon { font-size: 1.1rem; line-height: 1; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+    .margin-note strong { color: var(--text-primary); }
+
+    /* Tabs */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+    .tab-btn { background: transparent; border: none; padding: .75rem 1.25rem; cursor: pointer;
+        font-size: .8125rem; font-weight: 500; color: var(--text-muted);
+        border-bottom: 2px solid transparent; transition: var(--transition-fast); }
+    .tab-btn:hover:not(.active) { color: var(--text-secondary); }
+    .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--primary); }
+
+    /* Table row highlighting — overrides .lh-table tbody tr hover */
+    .lh-table tbody tr.margin-row-loss td { background: rgba(239, 68, 68, .08) !important; }
+    .lh-table tbody tr.margin-row-warn td { background: rgba(251, 191, 36, .07) !important; }
+    .lh-table tbody tr.margin-row-loss:hover td { background: rgba(239, 68, 68, .14) !important; }
+    .lh-table tbody tr.margin-row-warn:hover td { background: rgba(251, 191, 36, .12) !important; }
+
+    /* Table cell helpers */
+    .margin-num { text-align: right; white-space: nowrap; }
+    .margin-strong { font-weight: 600; color: var(--text-primary) !important; }
+    .margin-neg { color: #F87171 !important; }
+    .margin-sku { font-size: .75rem; padding: .15rem .4rem; background: rgba(99, 102, 241, .08); border-radius: 4px;
+        color: var(--text-secondary); white-space: nowrap; display: inline-block; }
+
+    .empty-state { padding: 2.5rem 1.5rem; text-align: center; color: var(--text-muted); font-size: .875rem; }
+
+    /* Pagination footer */
+    .margin-pager { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: .75rem 1.25rem; border-top: 1px solid var(--border); font-size: .8125rem;
+        color: var(--text-muted); flex-wrap: wrap; }
+    .margin-pager-info { font-weight: 500; }
+    .margin-pager-btns { display: flex; align-items: center; gap: .25rem; }
+    .margin-pager-current { padding: 0 .75rem; color: var(--text-secondary); font-weight: 500; }
+    .pager-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+        width: 32px; height: 32px; border-radius: var(--radius-sm); cursor: pointer; font-size: .9rem;
+        transition: var(--transition-fast); display: inline-flex; align-items: center; justify-content: center; }
+    .pager-btn:hover:not(:disabled) { background: rgba(99, 102, 241, .08); color: var(--text-primary);
+        border-color: rgba(99, 102, 241, .3); }
+    .pager-btn:disabled { opacity: .4; cursor: not-allowed; }
+</style>
+
+@code {
+    private const int PageSize = 20;
+
+    private bool _loading;
+    private string _error = string.Empty;
+    private DateTime _fromDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+    private DateTime _toDate = DateTime.UtcNow.Date;
+    private BlazorApp.Client.Models.ProductMarginReport? _report;
+    private string _activeTab = "products";
+    private int _productsPage = 1;
+    private int _byChannelPage = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        _loading = true;
+        _error = string.Empty;
+        _productsPage = 1;       // Reset paging — new dataset, old page index may be invalid.
+        _byChannelPage = 1;
+        try
+        {
+            var result = await Api.GetMarginPerProductAsync(_fromDate, _toDate);
+            if (result.Success && result.Data != null)
+                _report = result.Data;
+            else
+                _error = result.ErrorMessage ?? "Failed to load report.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        _loading = false;
+    }
+
+    private IEnumerable<BlazorApp.Client.Models.ProductMarginLine> PagedProducts() =>
+        _report == null ? Enumerable.Empty<BlazorApp.Client.Models.ProductMarginLine>()
+            : _report.Products.Skip((_productsPage - 1) * PageSize).Take(PageSize);
+
+    private IEnumerable<BlazorApp.Client.Models.ProductChannelMarginLine> PagedByChannel() =>
+        _report == null ? Enumerable.Empty<BlazorApp.Client.Models.ProductChannelMarginLine>()
+            : _report.ProductByChannel.Skip((_byChannelPage - 1) * PageSize).Take(PageSize);
+
+    private RenderFragment PaginationFooter(int totalRows, int currentPage, Action<int> setPage) => __builder =>
+    {
+        var pageCount = (int)Math.Ceiling(totalRows / (double)PageSize);
+        if (pageCount <= 1) return;
+        var firstRow = (currentPage - 1) * PageSize + 1;
+        var lastRow = Math.Min(currentPage * PageSize, totalRows);
+
+        <div class="margin-pager">
+            <span class="margin-pager-info">@firstRow–@lastRow of @totalRows</span>
+            <div class="margin-pager-btns">
+                <button class="pager-btn" disabled="@(currentPage <= 1)" @onclick="() => setPage(1)">«</button>
+                <button class="pager-btn" disabled="@(currentPage <= 1)" @onclick="() => setPage(currentPage - 1)">‹</button>
+                <span class="margin-pager-current">Page @currentPage of @pageCount</span>
+                <button class="pager-btn" disabled="@(currentPage >= pageCount)" @onclick="() => setPage(currentPage + 1)">›</button>
+                <button class="pager-btn" disabled="@(currentPage >= pageCount)" @onclick="() => setPage(pageCount)">»</button>
+            </div>
+        </div>
+    };
+
+    // Per Q4: red for margin < 5%, amber for 5–15%, no highlight above.
+    private static string MarginRowClass(decimal pct) =>
+        pct < 5 ? "margin-row-loss" : pct < 15 ? "margin-row-warn" : string.Empty;
+
+    private async Task ExportCsv()
+    {
+        if (_report == null) return;
+        var csv = _activeTab == "products" ? BuildProductCsv() : BuildProductChannelCsv();
+        var fileName = $"margin-{_activeTab}-{_fromDate:yyyyMMdd}-{_toDate:yyyyMMdd}.csv";
+        await JS.InvokeVoidAsync("downloadFile", fileName, "text/csv;charset=utf-8", csv);
+    }
+
+    private string BuildProductCsv()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("SKU,Product,UnitsSold,Revenue,Cost,PlatformFees,NetMargin,MarginPercent");
+        foreach (var p in _report!.Products)
+            sb.AppendLine(string.Join(",", new[] {
+                CsvCell(p.Sku), CsvCell(p.ProductName), p.UnitsSold.ToString(),
+                p.Revenue.ToString(), p.TotalCost.ToString(), p.PlatformFees.ToString(),
+                p.NetMargin.ToString(), p.NetMarginPercent.ToString()
+            }));
+        return sb.ToString();
+    }
+
+    private string BuildProductChannelCsv()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("SKU,Product,Channel,UnitsSold,Revenue,Cost,PlatformFees,NetMargin,MarginPercent");
+        foreach (var pc in _report!.ProductByChannel)
+            sb.AppendLine(string.Join(",", new[] {
+                CsvCell(pc.Sku), CsvCell(pc.ProductName), CsvCell(pc.ChannelName),
+                pc.UnitsSold.ToString(), pc.Revenue.ToString(), pc.TotalCost.ToString(),
+                pc.PlatformFees.ToString(), pc.NetMargin.ToString(), pc.NetMarginPercent.ToString()
+            }));
+        return sb.ToString();
+    }
+
+    private static string CsvCell(string s)
+    {
+        var quote = "\"";
+        var needsEscape = s.Contains(',') || s.Contains('"') || s.Contains('\n');
+        return needsEscape ? quote + s.Replace(quote, quote + quote) + quote : s;
+    }
+}

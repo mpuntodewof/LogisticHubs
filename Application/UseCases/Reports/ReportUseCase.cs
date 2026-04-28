@@ -68,6 +68,45 @@ namespace Application.UseCases.Reports
             };
         }
 
+        public async Task<ProductMarginReport> GetProductMarginReportAsync(DateTime from, DateTime to)
+        {
+            var products = await _reportRepository.GetProductMarginsAsync(from, to);
+            var byChannel = await _reportRepository.GetProductChannelMarginsAsync(from, to);
+
+            foreach (var p in products)
+            {
+                p.NetMargin = p.Revenue - p.TotalCost - p.PlatformFees;
+                p.NetMarginPercent = p.Revenue == 0 ? 0 : Math.Round(p.NetMargin / p.Revenue * 100, 2);
+            }
+            foreach (var pc in byChannel)
+            {
+                pc.NetMargin = pc.Revenue - pc.TotalCost - pc.PlatformFees;
+                pc.NetMarginPercent = pc.Revenue == 0 ? 0 : Math.Round(pc.NetMargin / pc.Revenue * 100, 2);
+            }
+
+            // Sort: worst margin first per Q4 default — that's the actionable view.
+            products = products.OrderBy(p => p.NetMarginPercent).ToList();
+            byChannel = byChannel.OrderBy(pc => pc.NetMarginPercent).ToList();
+
+            var totalRevenue = products.Sum(p => p.Revenue);
+            var totalCogs = products.Sum(p => p.TotalCost);
+            var totalFees = products.Sum(p => p.PlatformFees);
+            var netMargin = totalRevenue - totalCogs - totalFees;
+
+            return new ProductMarginReport
+            {
+                FromDate = from,
+                ToDate = to,
+                TotalRevenue = totalRevenue,
+                TotalCogs = totalCogs,
+                TotalPlatformFees = totalFees,
+                TotalNetMargin = netMargin,
+                NetMarginPercent = totalRevenue == 0 ? 0 : Math.Round(netMargin / totalRevenue * 100, 2),
+                Products = products,
+                ProductByChannel = byChannel
+            };
+        }
+
         public async Task<FinanceDashboardSummary> GetFinanceDashboardAsync()
         {
             var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-28 (5.1a auto-mapper hardened — 16 pinned tests, precedence bug fixed) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (5.4 margin per product report shipped) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -38,8 +38,8 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
 | Phase 3 — Post-Launch Hardening | 8 | 3 | 0 | 0 | 5 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 9 | 2 | 3 | 0 | 4 | 0 |
-| **Totals** | **45** | **10** | **3** | **1** | **31** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 9 | 3 | 2 | 0 | 4 | 0 |
+| **Totals** | **45** | **11** | **2** | **1** | **31** | **0** |
 
 ---
 
@@ -134,7 +134,7 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | 5.1a | Validate parsers against real Tokopedia + Shopee exports | P0 | S | 🟨 | New `CsvHeaderAutoMapper` (Application layer) replaces in-line frontend logic; fixes operator-precedence bug that silently skipped `"Order ID"` headers, adds longest-keyword-wins claim tracking, normalizes underscores/dashes to spaces, expanded EN+Bahasa synonyms across 8 fields. 16 pinned tests covering Tokopedia/Shopee likely real-export shapes (86/86 pass). **Remaining:** drop in actual Tokopedia + Shopee export from a real seller account, add as additional pinned cases, confirm SKU-match + value-format work end-to-end. |
 | 5.2 | Shopee CSV parser | P0 | M | ✅ | Same generic importer as 5.1; sample Shopee fixture passes. End-to-end shipped per code audit 2026-04-28. Real-export validation in 5.1a. |
 | 5.3 | P&L report (basic + per-channel) | P0 | L | 🟨 | Finance dashboard view + report endpoints scaffolded; per-channel P&L logic to verify |
-| 5.4 | Margin per product / per channel report | P0 | M | 🟨 | Tied to 5.3 dashboard work |
+| 5.4 | Margin per product / per channel report | P0 | M | ✅ | New `/reports/margin` page + `GET /reports/margin-per-product` endpoint. Two views: per-product (collapsed across channels) and per-product × channel matrix. Sorted worst-margin-first. Red row for margin <5%, amber 5–15%. CSV export per active tab. Cost source: `ProductVariant.CostPrice` "as of now" (point-in-time, not cost-at-sale) — UI surfaces caveat. 8 new use-case tests pin the margin math. 94/94 unit tests pass. |
 | 5.5 | Balance sheet | P1 | L | ⬜ | Standard format, ties to journals |
 | 5.6 | PPN input/output summary for DJP | P1 | M | ⬜ | Monthly DJP-format export |
 | 5.7 | Stock reconciliation workflow | P1 | M | ⚠️ | File modified — verify current state |
@@ -179,6 +179,7 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-28 | 5.4 | 🟨 → ✅ | Margin per product/per channel report shipped. New `Application/UseCases/Reports/ReportUseCase.GetProductMarginReportAsync` + `IReportRepository.GetProductMarginsAsync`/`GetProductChannelMarginsAsync` (raw aggregate queries, EF GroupBy on matched CSV rows joined to ProductVariant). New `/api/v1/reports/margin-per-product` endpoint reusing `Permissions.ChartOfAccounts.Read` (a dedicated `Permissions.Reports.*` group would require a seed migration — deferred). New `BlazorApp.Client/Pages/Finance/Margin.razor` page at `/reports/margin`: KPI cards, two tabs (per-product / per-product×channel), worst-margin-first sort, red/amber row highlighting for loss-making SKUs, client-side CSV export via JS interop (`window.downloadFile`). Cost source: `ProductVariant.CostPrice` point-in-time, with explicit caveat banner on the page. 8 new tests in `ReportUseCaseMarginTests` (94/94 unit tests pass). |
 | 2026-04-28 | 5.1a | ⬜ → 🟨 | New `Application/UseCases/Import/CsvHeaderAutoMapper.cs` extracts auto-mapping from `Index.razor`. Fixes operator-precedence bug on line 492 (`(order && no) \|\| pesanan` → silently dropped `"Order ID"` headers). Adds: longest-keyword-wins (so `"Total Price"` doesn't get claimed by `"price"` rule), claim tracking (each header maps to ≤1 field), underscore/dash normalization (so `no_pesanan` matches `no pesanan`), expanded EN+Bahasa synonyms across 8 fields. 16 pinned tests (`CsvHeaderAutoMapperTests.cs`) — including regression for the precedence bug, longest-match collisions, and likely Tokopedia/Shopee Seller Center header shapes. Frontend `AutoMapColumns()` rewritten to mirror the same algorithm + synonym list (no project-ref change). 86/86 unit tests pass. **Remaining for ✅:** drop in real Tokopedia + Shopee export from an actual seller account, add as additional pinned cases. |
 | 2026-04-28 | 5.1 | ⚠️ → ✅ | Code audit confirmed end-to-end Tokopedia import: generic auto-mapping importer, SKU → variant → stock deduction → StockMovement → channel revenue + platform fee captured. Frontend 3-step UI (`Import/Index.razor`) + 5 endpoints in `ImportController`. **Sample-fixture-based** — real-export validation split out as new item 5.1a. |
 | 2026-04-28 | 5.1a | (new) | New P0/S item: validate parsers against real Tokopedia + Shopee exports from an actual seller. Splits "parser shipped" from "parser proven on real data". |

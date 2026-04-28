@@ -8,6 +8,10 @@ namespace Application.Interfaces
         Task<List<AccountSummaryLine>> GetAccountSummariesAsync(DateTime from, DateTime to, string accountType);
         Task<List<ChannelProfitLine>> GetChannelProfitBreakdownAsync(DateTime from, DateTime to);
 
+        // Margin per product (raw aggregated facts; use case computes margin %)
+        Task<List<ProductMarginLine>> GetProductMarginsAsync(DateTime from, DateTime to);
+        Task<List<ProductChannelMarginLine>> GetProductChannelMarginsAsync(DateTime from, DateTime to);
+
         // Dashboard
         Task<StockHealthSummary> GetStockHealthAsync();
         Task<SalesPerformanceSummary> GetSalesPerformanceAsync();

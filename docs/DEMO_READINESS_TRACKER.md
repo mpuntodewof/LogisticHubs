@@ -1,7 +1,7 @@
 # StockLedger — Demo & Ship Readiness Tracker
 
 > Living document. Updated alongside [PRODUCTION_READINESS_TRACKER.md](PRODUCTION_READINESS_TRACKER.md).
-> **Last updated:** 2026-04-28 (5.1a auto-mapper hardened) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (5.4 margin report shipped) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -22,8 +22,8 @@ Demo-ready almost always lands first. Ship-ready takes longer because it has to 
 
 | Aspect | Score | Last assessed |
 |--------|------:|---------------|
-| 🎬 **Demo-ready** | **78%** | 2026-04-28 (after 5.1a auto-mapper hardening) |
-| 🚢 **Ship-ready (solid product)** | **47%** | 2026-04-28 |
+| 🎬 **Demo-ready** | **82%** | 2026-04-28 (after 5.4 margin report) |
+| 🚢 **Ship-ready (solid product)** | **50%** | 2026-04-28 |
 
 ### What "demo-ready" means here
 
@@ -56,7 +56,7 @@ Score = max(weakest sub-step's percentage). One broken step in a journey caps th
 | 1. Set Up My Store | 90% | 75% | No guided wizard — feels like 8 separate forms |
 | 2. Stock the Shelves | 90% | 80% | Auto-AP journal entry from goods receipt is `[Future]` |
 | 3. Record My Sales | **88%** | 73% | Auto-mapper hardened with pinned tests for likely real-export shapes; final real-account export pinning still open |
-| 4. Close the Books | 60% | 35% | Margin-per-product, PPN summary, balance sheet not built; e-Faktur not audited |
+| 4. Close the Books | 75% | 45% | PPN summary + balance sheet not built; e-Faktur not audited (margin-per-product shipped 2026-04-28) |
 | 5. Check My Business | 75% | 55% | Action-item recommendations + email alerts not built |
 
 ---
@@ -68,7 +68,7 @@ Three items, ~3–4 weeks of focused work. After this, you can pitch friendly cu
 | Order | Tracker ID | Item | Effort | Demo-impact |
 |------:|-----------|------|--------|-------------|
 | 1 | 5.1a | Validate parsers against real Tokopedia + Shopee exports | S (3–5 days) | **🟨 Partially done 2026-04-28** — auto-mapper extracted to testable `CsvHeaderAutoMapper` class, precedence bug fixed, 16 pinned tests for likely real-export shapes pass. Remaining: drop in actual seller-account export and add as final pinned cases. |
-| 2 | 5.4 | Margin per product / per channel report | M (1–2 wk) | Owner persona's #1 question — *"which SKU loses money on Shopee?"*. Closes the headline gap in Journey 4. Data already exists in `CsvImportRow` + `ProductVariant.Cost`. |
+| 2 | 5.4 | Margin per product / per channel report | M (1–2 wk) | **✅ Shipped 2026-04-28** — `/reports/margin` page with per-product and per-product×channel tabs, worst-margin-first sort, loss-making row highlighting, CSV export. Cost source: variant CostPrice point-in-time (caveat surfaced in UI). 8 use-case tests pin the math. |
 | 3 | 5.6 | PPN input/output summary for DJP | M (1–2 wk) | Accountant persona's #1 question. Data exists in invoices + tax rates. Without this, the *finance* product loses credibility in the first finance demo. |
 
 After these three: Demo-ready ≈ **90%**. Remaining 10% gap is polish (Bahasa coverage, action-item recommendations, balance sheet) — none of it blocks a confident demo to early customers.
@@ -115,5 +115,6 @@ These are real work but they're explicitly excluded so the scores answer the pro
 
 | Date | Aspect | Change | Notes |
 |------|--------|--------|-------|
+| 2026-04-28 | demo +4, ship +3 | 5.4 margin per product shipped | Demo 78% → 82%; Ship 47% → 50%. Journey 4 score 60% → 75% — owner-persona "which SKU loses money on Shopee" question now has a dedicated screen. New `/reports/margin` page (per-product + per-product×channel tabs, worst-margin-first, loss-row highlighting, CSV export). Cost basis is variant CostPrice point-in-time with caveat surfaced. |
 | 2026-04-28 | demo +3, ship +2 | 5.1a auto-mapper hardened | Demo 75% → 78%; Ship 45% → 47%. Journey 3 score 85% → 88%. New `CsvHeaderAutoMapper` (Application layer, 16 pinned tests) replaces in-line frontend logic; fixes a precedence bug that silently dropped `"Order ID"` headers. Score ceiling on Journey 3 still capped pending real-account-export pinning. |
 | 2026-04-28 | both | Initial scoring | Demo 75% / Ship 45%. Triggered by code audit that found Journey 3 (sales import) is shipped end-to-end (parsers, stock deduction, channel attribution, platform fees) — ahead of where the main tracker had it (5.1/5.2 ⚠️). 5.1/5.2 closed; new item 5.1a created for real-export validation. 3.9 onboarding wizard moved to Phase 1 as 1.11 (launch-blocker). |

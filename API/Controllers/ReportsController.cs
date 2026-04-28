@@ -32,6 +32,20 @@ namespace API.Controllers
             return Ok(report);
         }
 
+        // Reuses ChartOfAccounts.Read same as profit-and-loss above.
+        // A dedicated Permissions.Reports.* group would require a seed migration —
+        // tracked as a separate refactor, not blocking this report.
+        [HttpGet("margin-per-product")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
+        public async Task<ActionResult<ProductMarginReport>> GetMarginPerProduct(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to)
+        {
+            var fromDate = from ?? new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var toDate = to ?? DateTime.UtcNow;
+            var report = await _reportUseCase.GetProductMarginReportAsync(fromDate, toDate);
+            return Ok(report);
+        }
+
         [HttpGet("dashboard")]
         [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<DashboardSummary>> GetDashboard()

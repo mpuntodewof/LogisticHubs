@@ -2022,6 +2022,17 @@ namespace BlazorApp.Client.Services
             return ApiResult<ProfitAndLossReport>.Ok(data!);
         }
 
+        public async Task<ApiResult<PpnSummaryReport>> GetPpnSummaryAsync(int year, int month)
+        {
+            await AttachTokenAsync();
+            var url = $"{V1}/reports/ppn-summary?year={year}&month={month}";
+            var resp = await _http.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                return ApiResult<PpnSummaryReport>.Fail((int)resp.StatusCode, await ReadErrorMessageAsync(resp));
+            var data = await resp.Content.ReadFromJsonAsync<PpnSummaryReport>();
+            return ApiResult<PpnSummaryReport>.Ok(data!);
+        }
+
         public async Task<ApiResult<ProductMarginReport>> GetMarginPerProductAsync(DateTime? from = null, DateTime? to = null)
         {
             await AttachTokenAsync();

@@ -46,6 +46,19 @@ namespace API.Controllers
             return Ok(report);
         }
 
+        [HttpGet("ppn-summary")]
+        [RequirePermission(Permissions.ChartOfAccounts.Read)]
+        public async Task<ActionResult<PpnSummaryReport>> GetPpnSummary(
+            [FromQuery] int? year, [FromQuery] int? month)
+        {
+            var now = DateTime.UtcNow;
+            var y = year ?? now.Year;
+            var m = month ?? now.Month;
+            if (m < 1 || m > 12) return BadRequest("month must be 1-12.");
+            var report = await _reportUseCase.GetPpnSummaryAsync(y, m);
+            return Ok(report);
+        }
+
         [HttpGet("dashboard")]
         [RequirePermission(Permissions.Inventory.Read)]
         public async Task<ActionResult<DashboardSummary>> GetDashboard()

@@ -107,6 +107,43 @@ namespace Application.UseCases.Reports
             };
         }
 
+        public async Task<PpnSummaryReport> GetPpnSummaryAsync(int year, int month)
+        {
+            var invoices = await _reportRepository.GetPpnOutputInvoicesAsync(year, month);
+
+            // Per-rate grouping. Effective rate = round(Ppn / Dpp * 100, 2).
+            // Invoices with Dpp == 0 (rare — fully discounted, exempt) bucketed under "0%".
+            var groups = invoices
+                .GroupBy(i => i.Dpp == 0 ? 0m : Math.Round(i.PpnAmount / i.Dpp * 100m, 2))
+                .Select(g => new PpnRateGroup
+                {
+                    RatePercent = g.Key,
+                    TaxRateCode = $"PPN-{g.Key:0.##}",
+                    TaxRateName = g.Key == 0m ? "PPN 0% / Exempt" : $"PPN {g.Key:0.##}%",
+                    InvoiceCount = g.Count(),
+                    Dpp = g.Sum(i => i.Dpp),
+                    PpnAmount = g.Sum(i => i.PpnAmount)
+                })
+                .OrderByDescending(g => g.RatePercent)
+                .ToList();
+
+            var totalDpp = invoices.Sum(i => i.Dpp);
+            var totalOutput = invoices.Sum(i => i.PpnAmount);
+
+            return new PpnSummaryReport
+            {
+                Year = year,
+                Month = month,
+                TotalDpp = totalDpp,
+                TotalPpnOutput = totalOutput,
+                TotalPpnInput = 0m,                 // PurchaseInvoice not yet built (tracker 2.13)
+                NetPpnPayable = totalOutput,        // = Output - 0
+                InputAvailable = false,
+                RateGroups = groups,
+                Invoices = invoices
+            };
+        }
+
         public async Task<FinanceDashboardSummary> GetFinanceDashboardAsync()
         {
             var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

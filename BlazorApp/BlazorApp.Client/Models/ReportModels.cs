@@ -166,6 +166,45 @@ namespace BlazorApp.Client.Models
         public decimal NetMarginPercent { get; set; }
     }
 
+    // Mirrors Application.DTOs.Reports.PpnSummaryReport. Output-only in v1
+    // (PurchaseInvoice not yet built — Input PPN tracking deferred per tracker 2.13).
+    public class PpnSummaryReport
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public decimal TotalDpp { get; set; }
+        public decimal TotalPpnOutput { get; set; }
+        public decimal TotalPpnInput { get; set; }
+        public decimal NetPpnPayable { get; set; }
+        public bool InputAvailable { get; set; }
+        public List<PpnRateGroup> RateGroups { get; set; } = new();
+        public List<PpnInvoiceLine> Invoices { get; set; } = new();
+    }
+
+    public class PpnRateGroup
+    {
+        public string TaxRateCode { get; set; } = string.Empty;
+        public string TaxRateName { get; set; } = string.Empty;
+        public decimal RatePercent { get; set; }
+        public int InvoiceCount { get; set; }
+        public decimal Dpp { get; set; }
+        public decimal PpnAmount { get; set; }
+    }
+
+    public class PpnInvoiceLine
+    {
+        public Guid InvoiceId { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string? TaxInvoiceNumber { get; set; }
+        public DateTime InvoiceDate { get; set; }
+        public string? CounterpartyName { get; set; }
+        public string? CounterpartyNPWP { get; set; }
+        public decimal Dpp { get; set; }
+        public decimal PpnAmount { get; set; }
+        public decimal GrandTotal { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+
     public class NotificationSummary
     {
         public int TotalUnread { get; set; }

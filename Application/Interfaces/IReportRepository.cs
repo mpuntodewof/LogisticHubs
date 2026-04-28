@@ -12,6 +12,10 @@ namespace Application.Interfaces
         Task<List<ProductMarginLine>> GetProductMarginsAsync(DateTime from, DateTime to);
         Task<List<ProductChannelMarginLine>> GetProductChannelMarginsAsync(DateTime from, DateTime to);
 
+        // PPN Output — issued invoices in a month, line per invoice. Use case
+        // groups by tax rate + computes totals. Excludes Cancelled invoices.
+        Task<List<PpnInvoiceLine>> GetPpnOutputInvoicesAsync(int year, int month);
+
         // Dashboard
         Task<StockHealthSummary> GetStockHealthAsync();
         Task<SalesPerformanceSummary> GetSalesPerformanceAsync();

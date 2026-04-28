@@ -31,6 +31,12 @@ namespace Domain.Entities
         [MaxLength(255)]
         public string? CounterpartyName { get; set; }
 
+        // 16-digit Indonesian Tax ID (NPWP). Optional — invoices to non-PKP counterparties
+        // may not have one. Stored as string to preserve any formatting the user enters
+        // (e.g., "01.234.567.8-901.000"); validation/normalization is a separate concern.
+        [MaxLength(32)]
+        public string? CounterpartyNPWP { get; set; }
+
         public Guid? PaymentTermId { get; set; }
 
         [Required]

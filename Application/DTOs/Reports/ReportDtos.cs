@@ -173,4 +173,47 @@ namespace Application.DTOs.Reports
         public decimal NetMargin { get; set; }
         public decimal NetMarginPercent { get; set; }
     }
+
+    // ── PPN Summary Report (DJP monthly) ─────────────────────────────────────
+    // Output-only in v1 — Input PPN requires PurchaseInvoice entity (tracked
+    // separately as 2.13). NetPpnPayable in v1 equals -TotalPpnInput once Input
+    // exists; for now it equals TotalPpnOutput (assumes zero Input).
+    public class PpnSummaryReport
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public decimal TotalDpp { get; set; }              // Dasar Pengenaan Pajak (taxable base)
+        public decimal TotalPpnOutput { get; set; }        // VAT charged on issued sales invoices
+        public decimal TotalPpnInput { get; set; }         // 0 in v1 — placeholder
+        public decimal NetPpnPayable { get; set; }         // Output - Input
+        public bool InputAvailable { get; set; }           // false in v1
+        public List<PpnRateGroup> RateGroups { get; set; } = new();
+        public List<PpnInvoiceLine> Invoices { get; set; } = new();
+    }
+
+    // One row per (rate, invoice-status) for the per-rate summary section.
+    public class PpnRateGroup
+    {
+        public string TaxRateCode { get; set; } = string.Empty;
+        public string TaxRateName { get; set; } = string.Empty;
+        public decimal RatePercent { get; set; }           // e.g. 11.00
+        public int InvoiceCount { get; set; }
+        public decimal Dpp { get; set; }
+        public decimal PpnAmount { get; set; }
+    }
+
+    // One row per invoice for the line-item table + CSV export.
+    public class PpnInvoiceLine
+    {
+        public Guid InvoiceId { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string? TaxInvoiceNumber { get; set; }      // e-Faktur number (010.xxx-yy.xxxxxxxx)
+        public DateTime InvoiceDate { get; set; }
+        public string? CounterpartyName { get; set; }
+        public string? CounterpartyNPWP { get; set; }
+        public decimal Dpp { get; set; }                   // TaxableAmount
+        public decimal PpnAmount { get; set; }             // TaxAmount
+        public decimal GrandTotal { get; set; }
+        public string Status { get; set; } = string.Empty; // Issued / Paid / Cancelled (Cancelled excluded from totals)
+    }
 }

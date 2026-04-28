@@ -89,6 +89,39 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // Returns one row per non-cancelled invoice issued in the given month.
+        // The use case groups by effective tax rate (TaxAmount / TaxableAmount)
+        // to produce per-rate totals.
+        public async Task<List<PpnInvoiceLine>> GetPpnOutputInvoicesAsync(int year, int month)
+        {
+            var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var monthEnd = monthStart.AddMonths(1);
+            var cancelled = InvoiceStatus.Cancelled.ToString();
+            var draft = InvoiceStatus.Draft.ToString();
+
+            return await _context.Set<Invoice>()
+                .Where(i => i.Status != cancelled
+                    && i.Status != draft
+                    && i.InvoiceDate >= monthStart
+                    && i.InvoiceDate < monthEnd)
+                .OrderBy(i => i.InvoiceDate)
+                .ThenBy(i => i.InvoiceNumber)
+                .Select(i => new PpnInvoiceLine
+                {
+                    InvoiceId = i.Id,
+                    InvoiceNumber = i.InvoiceNumber,
+                    TaxInvoiceNumber = i.TaxInvoiceNumber,
+                    InvoiceDate = i.InvoiceDate,
+                    CounterpartyName = i.CounterpartyName,
+                    CounterpartyNPWP = i.CounterpartyNPWP,
+                    Dpp = i.TaxableAmount,
+                    PpnAmount = i.TaxAmount,
+                    GrandTotal = i.GrandTotal,
+                    Status = i.Status
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<ProductChannelMarginLine>> GetProductChannelMarginsAsync(DateTime from, DateTime to)
         {
             return await _context.Set<CsvImportRow>()

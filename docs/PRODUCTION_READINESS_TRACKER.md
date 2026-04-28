@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-28 (5.4 margin per product report shipped) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (5.6 PPN summary Output-only shipped; new item 2.13 PurchaseInvoice) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -35,11 +35,11 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | Phase | Total | ✅ Done | 🟨 In Progress | ⚠️ Partial | ⬜ Not Started | ⏸️ Blocked |
 |-------|------:|------:|------:|------:|------:|------:|
 | Phase 1 — Pre-Launch Foundation | 11 | 5 | 0 | 1 | 5 | 0 |
-| Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
+| Phase 2 — First Paying Customer | 13 | 0 | 0 | 0 | 13 | 0 |
 | Phase 3 — Post-Launch Hardening | 8 | 3 | 0 | 0 | 5 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 9 | 3 | 2 | 0 | 4 | 0 |
-| **Totals** | **45** | **11** | **2** | **1** | **31** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 9 | 3 | 3 | 0 | 3 | 0 |
+| **Totals** | **46** | **11** | **3** | **1** | **31** | **0** |
 
 ---
 
@@ -83,8 +83,9 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | 2.10 | Cancellation + 30-day read-only + CSV export | P1 | M | ⬜ | Promised in pricing FAQ — must implement |
 | 2.11 | Privacy policy, ToS, DPA | P1 | S | ⬜ | UU PDP DPO contact required |
 | 2.12 | MRR / churn / failed-payment dashboard (internal) | P1 | M | ⬜ | Internal admin panel |
+| 2.13 | PurchaseInvoice entity (vendor invoices, PPN Input source) | P1 | L | ⬜ | **Added 2026-04-28 from 5.6 audit.** Currently `PurchaseOrder` + `GoodsReceipt` exist but no vendor *invoice* stage. Required for PPN Input tracking, full PPN Output/Input/Net DJP report, AP journal entries. Schema: `PurchaseInvoice` + `PurchaseInvoiceItem` mirroring sales `Invoice` + `InvoiceItem`, with FK to `Supplier` and link back to `GoodsReceipt`. Update 5.6 to consume Input via `GetPpnInputInvoicesAsync` once shipped. |
 
-**Phase 2 calendar estimate:** 8–12 weeks (parallelizable with Phase 1)
+**Phase 2 calendar estimate:** 8–14 weeks (parallelizable with Phase 1)
 
 ---
 
@@ -136,7 +137,7 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | 5.3 | P&L report (basic + per-channel) | P0 | L | 🟨 | Finance dashboard view + report endpoints scaffolded; per-channel P&L logic to verify |
 | 5.4 | Margin per product / per channel report | P0 | M | ✅ | New `/reports/margin` page + `GET /reports/margin-per-product` endpoint. Two views: per-product (collapsed across channels) and per-product × channel matrix. Sorted worst-margin-first. Red row for margin <5%, amber 5–15%. CSV export per active tab. Cost source: `ProductVariant.CostPrice` "as of now" (point-in-time, not cost-at-sale) — UI surfaces caveat. 8 new use-case tests pin the margin math. 94/94 unit tests pass. |
 | 5.5 | Balance sheet | P1 | L | ⬜ | Standard format, ties to journals |
-| 5.6 | PPN input/output summary for DJP | P1 | M | ⬜ | Monthly DJP-format export |
+| 5.6 | PPN input/output summary for DJP | P1 | M | 🟨 | **Output shipped (2026-04-28)** — `/reports/ppn` page + `GET /reports/ppn-summary?year=&month=` endpoint. Month picker, KPI cards (DPP / Output / Input / Net), per-rate breakdown table (groups by effective rate `PPN/DPP`, sorted highest-first), per-invoice line items with NPWP + e-Faktur columns, paginated 20/page, simple CSV export. New `Invoice.CounterpartyNPWP` column + EF migration `AddInvoiceCounterpartyNPWP`. 7 use-case tests. **Remaining for ✅:** PPN Input requires PurchaseInvoice entity — tracked as new item 2.13. Once 2.13 lands, this report extends to full Input/Output. |
 | 5.7 | Stock reconciliation workflow | P1 | M | ⚠️ | File modified — verify current state |
 | 5.8 | Low stock dashboard & alerts | P1 | M | ⬜ | Depends on 2.8 (email sender) |
 
@@ -179,6 +180,8 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-28 | 5.6 | ⬜ → 🟨 | PPN Output summary shipped; Input deferred to 2.13. New `/reports/ppn` page + `GET /reports/ppn-summary` endpoint. Month picker, 4 KPI cards (DPP/Output/Input/Net), per-rate breakdown grouped by effective rate `PPN/DPP`, per-invoice line items table with `TaxInvoiceNumber` (e-Faktur) + new `CounterpartyNPWP` columns, 20/page pagination, simple CSV export. New `Invoice.CounterpartyNPWP` column (varchar(32) NULL) + EF migration `20260428090534_AddInvoiceCounterpartyNPWP`. Endpoint reuses `Permissions.ChartOfAccounts.Read`. UI explicitly surfaces "Output-only / Input pending 2.13" caveat. 7 use-case tests pin DPP/PPN totals + per-rate grouping + zero-DPP exempt bucket + sort order. 101/101 unit tests pass. |
+| 2026-04-28 | 2.13 | (new) | New P1/L item: **PurchaseInvoice entity**. Discovered during 5.6 audit — currently `PurchaseOrder` + `GoodsReceipt` exist but no vendor *invoice* stage carrying tax data. Blocks PPN Input tracking + full PPN Output/Input/Net DJP report + AP journal entries. Once shipped, 5.6 closes to ✅ by adding `GetPpnInputInvoicesAsync` and toggling `InputAvailable=true`. |
 | 2026-04-28 | 5.4 | 🟨 → ✅ | Margin per product/per channel report shipped. New `Application/UseCases/Reports/ReportUseCase.GetProductMarginReportAsync` + `IReportRepository.GetProductMarginsAsync`/`GetProductChannelMarginsAsync` (raw aggregate queries, EF GroupBy on matched CSV rows joined to ProductVariant). New `/api/v1/reports/margin-per-product` endpoint reusing `Permissions.ChartOfAccounts.Read` (a dedicated `Permissions.Reports.*` group would require a seed migration — deferred). New `BlazorApp.Client/Pages/Finance/Margin.razor` page at `/reports/margin`: KPI cards, two tabs (per-product / per-product×channel), worst-margin-first sort, red/amber row highlighting for loss-making SKUs, client-side CSV export via JS interop (`window.downloadFile`). Cost source: `ProductVariant.CostPrice` point-in-time, with explicit caveat banner on the page. 8 new tests in `ReportUseCaseMarginTests` (94/94 unit tests pass). |
 | 2026-04-28 | 5.1a | ⬜ → 🟨 | New `Application/UseCases/Import/CsvHeaderAutoMapper.cs` extracts auto-mapping from `Index.razor`. Fixes operator-precedence bug on line 492 (`(order && no) \|\| pesanan` → silently dropped `"Order ID"` headers). Adds: longest-keyword-wins (so `"Total Price"` doesn't get claimed by `"price"` rule), claim tracking (each header maps to ≤1 field), underscore/dash normalization (so `no_pesanan` matches `no pesanan`), expanded EN+Bahasa synonyms across 8 fields. 16 pinned tests (`CsvHeaderAutoMapperTests.cs`) — including regression for the precedence bug, longest-match collisions, and likely Tokopedia/Shopee Seller Center header shapes. Frontend `AutoMapColumns()` rewritten to mirror the same algorithm + synonym list (no project-ref change). 86/86 unit tests pass. **Remaining for ✅:** drop in real Tokopedia + Shopee export from an actual seller account, add as additional pinned cases. |
 | 2026-04-28 | 5.1 | ⚠️ → ✅ | Code audit confirmed end-to-end Tokopedia import: generic auto-mapping importer, SKU → variant → stock deduction → StockMovement → channel revenue + platform fee captured. Frontend 3-step UI (`Import/Index.razor`) + 5 endpoints in `ImportController`. **Sample-fixture-based** — real-export validation split out as new item 5.1a. |

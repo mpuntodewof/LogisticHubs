@@ -1,0 +1,306 @@
+@page "/reports/ppn"
+@layout AppLayout
+@inject BlazorApp.Client.Services.ApiClient Api
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<div class="page-header">
+    <div>
+        <h1>PPN Summary</h1>
+        <p class="page-desc">Monthly PPN Output for DJP / e-Faktur reporting — totals, per-rate breakdown, and per-invoice line items</p>
+    </div>
+</div>
+
+<div class="report-filters">
+    <div class="form-group">
+        <label>Month</label>
+        <select class="form-control-custom" style="min-width:140px" @bind="_month">
+            @for (var m = 1; m <= 12; m++)
+            {
+                var monthVal = m;
+                <option value="@monthVal">@(new DateTime(2000, monthVal, 1).ToString("MMMM"))</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Year</label>
+        <select class="form-control-custom" style="min-width:100px" @bind="_year">
+            @for (var y = DateTime.UtcNow.Year - 3; y <= DateTime.UtcNow.Year + 1; y++)
+            {
+                var yearVal = y;
+                <option value="@yearVal">@yearVal</option>
+            }
+        </select>
+    </div>
+    <button class="btn-primary" @onclick="LoadReport" disabled="@_loading" style="height:38px;margin-bottom:0">
+        @if (_loading) { <span>Generating...</span> } else { <span>Generate Report</span> }
+    </button>
+    <button class="btn-outline" @onclick="ExportCsv" disabled="@(_report == null || _loading)" style="height:38px;margin-bottom:0;margin-left:.5rem">
+        <span>&#128229;</span> Export CSV
+    </button>
+</div>
+
+<div class="ppn-note">
+    <span class="ppn-note-icon">&#9432;</span>
+    <div>
+        <strong>Output-only:</strong> This v1 report covers <em>PPN Output</em> from issued sales invoices only.
+        <em>PPN Input</em> tracking requires the PurchaseInvoice entity, scheduled separately (tracker 2.13).
+        <strong>Net PPN Payable</strong> shown here equals <em>Output − 0</em>; the real net (after deducting Input PPN) will appear once Input is tracked.
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert-custom alert-error" style="margin-bottom:1.25rem">@_error</div>
+}
+
+@if (_report != null)
+{
+    @* ── KPI Cards ───────────────────────────────────────── *@
+    <div class="dash-grid-4 mb-lg">
+        <div class="glow-card glow-cyan anim-enter anim-d1">
+            <span class="glow-stat-icon">&#128202;</span>
+            <div class="glow-stat-label">Taxable Base (DPP)</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalDpp.ToString("N0")</div>
+        </div>
+        <div class="glow-card glow-amber anim-enter anim-d2">
+            <span class="glow-stat-icon">&#128176;</span>
+            <div class="glow-stat-label">PPN Output</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalPpnOutput.ToString("N0")</div>
+        </div>
+        <div class="glow-card @(_report.InputAvailable ? "glow-cyan" : "")" style="@(_report.InputAvailable ? "" : "opacity:.55") @(_report.InputAvailable ? "" : "")">
+            <span class="glow-stat-icon">&#128230;</span>
+            <div class="glow-stat-label">PPN Input</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.TotalPpnInput.ToString("N0")</div>
+            @if (!_report.InputAvailable)
+            {
+                <div class="glow-stat-trend" style="margin-top:.5rem;color:var(--text-muted);font-size:.7rem">Pending PurchaseInvoice (2.13)</div>
+            }
+        </div>
+        <div class="glow-card glow-emerald anim-enter anim-d4">
+            <span class="glow-stat-icon">&#127919;</span>
+            <div class="glow-stat-label">Net PPN Payable</div>
+            <div class="glow-stat-value" style="font-size:1.5rem">Rp @_report.NetPpnPayable.ToString("N0")</div>
+            <div class="glow-stat-trend" style="margin-top:.5rem;font-size:.7rem">@MonthLabel(_report.Year, _report.Month)</div>
+        </div>
+    </div>
+
+    @* ── Per-Rate Breakdown ──────────────────────────────── *@
+    @if (_report.RateGroups.Count > 0)
+    {
+        <h2 class="ppn-section-title">By Tax Rate</h2>
+        <div class="card" style="padding:0;margin-bottom:1.5rem">
+            <div class="table-wrapper">
+                <table class="lh-table">
+                    <thead>
+                        <tr>
+                            <th>Rate</th>
+                            <th>Description</th>
+                            <th class="ppn-num">Invoices</th>
+                            <th class="ppn-num">DPP</th>
+                            <th class="ppn-num">PPN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var g in _report.RateGroups)
+                        {
+                            <tr>
+                                <td><span class="ppn-rate-pill">@g.RatePercent.ToString("0.##")%</span></td>
+                                <td>@g.TaxRateName</td>
+                                <td class="ppn-num">@g.InvoiceCount</td>
+                                <td class="ppn-num">Rp @g.Dpp.ToString("N0")</td>
+                                <td class="ppn-num ppn-strong">Rp @g.PpnAmount.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @* ── Per-Invoice Line Items ──────────────────────────── *@
+    <h2 class="ppn-section-title">Invoices (@_report.Invoices.Count)</h2>
+    @if (_report.Invoices.Count == 0)
+    {
+        <div class="card"><div class="ppn-empty">No issued invoices in @MonthLabel(_report.Year, _report.Month).</div></div>
+    }
+    else
+    {
+        <div class="card" style="padding:0">
+            <div class="table-wrapper">
+                <table class="lh-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>e-Faktur</th>
+                            <th>Date</th>
+                            <th>Counterparty</th>
+                            <th>NPWP</th>
+                            <th class="ppn-num">DPP</th>
+                            <th class="ppn-num">PPN</th>
+                            <th class="ppn-num">Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in PagedInvoices())
+                        {
+                            <tr>
+                                <td><code class="ppn-pill">@inv.InvoiceNumber</code></td>
+                                <td>@(inv.TaxInvoiceNumber ?? "—")</td>
+                                <td>@inv.InvoiceDate.ToString("yyyy-MM-dd")</td>
+                                <td>@(inv.CounterpartyName ?? "—")</td>
+                                <td>@(inv.CounterpartyNPWP ?? "—")</td>
+                                <td class="ppn-num">Rp @inv.Dpp.ToString("N0")</td>
+                                <td class="ppn-num ppn-strong">Rp @inv.PpnAmount.ToString("N0")</td>
+                                <td class="ppn-num">Rp @inv.GrandTotal.ToString("N0")</td>
+                                <td><span class="@StatusBadgeClass(inv.Status)">@inv.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @PaginationFooter(_report.Invoices.Count)
+        </div>
+    }
+}
+
+<style>
+    .ppn-note { display: flex; gap: .75rem; align-items: flex-start; padding: .85rem 1rem; margin-bottom: 1.25rem;
+        background: rgba(251, 191, 36, .07); border: 1px solid rgba(251, 191, 36, .25); border-radius: var(--radius-sm);
+        font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; backdrop-filter: blur(8px); }
+    .ppn-note-icon { font-size: 1.1rem; line-height: 1; color: #FBBF24; flex-shrink: 0; margin-top: 1px; }
+    .ppn-note strong { color: var(--text-primary); }
+    .ppn-note em { color: var(--text-primary); font-style: normal; font-weight: 500; }
+
+    .ppn-section-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 1.5rem 0 .75rem; }
+
+    .ppn-num { text-align: right; white-space: nowrap; }
+    .ppn-strong { font-weight: 600; color: var(--text-primary) !important; }
+
+    .ppn-pill { font-size: .75rem; padding: .15rem .4rem; background: rgba(99, 102, 241, .08); border-radius: 4px;
+        color: var(--text-secondary); white-space: nowrap; display: inline-block; }
+
+    .ppn-rate-pill { font-size: .75rem; padding: .2rem .55rem; border-radius: 999px;
+        background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(6,182,212,.12));
+        border: 1px solid rgba(99,102,241,.3); color: var(--text-primary); font-weight: 600; }
+
+    .ppn-status-issued { padding: .15rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 500;
+        background: rgba(99,102,241,.12); color: #A5B4FC; }
+    .ppn-status-paid { padding: .15rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 500;
+        background: rgba(16,185,129,.12); color: #34D399; }
+    .ppn-status-other { padding: .15rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 500;
+        background: rgba(148,163,184,.12); color: var(--text-muted); }
+
+    .ppn-empty { padding: 2.5rem 1.5rem; text-align: center; color: var(--text-muted); font-size: .875rem; }
+
+    .ppn-pager { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: .75rem 1.25rem; border-top: 1px solid var(--border); font-size: .8125rem;
+        color: var(--text-muted); flex-wrap: wrap; }
+    .ppn-pager-current { padding: 0 .75rem; color: var(--text-secondary); font-weight: 500; }
+    .pager-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+        width: 32px; height: 32px; border-radius: var(--radius-sm); cursor: pointer; font-size: .9rem;
+        transition: var(--transition-fast); display: inline-flex; align-items: center; justify-content: center; }
+    .pager-btn:hover:not(:disabled) { background: rgba(99, 102, 241, .08); color: var(--text-primary);
+        border-color: rgba(99, 102, 241, .3); }
+    .pager-btn:disabled { opacity: .4; cursor: not-allowed; }
+</style>
+
+@code {
+    private const int PageSize = 20;
+
+    private bool _loading;
+    private string _error = string.Empty;
+    private int _year = DateTime.UtcNow.Year;
+    private int _month = DateTime.UtcNow.Month;
+    private BlazorApp.Client.Models.PpnSummaryReport? _report;
+    private int _page = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        _loading = true;
+        _error = string.Empty;
+        _page = 1;
+        try
+        {
+            var result = await Api.GetPpnSummaryAsync(_year, _month);
+            if (result.Success && result.Data != null)
+                _report = result.Data;
+            else
+                _error = result.ErrorMessage ?? "Failed to load report.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        _loading = false;
+    }
+
+    private IEnumerable<BlazorApp.Client.Models.PpnInvoiceLine> PagedInvoices() =>
+        _report == null ? Enumerable.Empty<BlazorApp.Client.Models.PpnInvoiceLine>()
+            : _report.Invoices.Skip((_page - 1) * PageSize).Take(PageSize);
+
+    private RenderFragment PaginationFooter(int totalRows) => __builder =>
+    {
+        var pageCount = (int)Math.Ceiling(totalRows / (double)PageSize);
+        if (pageCount <= 1) return;
+        var firstRow = (_page - 1) * PageSize + 1;
+        var lastRow = Math.Min(_page * PageSize, totalRows);
+
+        <div class="ppn-pager">
+            <span>@firstRow–@lastRow of @totalRows</span>
+            <div style="display:flex;align-items:center;gap:.25rem">
+                <button class="pager-btn" disabled="@(_page <= 1)" @onclick="() => _page = 1">«</button>
+                <button class="pager-btn" disabled="@(_page <= 1)" @onclick="() => _page--">‹</button>
+                <span class="ppn-pager-current">Page @_page of @pageCount</span>
+                <button class="pager-btn" disabled="@(_page >= pageCount)" @onclick="() => _page++">›</button>
+                <button class="pager-btn" disabled="@(_page >= pageCount)" @onclick="() => _page = pageCount">»</button>
+            </div>
+        </div>
+    };
+
+    private static string MonthLabel(int year, int month) =>
+        new DateTime(year, month, 1).ToString("MMMM yyyy");
+
+    private static string StatusBadgeClass(string status) => status switch
+    {
+        "Issued" => "ppn-status-issued",
+        "Paid" => "ppn-status-paid",
+        _ => "ppn-status-other"
+    };
+
+    private async Task ExportCsv()
+    {
+        if (_report == null) return;
+        var csv = BuildCsv();
+        var fileName = $"ppn-summary-{_report.Year:0000}-{_report.Month:00}.csv";
+        await JS.InvokeVoidAsync("downloadFile", fileName, "text/csv;charset=utf-8", csv);
+    }
+
+    private string BuildCsv()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("InvoiceNumber,TaxInvoiceNumber,InvoiceDate,CounterpartyName,CounterpartyNPWP,DPP,PPN,GrandTotal,Status");
+        foreach (var inv in _report!.Invoices)
+            sb.AppendLine(string.Join(",", new[] {
+                CsvCell(inv.InvoiceNumber),
+                CsvCell(inv.TaxInvoiceNumber ?? ""),
+                inv.InvoiceDate.ToString("yyyy-MM-dd"),
+                CsvCell(inv.CounterpartyName ?? ""),
+                CsvCell(inv.CounterpartyNPWP ?? ""),
+                inv.Dpp.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                inv.PpnAmount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                inv.GrandTotal.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                CsvCell(inv.Status)
+            }));
+        return sb.ToString();
+    }
+
+    private static string CsvCell(string s)
+    {
+        var quote = "\"";
+        var needsEscape = s.Contains(',') || s.Contains('"') || s.Contains('\n');
+        return needsEscape ? quote + s.Replace(quote, quote + quote) + quote : s;
+    }
+}

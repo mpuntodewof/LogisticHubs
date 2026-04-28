@@ -483,20 +483,48 @@ KA-SPE-165G,50</pre>
         _loading = false;
     }
 
+    // Mirror of Application.UseCases.Import.CsvHeaderAutoMapper — kept in sync manually
+    // since BlazorApp.Client doesn't reference the Application project. The server-side
+    // copy is the canonical, unit-tested version; this exists for UX so the user can
+    // see and override the mapping before submit.
+    private static readonly (string[] Keywords, Action<Index, string> Set)[] _autoMapRules =
+    {
+        (new[] { "order id", "order no", "order number", "no pesanan", "nomor pesanan", "no. pesanan", "invoice", "no invoice" }, (p, h) => p._mapOrderNumber = h),
+        (new[] { "sku", "kode produk", "product code", "kode sku" }, (p, h) => p._mapSku = h),
+        (new[] { "quantity", "qty", "jumlah", "kuantitas" }, (p, h) => p._mapQuantity = h),
+        (new[] { "total price", "total harga", "subtotal", "grand total", "total amount", "total pembayaran", "total" }, (p, h) => p._mapTotalPrice = h),
+        (new[] { "unit price", "harga satuan", "harga jual", "selling price", "price", "harga" }, (p, h) => p._mapUnitPrice = h),
+        (new[] { "product name", "nama produk", "nama barang", "item name", "produk" }, (p, h) => p._mapProductName = h),
+        (new[] { "order date", "tanggal pesanan", "tanggal pembayaran", "tanggal transaksi", "tanggal", "date" }, (p, h) => p._mapOrderDate = h),
+        (new[] { "platform fee", "biaya platform", "admin fee", "biaya admin", "service fee", "fee", "biaya" }, (p, h) => p._mapPlatformFee = h),
+    };
+
     private void AutoMapColumns()
     {
         if (_csvHeaders == null) return;
-        foreach (var h in _csvHeaders)
+        var claimed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (keywords, set) in _autoMapRules)
         {
-            var lower = h.ToLower();
-            if (lower.Contains("order") && lower.Contains("no") || lower.Contains("pesanan")) _mapOrderNumber = h;
-            else if (lower.Contains("sku") || lower.Contains("kode")) _mapSku = h;
-            else if (lower.Contains("qty") || lower.Contains("jumlah") || lower.Contains("quantity")) _mapQuantity = h;
-            else if (lower.Contains("price") || lower.Contains("harga")) _mapUnitPrice = h;
-            else if (lower.Contains("total")) _mapTotalPrice = h;
-            else if (lower.Contains("product") || lower.Contains("produk") || lower.Contains("nama")) _mapProductName = h;
-            else if (lower.Contains("date") || lower.Contains("tanggal")) _mapOrderDate = h;
-            else if (lower.Contains("fee") || lower.Contains("biaya")) _mapPlatformFee = h;
+            string? bestHeader = null;
+            int bestKwLen = 0;
+            foreach (var h in _csvHeaders)
+            {
+                if (string.IsNullOrWhiteSpace(h) || claimed.Contains(h)) continue;
+                var normalized = h.ToLowerInvariant().Replace('_', ' ').Replace('-', ' ');
+                foreach (var kw in keywords)
+                {
+                    if (normalized.Contains(kw) && kw.Length > bestKwLen)
+                    {
+                        bestHeader = h;
+                        bestKwLen = kw.Length;
+                    }
+                }
+            }
+            if (bestHeader != null)
+            {
+                set(this, bestHeader);
+                claimed.Add(bestHeader);
+            }
         }
     }
 

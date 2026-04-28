@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-27 (3.6 closed — idempotency on financial writes) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-04-28 (5.1a auto-mapper hardened — 16 pinned tests, precedence bug fixed) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -15,16 +15,31 @@
 
 ---
 
-## Snapshot
+## Readiness Snapshot — Demo vs Ship
+
+> Two different bars. **Demo-ready** = can walk a prospect through it convincingly. **Ship-ready** = a paying customer can use it daily without you babysitting.
+
+| Aspect | Score | Bar to clear |
+|--------|------:|--------------|
+| 🎬 **Demo-ready** | **75%** | Real Tokopedia/Shopee export validation + margin-per-product + PPN summary → ~90% |
+| 🚢 **Ship-ready (solid product)** | **45%** | Demo bar + onboarding wizard + e-Faktur audit + email + error tracking → ~65% |
+
+See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scoring and the gap-to-close roadmap.
+
+> Deployment / domain / hosting infra is **explicitly excluded** from these scores — see Phase 1 items 1.4–1.6/1.8 for that track.
+
+---
+
+## Snapshot — by Phase
 
 | Phase | Total | ✅ Done | 🟨 In Progress | ⚠️ Partial | ⬜ Not Started | ⏸️ Blocked |
 |-------|------:|------:|------:|------:|------:|------:|
-| Phase 1 — Pre-Launch Foundation | 10 | 5 | 0 | 1 | 4 | 0 |
+| Phase 1 — Pre-Launch Foundation | 11 | 5 | 0 | 1 | 5 | 0 |
 | Phase 2 — First Paying Customer | 12 | 0 | 0 | 0 | 12 | 0 |
-| Phase 3 — Post-Launch Hardening | 9 | 3 | 0 | 0 | 6 | 0 |
+| Phase 3 — Post-Launch Hardening | 8 | 3 | 0 | 0 | 5 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 8 | 0 | 2 | 3 | 3 | 0 |
-| **Totals** | **44** | **8** | **2** | **4** | **30** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 9 | 2 | 3 | 0 | 4 | 0 |
+| **Totals** | **45** | **10** | **3** | **1** | **31** | **0** |
 
 ---
 
@@ -44,8 +59,9 @@
 | 1.8 | Move secrets out of env vars | P0 | M | ⬜ | JWT secret + DB creds → Key Vault / Secrets Manager |
 | 1.9 | PPN / e-Faktur correctness audit | P0 | M | ⬜ | Sign-off from Indonesian accountant + property tests |
 | 1.10 | Resolve 47 uncommitted files on `develop` | P0 | S | ✅ | Split into 6 logical commits: finance seed, transaction wrapper refactor, CSV import expansion, reports dashboard, E2E test corrections, theme + UI restyle |
+| 1.11 | Onboarding wizard ("value in <15 min") | P0 | L | ⬜ | **Moved from 3.9 (2026-04-28)** — without this the trial funnel leaks; new tenant currently has to manually configure COA, tax rates, payment terms, warehouses, units, brands, products before reaching Journey 2. Strategy doc Risk #2. |
 
-**Phase 1 calendar estimate:** 6–10 weeks
+**Phase 1 calendar estimate:** 8–12 weeks
 
 ---
 
@@ -86,9 +102,9 @@
 | 3.6 | Document & test idempotency on financial writes | P1 | M | ✅ | Hardened middleware: composite (TenantId, IdempotencyKey) PK, endpoint-signature reuse check (422), in-flight 409, 24h response replay, 5xx not cached. New `[Idempotent]` attribute applied to 11 financial write endpoints (invoice create/issue/assign-tax/pay/cancel, journal create/post/void, stock movement create/manual-sale/transfer). 12 new tests cover happy path, replay, conflict, TTL, tenant isolation, throw-cleanup |
 | 3.7 | Refresh-token revocation list | P2 | M | ⬜ | Logout/password-change invalidates tokens |
 | 3.8 | Permission constants class | P3 | S | ✅ | New `Domain/Constants/Permissions.cs` with nested classes; 109 controller attributes converted; coverage tests guard against drift |
-| 3.9 | Onboarding wizard ("value in <15 min") | P1 | L | ⬜ | Strategy doc Risk #2 |
+| 3.9 | ~~Onboarding wizard~~ | — | — | ➡️ | **Moved to 1.11 (2026-04-28)** — relocated to Phase 1 as a launch-blocker, not post-launch hardening. |
 
-**Phase 3 calendar estimate:** 6–10 weeks
+**Phase 3 calendar estimate:** 5–8 weeks
 
 ---
 
@@ -114,8 +130,9 @@
 
 | # | Item | Priority | Effort | Status | Notes |
 |---|------|---------|--------|--------|-------|
-| 5.1 | Tokopedia CSV parser | P0 | M | ⚠️ | Column-mapping flow + sample fixture landed; verify against real Tokopedia export |
-| 5.2 | Shopee CSV parser | P0 | M | ⚠️ | Same as 5.1 — sample fixture present, real-export validation outstanding |
+| 5.1 | Tokopedia CSV parser | P0 | M | ✅ | Generic column-mapping importer with auto-detection of order/sku/qty/price/fee/date columns; SKU → variant → stock deduction → StockMovement → channel revenue + platform fee captured. Sample Tokopedia fixture passes. End-to-end shipped per code audit 2026-04-28. **Real-export validation tracked separately as 5.1a.** |
+| 5.1a | Validate parsers against real Tokopedia + Shopee exports | P0 | S | 🟨 | New `CsvHeaderAutoMapper` (Application layer) replaces in-line frontend logic; fixes operator-precedence bug that silently skipped `"Order ID"` headers, adds longest-keyword-wins claim tracking, normalizes underscores/dashes to spaces, expanded EN+Bahasa synonyms across 8 fields. 16 pinned tests covering Tokopedia/Shopee likely real-export shapes (86/86 pass). **Remaining:** drop in actual Tokopedia + Shopee export from a real seller account, add as additional pinned cases, confirm SKU-match + value-format work end-to-end. |
+| 5.2 | Shopee CSV parser | P0 | M | ✅ | Same generic importer as 5.1; sample Shopee fixture passes. End-to-end shipped per code audit 2026-04-28. Real-export validation in 5.1a. |
 | 5.3 | P&L report (basic + per-channel) | P0 | L | 🟨 | Finance dashboard view + report endpoints scaffolded; per-channel P&L logic to verify |
 | 5.4 | Margin per product / per channel report | P0 | M | 🟨 | Tied to 5.3 dashboard work |
 | 5.5 | Balance sheet | P1 | L | ⬜ | Standard format, ties to journals |
@@ -162,6 +179,13 @@
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-04-28 | 5.1a | ⬜ → 🟨 | New `Application/UseCases/Import/CsvHeaderAutoMapper.cs` extracts auto-mapping from `Index.razor`. Fixes operator-precedence bug on line 492 (`(order && no) \|\| pesanan` → silently dropped `"Order ID"` headers). Adds: longest-keyword-wins (so `"Total Price"` doesn't get claimed by `"price"` rule), claim tracking (each header maps to ≤1 field), underscore/dash normalization (so `no_pesanan` matches `no pesanan`), expanded EN+Bahasa synonyms across 8 fields. 16 pinned tests (`CsvHeaderAutoMapperTests.cs`) — including regression for the precedence bug, longest-match collisions, and likely Tokopedia/Shopee Seller Center header shapes. Frontend `AutoMapColumns()` rewritten to mirror the same algorithm + synonym list (no project-ref change). 86/86 unit tests pass. **Remaining for ✅:** drop in real Tokopedia + Shopee export from an actual seller account, add as additional pinned cases. |
+| 2026-04-28 | 5.1 | ⚠️ → ✅ | Code audit confirmed end-to-end Tokopedia import: generic auto-mapping importer, SKU → variant → stock deduction → StockMovement → channel revenue + platform fee captured. Frontend 3-step UI (`Import/Index.razor`) + 5 endpoints in `ImportController`. **Sample-fixture-based** — real-export validation split out as new item 5.1a. |
+| 2026-04-28 | 5.1a | (new) | New P0/S item: validate parsers against real Tokopedia + Shopee exports from an actual seller. Splits "parser shipped" from "parser proven on real data". |
+| 2026-04-28 | 5.2 | ⚠️ → ✅ | Same as 5.1 — Shopee path shipped end-to-end on the same generic importer; real-export validation tracked under 5.1a. |
+| 2026-04-28 | 1.11 | (new) | New P0/L item: Onboarding wizard. Relocated from 3.9 (Phase 3) to Phase 1 as a launch-blocker — current setup flow is too steep for a 14-day trial; new tenants must manually configure 7+ entity types before reaching Journey 2. |
+| 2026-04-28 | 3.9 | ⬜ → ➡️ | Moved to 1.11. Original ID retired in place per "keep IDs stable" rule. |
+| 2026-04-28 | — | (snapshot) | Added **Demo vs Ship Readiness** section: 75% demo-ready, 45% ship-ready (deployment infra excluded). Spawned new doc `docs/DEMO_READINESS_TRACKER.md` for per-journey scoring + gap-to-close roadmap. |
 | 2026-04-27 | 3.6 | ⬜ → ✅ | Idempotency middleware rewritten for replay-safe financial writes. Composite (TenantId, IdempotencyKey) PK, ITenantScoped with global query filter, endpoint-signature reuse check (422), InProgress claim row gives 409 on concurrent duplicate (cleared on handler throw), 24h response replay, 5xx not cached. New `[Idempotent]` attribute enforces header presence (400) on 11 financial write endpoints across Invoices/JournalEntries/StockMovements. EF migration `HardenIdempotencyRecord` adds composite PK + Endpoint/Status columns. 12 new unit tests (70/70 pass). Commit `982c161`. |
 | 2026-04-26 | 3.8 | ⬜ → ✅ | New `Domain/Constants/Permissions.cs` with nested static classes; `Program.cs` enumerates from `Permissions.All()`; 109 `[RequirePermission(...)]` attributes across 21 controllers now use typed constants. Typos at call sites become compile errors. Coverage tests added (58/58 unit tests pass). Commit `2ea490a`. |
 | 2026-04-25 | 3.4 | ⬜ → ✅ | All 29 ITenantScoped entities filtered; convention documented in AppDbContext; new TenantQueryFilterCoverageTests guard against drift (54/54 unit tests pass). Fail-CLOSED migration documented as future work in commit `746adb8`. |

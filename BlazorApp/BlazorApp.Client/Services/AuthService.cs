@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using BlazorApp.Client.Models;
+using BlazorApp.Client.Services.ApiClients;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -7,12 +8,12 @@ namespace BlazorApp.Client.Services
 {
     public class AuthService : IAsyncDisposable
     {
-        private readonly ApiClient _api;
+        private readonly AuthClient _api;
         private readonly ILocalStorageService _localStorage;
         private readonly AuthenticationStateProvider _authStateProvider;
         private Timer? _refreshTimer;
 
-        public AuthService(ApiClient api, ILocalStorageService localStorage, AuthenticationStateProvider authStateProvider)
+        public AuthService(AuthClient api, ILocalStorageService localStorage, AuthenticationStateProvider authStateProvider)
         {
             _api = api;
             _localStorage = localStorage;

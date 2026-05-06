@@ -1,6 +1,7 @@
 @page "/import"
 @layout AppLayout
-@inject BlazorApp.Client.Services.ApiClient Api
+@inject BlazorApp.Client.Services.ApiClients.ImportClient Api
+@inject BlazorApp.Client.Services.ApiClients.InventoryClient InventoryApi
 @inject NavigationManager Nav
 
 <div class="page-header">
@@ -426,7 +427,7 @@ KA-SPE-165G,50</pre>
         {
             try
             {
-                var r = await Api.GetWarehousesAsync();
+                var r = await InventoryApi.GetWarehousesAsync();
                 if (r.Success && r.Data != null) _warehouses = r.Data;
             }
             catch { _warehouses = new(); }

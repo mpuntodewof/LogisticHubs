@@ -1,7 +1,7 @@
 # StockLedger — Production & Revenue Readiness Tracker
 
 > Living document. Updated as work progresses.
-> **Last updated:** 2026-04-28 (added 5.9 dashboard action items, 5.10 batch/expiry deferred) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-05-06 (added 5.11 bundle / composite SKU) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -38,8 +38,8 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | Phase 2 — First Paying Customer | 13 | 0 | 0 | 0 | 13 | 0 |
 | Phase 3 — Post-Launch Hardening | 8 | 3 | 0 | 0 | 5 | 0 |
 | Phase 4 — Pre-Scale Hardening | 5 | 0 | 0 | 0 | 5 | 0 |
-| Phase 5 — Product-Level Revenue Gaps | 11 | 3 | 3 | 0 | 5 | 0 |
-| **Totals** | **48** | **11** | **3** | **1** | **33** | **0** |
+| Phase 5 — Product-Level Revenue Gaps | 12 | 3 | 3 | 0 | 6 | 0 |
+| **Totals** | **49** | **11** | **3** | **1** | **34** | **0** |
 
 ---
 
@@ -142,8 +142,9 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 | 5.8 | Low stock dashboard & alerts | P1 | M | ⬜ | Depends on 2.8 (email sender) |
 | 5.9 | Owner-persona action items on dashboard | P1 | M | ⬜ | **Added 2026-04-28.** Bundles three related insights that turn the dashboard from "what happened" → "what to do next": (a) Top Selling sort toggle (units ↔ revenue) — already shipped as units-only, (b) Low Stock **urgency** — replace static threshold with "runs out in N days" using avg daily sales velocity from `StockMovement` (Type=Out, Reason=Sale), (c) Dead Stock callout — list SKUs with no sales in last 60 days. Plus a small dashboard profit hint surfacing top-margin + loss-making SKUs (data already in `GetProductMarginsAsync`). Owner persona's "what should I do this week" answer. |
 | 5.10 | Batch + expiry tracking | P3 | XL | ⬜ | **Added 2026-04-28 (deferred).** Schema change: `Batch`/`Lot` entity per WarehouseStock, `ExpiryDate` + `BatchNumber` on goods receipts and stock movements, FEFO picking logic. **Out-of-scope for current ICP** (multi-channel SMB retailers). Building this shifts ICP toward FMCG/pharma/F&B distributors — different market, different competition (Mekari, Krishand). Do not start until ICP widening is an intentional decision with at least one paying customer asking for it. |
+| 5.11 | Bundle / composite SKU logic | P1 | M | ⬜ | **Added 2026-05-06.** Discovered during inventory pain-point cross-check — current domain has zero Bundle/CompositeProduct concept (verified by grep across `**/*.cs`), but Indonesian marketplace sellers rely heavily on bundle promos ("buy 2 get 1," 3-pack, mix-and-match). Without this, a bundle sale either decrements the wrong SKU or doesn't decrement components at all → stock drift identical to the "Bundle Stock Errors" pain point. Schema: new `ProductBundle` entity (header) + `ProductBundleComponent` (variant_id × qty_per_bundle, FK to `ProductVariant`). On sale of a bundle SKU, fan out to per-component `StockMovement` rows (Type=Out, Reason=Sale, Reference=bundle invoice item) so the ledger stays single-source-of-truth. Bundle pricing override on `InvoiceItem` (don't sum component `SellingPrice`). Importer (5.1/5.2) needs a bundle-detection hook so marketplace bundle SKUs map to the bundle, not a phantom variant. **Out of scope for first cut:** dynamic/configurable bundles (customer picks 3 of 10 flavors) — start with fixed bundles only. |
 
-**Phase 5 calendar estimate:** 12–18 weeks (5.10 deferred from estimate)
+**Phase 5 calendar estimate:** 14–20 weeks (5.10 deferred from estimate; 5.11 added at 1–2 wk)
 
 ---
 
@@ -182,6 +183,7 @@ See [DEMO_READINESS_TRACKER.md](DEMO_READINESS_TRACKER.md) for per-journey scori
 
 | Date | Item | Change | Notes |
 |------|------|--------|-------|
+| 2026-05-06 | 5.11 | (new) | New P1/M item: **Bundle / composite SKU logic**. Discovered during inventory pain-point cross-check against a Notion feature list. Confirmed via grep: zero `Bundle`/`CompositeProduct`/`ProductBundle`/`BundleItem` references across the domain. Bundle promos are heavily used by Indonesian marketplace sellers (Shopee/Tokopedia/TikTok); without component fan-out at sale time, every bundle sale silently corrupts stock. Scoped: `ProductBundle` + `ProductBundleComponent` entities, fan-out to per-component `StockMovement` on sale, bundle pricing override on `InvoiceItem`, importer hook to map marketplace bundle SKUs. First-cut excludes dynamic/configurable bundles. |
 | 2026-04-28 | 5.9 | (new) | New P1/M item: **Owner-persona action items on dashboard**. Bundles three insights from a feature-gap discussion: Top Selling sort toggle, Low Stock urgency (days-to-stockout via velocity), Dead Stock callout (no sales in N days). Plus dashboard profit hint surfacing top/loss-making SKUs. Headline value: dashboard goes from "what happened" → "what to do next." |
 | 2026-04-28 | 5.10 | (new, deferred) | New P3/XL item: **Batch + expiry tracking**. Discussed during the same feature-gap audit. Recorded but explicitly deferred — building this shifts ICP from multi-channel SMB retailers to FMCG/pharma distributors, which is a strategic widening that should not be started without at least one paying customer asking for it. Pre-existing entities (`ProductVariant`, `WarehouseStock`) have no expiry/batch fields and would need significant schema work. |
 | 2026-04-28 | 5.6 | ⬜ → 🟨 | PPN Output summary shipped; Input deferred to 2.13. New `/reports/ppn` page + `GET /reports/ppn-summary` endpoint. Month picker, 4 KPI cards (DPP/Output/Input/Net), per-rate breakdown grouped by effective rate `PPN/DPP`, per-invoice line items table with `TaxInvoiceNumber` (e-Faktur) + new `CounterpartyNPWP` columns, 20/page pagination, simple CSV export. New `Invoice.CounterpartyNPWP` column (varchar(32) NULL) + EF migration `20260428090534_AddInvoiceCounterpartyNPWP`. Endpoint reuses `Permissions.ChartOfAccounts.Read`. UI explicitly surfaces "Output-only / Input pending 2.13" caveat. 7 use-case tests pin DPP/PPN totals + per-rate grouping + zero-DPP exempt bucket + sort order. 101/101 unit tests pass. |

@@ -1,7 +1,7 @@
 # StockLedger — Demo & Ship Readiness Tracker
 
 > Living document. Updated alongside [PRODUCTION_READINESS_TRACKER.md](PRODUCTION_READINESS_TRACKER.md).
-> **Last updated:** 2026-04-28 (added 5.9 dashboard action items to demo roadmap) | **Maintained by:** Henoch Hernanda + Claude
+> **Last updated:** 2026-05-06 (added 5.11 bundle / composite SKU to ship roadmap) | **Maintained by:** Henoch Hernanda + Claude
 
 ---
 
@@ -89,8 +89,9 @@ Demo-readiness items above **plus** the items below. ~6–10 additional weeks on
 | 6 | 3.1 | Error tracking (Sentry / App Insights) | S (2 hrs) | Free, 2-hour install, lights up the moment a real user hits a bug. Without this, you find out from the customer's WhatsApp message — too late. |
 | 7 | 2.8 | `IEmailSender` + transactional email provider | M (1–2 wk) | Unlocks welcome email, password reset, trial expiry, receipts, low-stock alerts. Almost every other Phase 2 item depends on this. |
 | 8 | 5.5 | Balance sheet | L (2–3 wk) | Important for accountants but *not* first-demo-critical. Accountants accept "next month" if the rest is solid. |
+| 9 | 5.11 | Bundle / composite SKU logic | M (1–2 wk) | Doesn't block a clean demo (sample data avoids bundles), but breaks real customers the moment they sell a marketplace bundle promo — components don't decrement, stock drifts, overselling on the *components* of the bundle. Ship-blocker for any seller using bundle promos, which is the majority on Shopee/Tokopedia/TikTok. |
 
-After items 1–8: Ship-ready ≈ **65%**. The remaining 35% is mostly **billing** (Phase 2 items 2.1–2.10) — which is required before *charging* customers but not required to *use* the product. That's the "first paying customer" bar, separate from "solid product" bar.
+After items 1–9: Ship-ready ≈ **65%**. The remaining 35% is mostly **billing** (Phase 2 items 2.1–2.10) — which is required before *charging* customers but not required to *use* the product. That's the "first paying customer" bar, separate from "solid product" bar.
 
 ---
 
@@ -118,6 +119,7 @@ These are real work but they're explicitly excluded so the scores answer the pro
 
 | Date | Aspect | Change | Notes |
 |------|--------|--------|-------|
+| 2026-05-06 | (no score change) | Added 5.11 to ship roadmap | Inventory pain-point cross-check vs. Notion feature list surfaced bundles as the only **completely uncovered** gap (zero domain references). Added to ship-readiness roadmap, not demo — sample data avoids bundles so the demo % is unaffected, but real customers running bundle promos hit silent stock drift on the first sale. Demo 85% / Ship 52% unchanged; ship % will reflect 5.11 once shipped. |
 | 2026-04-28 | (no score change) | Added 5.9 to demo roadmap | Audit of 5 dashboard-insight feature ideas. Three (Top Selling, Margin per item, dashboard profit hint) already covered or one-off polish. Two genuinely useful gaps (Low Stock urgency, Dead Stock) bundled with the polish into new tracker item 5.9 — "Owner-persona action items on dashboard." Expiry Risk recorded as 5.10 but explicitly deferred (ICP-widening). After 5.9 ships, demo-ready projected ≈ 92%. |
 | 2026-04-28 | demo +3, ship +2 | 5.6 PPN Output summary shipped | Demo 82% → 85%; Ship 50% → 52%. Journey 4 score 75% → 80%. New `/reports/ppn` page closes the accountant-persona "where do I get the monthly DJP file" question for Output. New `Invoice.CounterpartyNPWP` column + migration. PPN Input deferred to new tracker item 2.13 (PurchaseInvoice entity). Score is +3 not +5 because full Net PPN (Output−Input) waits on 2.13. |
 | 2026-04-28 | demo +4, ship +3 | 5.4 margin per product shipped | Demo 78% → 82%; Ship 47% → 50%. Journey 4 score 60% → 75% — owner-persona "which SKU loses money on Shopee" question now has a dedicated screen. New `/reports/margin` page (per-product + per-product×channel tabs, worst-margin-first, loss-row highlighting, CSV export). Cost basis is variant CostPrice point-in-time with caveat surfaced. |

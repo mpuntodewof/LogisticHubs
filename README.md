@@ -2,7 +2,7 @@
 
 **Know your real stock. Know your real profit. Across every channel.**
 
-StockLedger is a multi-tenant SaaS platform for **Inventory Management + Financial Visibility**, built for Indonesian mid-to-upper retailers who sell across multiple channels (Tokopedia, Shopee, offline) but lack a unified view of their stock and profitability.
+StockLedger is a multi-tenant SaaS platform for **Inventory Management + Financial Visibility**, built for Indonesian mid-to-upper retailers who sell across multiple channels but lack a unified view of their stock and profitability.
 
 Built with **.NET 8**, **ASP.NET Core Web API**, **Blazor**, and **MySQL** — following **Clean Architecture** principles.
 
